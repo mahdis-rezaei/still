@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: still
+    description: Still journaling companion
 paths:
   /healthz:
     get:
@@ -24,6 +26,66 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /still/extract:
+    post:
+      operationId: extractCandidates
+      tags: [still]
+      summary: Extract recurring thread candidates from journal entries
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExtractInput"
+      responses:
+        "200":
+          description: Extracted candidates
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExtractResult"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /still/score:
+    post:
+      operationId: scoreCandidates
+      tags: [still]
+      summary: Score candidates and select the best thread
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScoreInput"
+      responses:
+        "200":
+          description: Scored result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScoreResult"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +95,116 @@ components:
           type: string
       required:
         - status
-
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+    EvidenceItem:
+      type: object
+      properties:
+        date:
+          type: string
+        fragment:
+          type: string
+      required:
+        - date
+        - fragment
+    ThreadCandidate:
+      type: object
+      properties:
+        function:
+          type: string
+        type:
+          type: string
+        evidence:
+          type: array
+          items:
+            $ref: "#/components/schemas/EvidenceItem"
+        surface_variation:
+          type: string
+      required:
+        - function
+        - type
+        - evidence
+        - surface_variation
+    ExtractInput:
+      type: object
+      properties:
+        entries:
+          type: string
+      required:
+        - entries
+    ExtractResult:
+      type: object
+      properties:
+        candidates:
+          type: array
+          items:
+            $ref: "#/components/schemas/ThreadCandidate"
+      required:
+        - candidates
+    CandidateScore:
+      type: object
+      properties:
+        function:
+          type: string
+        persistence:
+          type: number
+        persistence_of_function:
+          type: number
+        recognition:
+          type: number
+        endurance_not_wound:
+          type: number
+        safety:
+          type: number
+        surfaceable:
+          type: boolean
+        why:
+          type: string
+      required:
+        - function
+        - persistence
+        - persistence_of_function
+        - recognition
+        - endurance_not_wound
+        - safety
+        - surfaceable
+        - why
+    ScoreInput:
+      type: object
+      properties:
+        candidates:
+          type: array
+          items:
+            $ref: "#/components/schemas/ThreadCandidate"
+      required:
+        - candidates
+    ScoreResult:
+      type: object
+      properties:
+        scores:
+          type: array
+          items:
+            $ref: "#/components/schemas/CandidateScore"
+        register:
+          type: string
+          enum: [thread, nothing]
+        thread:
+          type: ["string", "null"]
+        evidence:
+          type: array
+          items:
+            $ref: "#/components/schemas/EvidenceItem"
+        why:
+          type: string
+        message:
+          type: ["string", "null"]
+      required:
+        - scores
+        - register
+        - evidence
+        - why
