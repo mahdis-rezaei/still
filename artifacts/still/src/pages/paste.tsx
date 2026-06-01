@@ -59,7 +59,7 @@ export default function Paste() {
             disabled={!entries.trim()}
             className="w-full sm:w-auto bg-ink hover:bg-deep-brown disabled:bg-faint-ink text-surface px-8 py-3 rounded-sm font-body text-lg transition-colors"
           >
-            Find what endured
+            Find what's worth returning to
           </button>
           
           <button
