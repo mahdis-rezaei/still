@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -37,10 +37,39 @@ export default function Entries() {
   const [batch, setBatch] = useState("");
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
+  const [query, setQuery] = useState("");
+  const yearRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const list = entries ?? [];
   const batchParsed = parseEntriesVerbatim(batch);
   const batchCount = batchParsed.length;
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter(
+      (e) =>
+        e.text.toLowerCase().includes(q) || e.date.toLowerCase().includes(q),
+    );
+  }, [list, query]);
+
+  const yearGroups = useMemo(() => {
+    const map = new Map<string, Entry[]>();
+    for (const e of filtered) {
+      const year = e.date.slice(0, 4) || "—";
+      const arr = map.get(year);
+      if (arr) arr.push(e);
+      else map.set(year, [e]);
+    }
+    return [...map.entries()];
+  }, [filtered]);
+
+  function jumpToYear(year: string) {
+    yearRefs.current[year]?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
 
   function toggle(id: number) {
     setExpanded((prev) => {
@@ -197,13 +226,63 @@ export default function Entries() {
 
       {/* The archive */}
       <div className="flex flex-col">
-        <span className="text-[10px] font-sans tracking-widest uppercase text-faint-ink mb-4">
-          {isLoading ? "Opening the archive…" : list.length === 0 ? "The archive is empty" : "Pages kept"}
-        </span>
+        <div className="flex items-baseline justify-between mb-4">
+          <span className="text-[10px] font-sans tracking-widest uppercase text-faint-ink">
+            {isLoading ? "Opening the archive…" : list.length === 0 ? "The archive is empty" : "Pages kept"}
+          </span>
+          {list.length > 0 && (
+            <span className="text-[10px] font-sans text-faint-ink tracking-wide">
+              {query.trim()
+                ? `${filtered.length} of ${list.length}`
+                : `${list.length} ${list.length === 1 ? "page" : "pages"}`}
+            </span>
+          )}
+        </div>
 
         {list.length > 0 && (
-          <div className="flex flex-col">
-            {list.map((entry, i) => {
+          <>
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search by word or date — try 2018, 2018-03, or a phrase…"
+              className="w-full bg-surface border border-border rounded-sm px-4 py-2.5 text-sm text-ink font-sans placeholder:text-faint-ink focus:outline-none focus:ring-1 focus:ring-accent-sepia mb-4"
+            />
+
+            {yearGroups.length > 1 && (
+              <div className="flex flex-wrap gap-2 mb-6">
+                {yearGroups.map(([year]) => (
+                  <button
+                    key={year}
+                    onClick={() => jumpToYear(year)}
+                    className="font-sans text-xs px-3 py-1 rounded-full border border-border text-soft-ink hover:text-ink hover:border-accent-sepia transition-colors"
+                  >
+                    {year}
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {list.length > 0 && filtered.length === 0 && (
+          <p className="font-body text-base text-faint-ink py-4">
+            No pages match “{query.trim()}”.
+          </p>
+        )}
+
+        {yearGroups.map(([year, items]) => (
+          <div
+            key={year}
+            ref={(el) => {
+              yearRefs.current[year] = el;
+            }}
+            className="flex flex-col scroll-mt-6"
+          >
+            <h2 className="font-display text-2xl text-deep-brown mt-6 mb-1 pt-2 border-t border-border first:border-0 first:pt-0">
+              {year}
+            </h2>
+            {items.map((entry, i) => {
               const isOpen = expanded.has(entry.id);
               const firstLine = entry.text.trim().split("\n")[0];
               return (
@@ -246,7 +325,7 @@ export default function Entries() {
               );
             })}
           </div>
-        )}
+        ))}
       </div>
     </div>
   );
