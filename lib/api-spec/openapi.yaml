@@ -30,7 +30,7 @@ paths:
     post:
       operationId: extractCandidates
       tags: [still]
-      summary: Extract recurring thread candidates from journal entries
+      summary: Extract remembrance candidates from journal entries
       requestBody:
         required: true
         content:
@@ -60,7 +60,7 @@ paths:
     post:
       operationId: scoreCandidates
       tags: [still]
-      summary: Score candidates and select the best thread
+      summary: Score candidates and select the one thing worth returning to
       requestBody:
         required: true
         content:
@@ -102,34 +102,42 @@ components:
           type: string
       required:
         - error
-    EvidenceItem:
+    Quote:
       type: object
       properties:
         date:
           type: string
         fragment:
           type: string
+        source_type:
+          type: string
+          enum: [journal, saved_quote, copied_text, unknown]
       required:
         - date
         - fragment
-    ThreadCandidate:
+        - source_type
+    Candidate:
       type: object
       properties:
+        register:
+          type: string
+          enum: [thread, memory, distance, value_signal, becoming, survival]
         function:
           type: string
-        type:
+        description:
           type: string
         evidence:
           type: array
           items:
-            $ref: "#/components/schemas/EvidenceItem"
-        surface_variation:
+            $ref: "#/components/schemas/Quote"
+        why_it_matters:
           type: string
       required:
+        - register
         - function
-        - type
+        - description
         - evidence
-        - surface_variation
+        - why_it_matters
     ExtractInput:
       type: object
       properties:
@@ -143,7 +151,7 @@ components:
         candidates:
           type: array
           items:
-            $ref: "#/components/schemas/ThreadCandidate"
+            $ref: "#/components/schemas/Candidate"
       required:
         - candidates
     CandidateScore:
@@ -151,15 +159,21 @@ components:
       properties:
         function:
           type: string
-        persistence:
-          type: number
-        persistence_of_function:
+        register:
+          type: string
+        evidence_strength:
           type: number
         recognition:
           type: number
-        endurance_not_wound:
+        emotional_truth:
           type: number
         safety:
+          type: number
+        worth_returning_to:
+          type: number
+        non_horoscope_specificity:
+          type: number
+        perspective_not_wound:
           type: number
         surfaceable:
           type: boolean
@@ -167,11 +181,14 @@ components:
           type: string
       required:
         - function
-        - persistence
-        - persistence_of_function
+        - register
+        - evidence_strength
         - recognition
-        - endurance_not_wound
+        - emotional_truth
         - safety
+        - worth_returning_to
+        - non_horoscope_specificity
+        - perspective_not_wound
         - surfaceable
         - why
     ScoreInput:
@@ -180,7 +197,7 @@ components:
         candidates:
           type: array
           items:
-            $ref: "#/components/schemas/ThreadCandidate"
+            $ref: "#/components/schemas/Candidate"
       required:
         - candidates
     ScoreResult:
@@ -192,13 +209,15 @@ components:
             $ref: "#/components/schemas/CandidateScore"
         register:
           type: string
-          enum: [thread, nothing]
-        thread:
+          enum: [thread, memory, distance, value_signal, becoming, survival, nothing]
+        label:
           type: ["string", "null"]
-        evidence:
+        observation:
+          type: ["string", "null"]
+        quotes:
           type: array
           items:
-            $ref: "#/components/schemas/EvidenceItem"
+            $ref: "#/components/schemas/Quote"
         why:
           type: string
         message:
@@ -206,5 +225,5 @@ components:
       required:
         - scores
         - register
-        - evidence
+        - quotes
         - why

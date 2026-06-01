@@ -9,74 +9,143 @@ const client = new Anthropic({
 });
 
 const MODEL = "claude-sonnet-4-6";
-const MAX_TOKENS_PASS1 = 2000;
-const MAX_TOKENS_PASS2 = 4000;
+const MAX_TOKENS_PASS1 = 3000;
+const MAX_TOKENS_PASS2 = 5000;
 
-const PASS1_SYSTEM = `You are analyzing personal journal entries to find RECURRING patterns across time. You are NOT summarizing, advising, or interpreting the person's life — you only describe what is in the writing.
+const PASS1_SYSTEM = `You are reading personal journal entries to find things worth returning to today. You are NOT summarizing, advising, or interpreting the person's life — you only describe what is in the writing.
 
-You receive dated entries. Extract candidate recurring threads: underlying patterns appearing in MULTIPLE entries from DIFFERENT dates. A thread is defined by its FUNCTION, not its surface words — the same function appearing in different language across time is exactly the signal (e.g. "tells herself to breathe" in July 2015 and "tells herself to hold the pen" in November 2015 share the function: self-reassurance under uncertainty — this counts even if both are in the same year, because the expression changed while the function held).
+You extract candidates across six remembrance registers:
 
-For each candidate output: function (the underlying recurring move, plain words); type (one of: self-narrative, emotional-response, coping-behavior, value, fear, contradiction); evidence (array of 2+ {date, fragment}, fragment = SHORT near-verbatim quote from that entry, different dates required — different months in the same year qualify as different dates); surface_variation (one sentence on how the expression changed while the function stayed the same).
+1. THREAD — A recurring pattern, value, fear, strength, self-talk pattern, or response across multiple entries from different dates. The same underlying move appearing in different language across time. Ask: "What kept returning?"
+
+2. MEMORY — A single entry or small cluster worth resurfacing because it captures a past self, a moment, a feeling, or a realization that deserves to be seen again. Ask: "What was I thinking? What did I forget?"
+
+3. DISTANCE — A contrast between earlier and later writing showing growth, movement, release, or transformation. Requires at least two entries with a clear before/after. Ask: "How far have I come? What changed?"
+
+4. VALUE_SIGNAL — A quote, book passage, poem, copied note, or saved excerpt that appears because the user chose to save it. The saving is the signal; it reveals what mattered then. Do NOT treat saved content as the user's own words. Ask: "What mattered to me then?"
+
+5. BECOMING — An entry that shows an early version of something the user later became or continued becoming — a capacity, a pattern, an orientation present before it was named. Ask: "Who was I becoming?"
+
+6. SURVIVAL — Something that persisted through difficult circumstances. A value, voice, or strength that held across loss, change, or hard seasons. Ask: "What survived?"
+
+For each candidate output:
+- register: one of thread | memory | distance | value_signal | becoming | survival
+- function: the underlying pattern or significance, in plain words
+- description: one sentence on what makes this candidate meaningful
+- evidence: array of {date, fragment, source_type} — SHORT near-verbatim quotes from the entries, with source_type = "journal" | "saved_quote" | "copied_text" | "unknown"
+- why_it_matters: one sentence on why this is worth returning to
 
 RULES:
-- Only output a thread appearing in entries from at least 2 DIFFERENT dates. Different months in the same year count.
+- THREAD and DISTANCE require evidence from at least 2 different dates. Different months in the same year qualify.
+- MEMORY, VALUE_SIGNAL, BECOMING, SURVIVAL can draw from a single strong entry.
 - Include ALL matching evidence across dates — do not stop at 2 if more exist.
 - Require genuine textual evidence; never infer patterns not on the page.
-- NEVER extract any thread about body weight, eating, dieting, physical appearance, or self-image. Skip entirely, even if it recurs.
-- Crisis detection is a holistic judgment, NOT keyword matching. If an entry contains active, present-tense crisis or self-harm, EXCLUDE that entire entry from extraction; its content must never reach Pass 2.
-- Extract 3-8 candidates; cast a wide net — selection happens later.
+- NEVER extract anything about body weight, eating, dieting, physical appearance, or self-image. Skip entirely even if it recurs.
+- If an entry contains active, present-tense crisis or self-harm, EXCLUDE that entire entry. Its content must never reach Pass 2.
+- Extract 3-10 candidates across different registers when possible; cast a wide net.
 - Output ONLY valid JSON: {"candidates":[...]}. No preamble, no markdown fences.`;
 
-const PASS2_SYSTEM = `You select which ONE recurring thread (if any) is worth showing the person. You receive candidate threads with evidence and a pre-computed PERSISTENCE_TIER for each candidate. Score and use the persistence tier as given — do NOT override it.
+const PASS2_SYSTEM = `You receive candidates from journal entries, each tagged with a register and pre-computed evidence metadata. You select the single best thing worth returning to today, or stay silent.
 
-PERSISTENCE_TIER values (pre-computed, authoritative):
-  5 = cross-year: evidence spans 2+ different calendar years
-  4 = seasonal: evidence within one year but across 2+ distinct months (e.g. July + November)
-  3 = short: evidence within one month, or only 2 entries close together
-  1 = single date only
+REGISTER PRIORITY (use only as tiebreaker between equally strong candidates; do not force order if another is clearly more meaningful):
+1. Strong thread
+2. Strong distance
+3. Strong becoming
+4. Strong survival
+5. Strong memory
+6. Strong value_signal
+7. Nothing
 
-Score each candidate on the remaining four dimensions (1-5):
-PERSISTENCE_OF_FUNCTION — 5=same move in clearly different language/situations; 3=same function, similar wording; 1=weak/stretched link.
-RECOGNITION — 5=user would instantly say "yes, that's true"; 3=plausible but debatable; 1=feels imposed.
-ENDURANCE_NOT_WOUND — 5=meaning that survived the moment, steadying to hear; 3=mixed; 1=replays pain without perspective.
-SAFETY — 5=safe; 1=touches body/appearance/eating, active distress, or would wound (disqualifying).
+SCORING — score each candidate 1-5 on all dimensions:
 
-A candidate is surfaceable ONLY if ALL: safety=5, persistence_tier>=4, persistence_of_function>=4, recognition>=4, endurance_not_wound>=4.
-If none qualify, register="nothing". This is correct and expected for many inputs — do NOT lower the bar to find a winner.
-If one+ qualify, pick the highest total score and write the thread.
+EVIDENCE_STRENGTH — how well-grounded in actual text:
+  Thread/Distance/Survival: use the pre-computed evidence_metadata.year_count and month_count. year_count>=2: 5. Same year multiple months: 4. Same month: 3.
+  Memory/Value_signal/Becoming: a single strong, specific entry can score 4-5.
 
-VOICE of the final thread:
-- Speak about the WRITING, never the life: "in your entries", "across the pages you shared", "in the writing I have" — NEVER "you spent years..." or "you are...".
-- Observation, never verdict or diagnosis. No advice. No therapy language.
-- Name the evolution across months/years/words.
-- 2-4 sentences. Warm, plain, a friend who read it all. No confidence numbers.
+RECOGNITION — would the person immediately say "yes, that's me, that's true"? 5=unmistakable, 3=plausible but debatable, 1=feels imposed.
+
+EMOTIONAL_TRUTH — does it land as real, not generic? 5=specific, irreplaceable, 1=could apply to anyone.
+
+SAFETY — 5=safe and steadying; 1=touches body/appearance/eating, active distress, raw wound without perspective (disqualifying).
+
+WORTH_RETURNING_TO — is this genuinely worth opening today? 5=yes immediately, 3=maybe, 1=no.
+
+NON_HOROSCOPE_SPECIFICITY — is it specific to THIS writing, not generic wisdom? 5=unmistakably from these pages, 1=could say it about anyone.
+
+PERSPECTIVE_NOT_WOUND — 5=shows something that survived, a steadying truth, growth, or meaning; 1=replays pain without perspective.
+
+SURFACEABLE if ALL: safety=5, evidence_strength>=4, recognition>=4, worth_returning_to>=4, perspective_not_wound>=4.
+
+If none qualify, return nothing. This is correct and expected — do NOT lower the bar to find a winner.
+
+VOICE of the final observation:
+- Speak about the WRITING, never the life. Use: "In the entries you shared…", "Across these pages…", "In this entry…", "In the passages you saved…"
+- NEVER: "You are…", "You spent years…", "Your life…", "You have anxiety…"
+- Observation, never verdict, diagnosis, or advice.
+- 2–4 sentences. Warm, plain — a friend who read it all carefully.
+- Name the specific words, the dates, the evolution. Not generic.
+
+QUOTE SELECTION:
+- Pick the strongest 2–6 quotes that actually earn the observation.
+- For value_signal: mark source_type correctly — "saved_quote" or "copied_text" if it was saved content.
+- Quotes are the emotional payoff. The observation is the frame.
+
+LABEL MAP:
+- thread → "WHAT KEPT RETURNING"
+- memory → "A PAGE FROM THEN"
+- distance → "LOOK HOW FAR"
+- value_signal → "WHAT MATTERED THEN"
+- becoming → "WHO YOU WERE BECOMING"
+- survival → "WHAT SURVIVED"
 
 Output ONLY valid JSON (no markdown fences):
-{"scores":[{function, persistence_tier, persistence_of_function, recognition, endurance_not_wound, safety, surfaceable, why}], "register":"thread"|"nothing", "thread":string|null, "evidence":[{date,fragment}], "why":string}`;
+{
+  "scores": [{
+    "function": string,
+    "register": string,
+    "evidence_strength": number,
+    "recognition": number,
+    "emotional_truth": number,
+    "safety": number,
+    "worth_returning_to": number,
+    "non_horoscope_specificity": number,
+    "perspective_not_wound": number,
+    "surfaceable": boolean,
+    "why": string
+  }],
+  "register": "thread"|"memory"|"distance"|"value_signal"|"becoming"|"survival"|"nothing",
+  "label": string|null,
+  "observation": string|null,
+  "quotes": [{"date": string, "fragment": string, "source_type": "journal"|"saved_quote"|"copied_text"|"unknown"}],
+  "why": string,
+  "message": string|null
+}`;
 
-// --- Persistence tier computation ---
+// --- Evidence metadata computation ---
 
-type EvidenceItem = { date: string; fragment: string };
+type EvidenceItem = { date: string; fragment: string; source_type?: string };
 
 function parseDateParts(dateStr: string): { year: number; month: number } | null {
-  // Support YYYY-MM-DD and YYYY-MM formats
   const m = dateStr.match(/^(\d{4})-(\d{2})/);
   if (!m) return null;
   return { year: parseInt(m[1], 10), month: parseInt(m[2], 10) };
 }
 
-function computePersistenceTier(evidence: EvidenceItem[]): number {
+function computeEvidenceMetadata(evidence: EvidenceItem[]) {
   const parts = evidence.map((e) => parseDateParts(e.date)).filter(Boolean) as { year: number; month: number }[];
-  if (parts.length === 0) return 1;
-
   const years = new Set(parts.map((p) => p.year));
-  if (years.size >= 2) return 5; // cross-year
-
-  // Same year — check distinct months
-  const months = new Set(parts.map((p) => p.month));
-  if (months.size >= 2) return 4; // seasonal
-
-  return 3; // same month
+  const months = new Set(parts.map((p) => `${p.year}-${p.month}`));
+  return {
+    year_count: years.size,
+    month_count: months.size,
+    entry_count: evidence.length,
+    span_label:
+      years.size >= 2
+        ? `spans ${years.size} different calendar years`
+        : months.size >= 2
+          ? `within one year across ${months.size} distinct months`
+          : "within a single month",
+  };
 }
 
 // --- JSON extraction ---
@@ -95,11 +164,18 @@ const ExtractInputSchema = z.object({
   entries: z.string().min(1),
 });
 
+const QuoteSchema = z.object({
+  date: z.string(),
+  fragment: z.string(),
+  source_type: z.enum(["journal", "saved_quote", "copied_text", "unknown"]).default("journal"),
+});
+
 const CandidateSchema = z.object({
+  register: z.enum(["thread", "memory", "distance", "value_signal", "becoming", "survival"]),
   function: z.string(),
-  type: z.string(),
-  evidence: z.array(z.object({ date: z.string(), fragment: z.string() })),
-  surface_variation: z.string(),
+  description: z.string(),
+  evidence: z.array(QuoteSchema),
+  why_it_matters: z.string(),
 });
 
 const ScoreInputSchema = z.object({
@@ -152,16 +228,10 @@ router.post("/still/score", async (req, res) => {
     return;
   }
 
-  // Annotate each candidate with its computed persistence tier
+  // Annotate each candidate with pre-computed evidence metadata
   const annotated = parsed.data.candidates.map((c) => ({
     ...c,
-    persistence_tier: computePersistenceTier(c.evidence),
-    persistence_tier_label:
-      computePersistenceTier(c.evidence) === 5
-        ? "cross-year (spans multiple calendar years)"
-        : computePersistenceTier(c.evidence) === 4
-          ? "seasonal (multiple distinct months within one year)"
-          : "short (same month or very close together)",
+    evidence_metadata: computeEvidenceMetadata(c.evidence),
   }));
 
   try {

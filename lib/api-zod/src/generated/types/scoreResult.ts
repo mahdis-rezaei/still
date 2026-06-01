@@ -6,15 +6,17 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { CandidateScore } from './candidateScore';
-import type { EvidenceItem } from './evidenceItem';
+import type { Quote } from './quote';
 import type { ScoreResultRegister } from './scoreResultRegister';
 
 export interface ScoreResult {
   scores: CandidateScore[];
   register: ScoreResultRegister;
   /** @nullable */
-  thread?: string | null;
-  evidence: EvidenceItem[];
+  label?: string | null;
+  /** @nullable */
+  observation?: string | null;
+  quotes: Quote[];
   why: string;
   /** @nullable */
   message?: string | null;

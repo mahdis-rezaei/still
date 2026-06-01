@@ -127,7 +127,7 @@ export const getExtractCandidatesUrl = () => {
 }
 
 /**
- * @summary Extract recurring thread candidates from journal entries
+ * @summary Extract remembrance candidates from journal entries
  */
 export const extractCandidates = async (extractInput: ExtractInput, options?: RequestInit): Promise<ExtractResult> => {
 
@@ -176,7 +176,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ExtractCandidatesMutationError = ErrorType<ErrorResponse>
 
     /**
- * @summary Extract recurring thread candidates from journal entries
+ * @summary Extract remembrance candidates from journal entries
  */
 export const useExtractCandidates = <TError = ErrorType<ErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof extractCandidates>>, TError,{data: BodyType<ExtractInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -198,7 +198,7 @@ export const getScoreCandidatesUrl = () => {
 }
 
 /**
- * @summary Score candidates and select the best thread
+ * @summary Score candidates and select the one thing worth returning to
  */
 export const scoreCandidates = async (scoreInput: ScoreInput, options?: RequestInit): Promise<ScoreResult> => {
 
@@ -247,7 +247,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ScoreCandidatesMutationError = ErrorType<ErrorResponse>
 
     /**
- * @summary Score candidates and select the best thread
+ * @summary Score candidates and select the one thing worth returning to
  */
 export const useScoreCandidates = <TError = ErrorType<ErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof scoreCandidates>>, TError,{data: BodyType<ScoreInput>}, TContext>, request?: SecondParameter<typeof customFetch>}

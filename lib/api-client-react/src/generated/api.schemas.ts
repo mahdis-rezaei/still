@@ -13,16 +13,40 @@ export interface ErrorResponse {
   error: string;
 }
 
-export interface EvidenceItem {
+export type QuoteSourceType = typeof QuoteSourceType[keyof typeof QuoteSourceType];
+
+
+export const QuoteSourceType = {
+  journal: 'journal',
+  saved_quote: 'saved_quote',
+  copied_text: 'copied_text',
+  unknown: 'unknown',
+} as const;
+
+export interface Quote {
   date: string;
   fragment: string;
+  source_type: QuoteSourceType;
 }
 
-export interface ThreadCandidate {
+export type CandidateRegister = typeof CandidateRegister[keyof typeof CandidateRegister];
+
+
+export const CandidateRegister = {
+  thread: 'thread',
+  memory: 'memory',
+  distance: 'distance',
+  value_signal: 'value_signal',
+  becoming: 'becoming',
+  survival: 'survival',
+} as const;
+
+export interface Candidate {
+  register: CandidateRegister;
   function: string;
-  type: string;
-  evidence: EvidenceItem[];
-  surface_variation: string;
+  description: string;
+  evidence: Quote[];
+  why_it_matters: string;
 }
 
 export interface ExtractInput {
@@ -30,22 +54,25 @@ export interface ExtractInput {
 }
 
 export interface ExtractResult {
-  candidates: ThreadCandidate[];
+  candidates: Candidate[];
 }
 
 export interface CandidateScore {
   function: string;
-  persistence: number;
-  persistence_of_function: number;
+  register: string;
+  evidence_strength: number;
   recognition: number;
-  endurance_not_wound: number;
+  emotional_truth: number;
   safety: number;
+  worth_returning_to: number;
+  non_horoscope_specificity: number;
+  perspective_not_wound: number;
   surfaceable: boolean;
   why: string;
 }
 
 export interface ScoreInput {
-  candidates: ThreadCandidate[];
+  candidates: Candidate[];
 }
 
 export type ScoreResultRegister = typeof ScoreResultRegister[keyof typeof ScoreResultRegister];
@@ -53,6 +80,11 @@ export type ScoreResultRegister = typeof ScoreResultRegister[keyof typeof ScoreR
 
 export const ScoreResultRegister = {
   thread: 'thread',
+  memory: 'memory',
+  distance: 'distance',
+  value_signal: 'value_signal',
+  becoming: 'becoming',
+  survival: 'survival',
   nothing: 'nothing',
 } as const;
 
@@ -60,8 +92,10 @@ export interface ScoreResult {
   scores: CandidateScore[];
   register: ScoreResultRegister;
   /** @nullable */
-  thread?: string | null;
-  evidence: EvidenceItem[];
+  label?: string | null;
+  /** @nullable */
+  observation?: string | null;
+  quotes: Quote[];
   why: string;
   /** @nullable */
   message?: string | null;

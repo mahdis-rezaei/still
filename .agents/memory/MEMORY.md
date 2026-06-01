@@ -1,0 +1,2 @@
+- [Still engine design](still-engine.md) — six remembrance registers, server-side evidence metadata injection for reliable temporal scoring
+- [Still zod/v4 import](still-zod.md) — use `import { z } from "zod"`, NOT `zod/v4` subpath; esbuild won't resolve it

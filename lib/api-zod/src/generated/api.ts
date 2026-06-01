@@ -18,7 +18,7 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
- * @summary Extract recurring thread candidates from journal entries
+ * @summary Extract remembrance candidates from journal entries
  */
 export const ExtractCandidatesBody = zod.object({
   "entries": zod.string()
@@ -26,48 +26,57 @@ export const ExtractCandidatesBody = zod.object({
 
 export const ExtractCandidatesResponse = zod.object({
   "candidates": zod.array(zod.object({
+  "register": zod.enum(['thread', 'memory', 'distance', 'value_signal', 'becoming', 'survival']),
   "function": zod.string(),
-  "type": zod.string(),
+  "description": zod.string(),
   "evidence": zod.array(zod.object({
   "date": zod.string(),
-  "fragment": zod.string()
+  "fragment": zod.string(),
+  "source_type": zod.enum(['journal', 'saved_quote', 'copied_text', 'unknown'])
 })),
-  "surface_variation": zod.string()
+  "why_it_matters": zod.string()
 }))
 })
 
 
 /**
- * @summary Score candidates and select the best thread
+ * @summary Score candidates and select the one thing worth returning to
  */
 export const ScoreCandidatesBody = zod.object({
   "candidates": zod.array(zod.object({
+  "register": zod.enum(['thread', 'memory', 'distance', 'value_signal', 'becoming', 'survival']),
   "function": zod.string(),
-  "type": zod.string(),
+  "description": zod.string(),
   "evidence": zod.array(zod.object({
   "date": zod.string(),
-  "fragment": zod.string()
+  "fragment": zod.string(),
+  "source_type": zod.enum(['journal', 'saved_quote', 'copied_text', 'unknown'])
 })),
-  "surface_variation": zod.string()
+  "why_it_matters": zod.string()
 }))
 })
 
 export const ScoreCandidatesResponse = zod.object({
   "scores": zod.array(zod.object({
   "function": zod.string(),
-  "persistence": zod.number(),
-  "persistence_of_function": zod.number(),
+  "register": zod.string(),
+  "evidence_strength": zod.number(),
   "recognition": zod.number(),
-  "endurance_not_wound": zod.number(),
+  "emotional_truth": zod.number(),
   "safety": zod.number(),
+  "worth_returning_to": zod.number(),
+  "non_horoscope_specificity": zod.number(),
+  "perspective_not_wound": zod.number(),
   "surfaceable": zod.boolean(),
   "why": zod.string()
 })),
-  "register": zod.enum(['thread', 'nothing']),
-  "thread": zod.string().nullish(),
-  "evidence": zod.array(zod.object({
+  "register": zod.enum(['thread', 'memory', 'distance', 'value_signal', 'becoming', 'survival', 'nothing']),
+  "label": zod.string().nullish(),
+  "observation": zod.string().nullish(),
+  "quotes": zod.array(zod.object({
   "date": zod.string(),
-  "fragment": zod.string()
+  "fragment": zod.string(),
+  "source_type": zod.enum(['journal', 'saved_quote', 'copied_text', 'unknown'])
 })),
   "why": zod.string(),
   "message": zod.string().nullish()

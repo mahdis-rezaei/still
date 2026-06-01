@@ -5,8 +5,10 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { QuoteSourceType } from './quoteSourceType';
 
-export interface EvidenceItem {
+export interface Quote {
   date: string;
   fragment: string;
+  source_type: QuoteSourceType;
 }

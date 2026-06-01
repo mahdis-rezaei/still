@@ -1,0 +1,309 @@
+Update Still’s engine and UI philosophy.
+
+The product should not be limited to “what endured.” That is one important lens, but people revisit old journals for more than durability.
+
+The broader product goal is:
+
+Still helps people maintain a relationship with their past selves.
+
+People revisit old journals to understand:
+
+1. What was I thinking?
+2. How was I feeling?
+3. How far have I come?
+4. What did I forget?
+5. What mattered to me then?
+6. What was I learning?
+7. What kept returning?
+8. What changed?
+9. Who was I becoming?
+10. What survived?
+
+Important:
+These are internal retrieval lenses, NOT separate dashboard tabs.
+
+The app should still return exactly ONE thing worth returning to today.
+
+## Update the engine
+
+Pass 1 should extract candidates across these remembrance lenses:
+
+1. `thread`
+   A recurring pattern, value, fear, strength, self-talk pattern, or response across multiple entries.
+   Question answered:
+   “What kept returning?”
+
+2. `memory`
+   A single entry or small cluster worth resurfacing because it captures a past self, moment, feeling, or realization.
+   Questions answered:
+   “What was I thinking?”
+   “How was I feeling?”
+   “What did I forget?”
+
+3. `distance`
+   A contrast between earlier and later writing showing growth, movement, release, or transformation.
+   Questions answered:
+   “How far have I come?”
+   “What changed?”
+
+4. `value_signal`
+   A quote, book passage, poem, copied note, or saved excerpt that appears meaningful because the user chose to save it.
+   Question answered:
+   “What mattered to me then?”
+
+Important:
+Do not treat copied content as the user’s own words. But do treat saved content as a signal of what mattered to the user at that time.
+
+Example:
+If the user saved a passage about courage, do not say:
+“You wrote about courage.”
+
+Instead say:
+“In the pages you saved then, courage seemed to be something you were reaching toward.”
+
+5. `becoming`
+   An entry that shows an early version of something the user later became or continued becoming.
+   Question answered:
+   “Who was I becoming?”
+
+Example:
+Years before leading teams or coaching people, the user repeatedly wrote about helping others understand themselves.
+
+6. `survival`
+   A thread showing something that persisted through difficult circumstances.
+   Question answered:
+   “What survived?”
+
+Example:
+“The relationship changed, the city changed, the job changed, but hope kept returning in the writing.”
+
+## Selection priority
+
+The system should choose the single strongest result.
+
+Priority:
+
+1. Strong thread
+2. Strong distance
+3. Strong becoming
+4. Strong survival
+5. Strong memory
+6. Strong value_signal
+7. Nothing
+
+But do not force this order if another candidate is clearly more meaningful.
+
+## Output contract
+
+Update the output to:
+
+{
+"register": "thread" | "memory" | "distance" | "value_signal" | "becoming" | "survival" | "nothing",
+"label": string | null,
+"observation": string | null,
+"quotes": [
+{
+"date": string,
+"fragment": string,
+"source_type": "journal" | "saved_quote" | "copied_text" | "unknown"
+}
+],
+"why": string,
+"message": string | null
+}
+
+## UI labels
+
+Map registers to labels:
+
+* thread → WHAT KEPT RETURNING
+* memory → A PAGE FROM THEN
+* distance → LOOK HOW FAR
+* value_signal → WHAT MATTERED THEN
+* becoming → WHO YOU WERE BECOMING
+* survival → WHAT SURVIVED
+* nothing → NOTHING THIS TIME
+
+## Result structure
+
+Every result should have this hierarchy:
+
+1. Label
+2. Observation
+3. Section: IN YOUR OWN WORDS / IN THE WORDS YOU SAVED
+4. Dated quotes
+5. Optional: Why this surfaced
+
+The quote should be central.
+
+The AI observation should not replace the diary.
+
+The AI’s job is to find the page worth opening.
+
+The journal or saved passage is the emotional payoff.
+
+## Voice rules
+
+Always speak from evidence.
+
+Use:
+
+* “In the entries you shared…”
+* “Across these pages…”
+* “In this entry…”
+* “In the writing I have…”
+* “In the passages you saved…”
+
+Avoid:
+
+* “You are…”
+* “You spent years…”
+* “Your life was…”
+* “You have anxiety…”
+* diagnosis
+* advice
+* therapy language
+
+## Safety rules
+
+Keep all existing safety rules.
+
+Never surface:
+
+* body weight
+* eating
+* dieting
+* physical appearance
+* active crisis
+* diagnosis
+* raw painful content without perspective
+
+A memory result must never be just a wound.
+
+Bad:
+“On Aug 24, 2015, you felt fat, lazy, and lost.”
+
+Good:
+“On Aug 24, 2015, this page shows a younger version of you overwhelmed and uncertain — but also already trying to steady herself: ‘Relax Mahdis, take a deep breath.’”
+
+## Update Pass 1
+
+Pass 1 should extract 3–10 candidates across all registers.
+
+Each candidate should include:
+
+{
+"register": "thread" | "memory" | "distance" | "value_signal" | "becoming" | "survival",
+"function": string,
+"description": string,
+"evidence": [
+{
+"date": string,
+"fragment": string,
+"source_type": "journal" | "saved_quote" | "copied_text" | "unknown"
+}
+],
+"why_it_matters": string
+}
+
+## Update Pass 2
+
+Pass 2 should score each candidate on:
+
+* evidence_strength
+* recognition
+* emotional_truth
+* safety
+* worth_returning_to
+* non_horoscope_specificity
+* perspective_not_wound
+
+All scores 1–5.
+
+A candidate is surfaceable only if:
+
+* safety = 5
+* evidence_strength >= 4
+* recognition >= 4
+* worth_returning_to >= 4
+* perspective_not_wound >= 4
+
+If nothing qualifies, return `nothing`.
+
+## Important calibration
+
+The app should not only look for repeated patterns.
+
+Sometimes the best result is:
+
+* a forgotten page
+* a saved quote that reveals what mattered then
+* a contrast showing how far the user has come
+* an early glimpse of who the user was becoming
+* a strength that survived a hard season
+
+But it should still return only ONE thing.
+
+Still should answer:
+
+“What is one thing from these pages worth returning to today?”
+
+## Test case
+
+Use this input:
+
+[2015-07-01]
+I am jobless and loveless but again not hopeless. I still have hope for human beings. You are on the right track Mahdis. Keep having hope on this world and on all the beings.
+
+[2015-08-24]
+I feel lost. I don't have a job and dad should support me. Relax Mahdis relax. Take a deep breath. One - two - three. Everything is under control.
+
+[2015-09-24]
+Can I complain please? I am human too. I have feelings too. What is the source of all this pain?
+
+[2015-11-07]
+Dear Brain, relax. Take a deep breath and relax. Everything is under control. Relax. Why are you scared?
+
+[2015-11-19]
+Fear is part of me. Fear just wants my attention. Why not face it? Why not welcome it and see what it wants to talk about?
+
+[2018-03-29]
+When writing the story of YOUR life, make sure YOU hold the pen. Be brave when writing YOUR script.
+
+[2021-08-12]
+You got this Warrior. You got this. I have come such a long way. My imposter syndrome is high but Mahdis, look how far you've come.
+
+[2026-05-25]
+I feel stressed. I feel like I'm moving so slow now, hiding behind the bushes. I am scared. You can do it Mahdis.
+
+Expected:
+The app should not return nothing.
+
+Strong acceptable result:
+register = thread
+label = WHAT KEPT RETURNING
+observation = Across the entries you shared, when uncertainty appeared, you repeatedly tried to steady yourself from within. In 2015 you told yourself to breathe and reminded yourself that everything was under control. Years later, the language changed — “hold the pen,” “you got this,” “you can do it” — but the voice kept returning.
+
+Quotes:
+
+* 2015-07-01: “You are on the right track Mahdis.”
+* 2015-08-24: “Relax Mahdis relax. Take a deep breath.”
+* 2015-11-07: “Everything is under control. Relax.”
+* 2018-03-29: “Make sure YOU hold the pen.”
+* 2021-08-12: “You got this Warrior.”
+* 2026-05-25: “You can do it Mahdis.”
+
+Also acceptable:
+register = distance
+label = LOOK HOW FAR
+if it frames the movement from uncertainty/dependency in 2015 to later self-trust and self-direction.
+
+Unacceptable:
+
+* returning nothing
+* diagnosing anxiety
+* surfacing body/appearance content
+* summarizing only events
+* giving advice
+* hiding the quotes
+* treating copied/saved passages as if the user wrote them

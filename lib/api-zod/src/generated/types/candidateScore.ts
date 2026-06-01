@@ -8,11 +8,14 @@
 
 export interface CandidateScore {
   function: string;
-  persistence: number;
-  persistence_of_function: number;
+  register: string;
+  evidence_strength: number;
   recognition: number;
-  endurance_not_wound: number;
+  emotional_truth: number;
   safety: number;
+  worth_returning_to: number;
+  non_horoscope_specificity: number;
+  perspective_not_wound: number;
   surfaceable: boolean;
   why: string;
 }

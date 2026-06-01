@@ -6,13 +6,15 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './candidate';
+export * from './candidateRegister';
 export * from './candidateScore';
 export * from './errorResponse';
-export * from './evidenceItem';
 export * from './extractInput';
 export * from './extractResult';
 export * from './healthStatus';
+export * from './quote';
+export * from './quoteSourceType';
 export * from './scoreInput';
 export * from './scoreResult';
 export * from './scoreResultRegister';
-export * from './threadCandidate';

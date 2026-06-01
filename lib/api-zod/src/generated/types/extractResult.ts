@@ -5,8 +5,8 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { ThreadCandidate } from './threadCandidate';
+import type { Candidate } from './candidate';
 
 export interface ExtractResult {
-  candidates: ThreadCandidate[];
+  candidates: Candidate[];
 }

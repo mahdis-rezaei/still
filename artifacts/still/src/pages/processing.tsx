@@ -6,8 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const MESSAGES = [
   "Reading across time...",
-  "Looking for what repeated beneath changing words...",
-  "Checking whether anything is worth saying...",
+  "Looking for what's worth returning to today...",
+  "Checking whether anything qualifies...",
   "Choosing silence if the evidence is weak..."
 ];
 
