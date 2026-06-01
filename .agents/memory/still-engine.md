@@ -25,8 +25,7 @@ No thread-first priority — Pass 2 chooses by actual quality. A vivid memory or
 - The quote carries the payoff (80/20); prose just walks to it and stops. End on the writer's voice.
 
 ## Output contract
-`{ mode, label, observation, quotes[], why, message, scores[] }` — field is `mode` (not `register`).
-Label map: thread→"WHAT KEPT RETURNING", memory→"A PAGE FROM THEN", distance→"LOOK HOW FAR", value_signal→"WHAT MATTERED THEN", wisdom→"WHAT YOU KNEW".
+Score result field is `mode` (not `register`). Label map: thread→"WHAT KEPT RETURNING", memory→"A PAGE FROM THEN", distance→"LOOK HOW FAR", value_signal→"WHAT MATTERED THEN", wisdom→"WHAT YOU KNEW".
 
-## "Show full entry" data flow
-result.tsx resolves a quote's full original entry by date: prefers stored DB entry containing the fragment (useListEntries), falls back to client-side parsed paste (store.tsx parsedEntries), degrades gracefully (control hidden) when neither exists. Fragment highlight is whitespace/case-tolerant (regex with \s+).
+## "Show full entry" — design decision
+The reader may always OPEN their own full page (raw lines and all); the safety filter only governs what Still SURFACES unbidden. So full-entry reveal is collapsed-by-default and resolves the original text by date (stored DB entry preferred, client-side parsed paste as fallback, control hidden if neither). Fragment highlighting must tolerate near-verbatim differences (whitespace/case) since fragments are not always exact substrings.
