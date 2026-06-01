@@ -1,2 +1,2 @@
-- [Still engine design](still-engine.md) — six remembrance registers, server-side evidence metadata injection for reliable temporal scoring
+- [Still engine design](still-engine.md) — five remembrance modes, server-side evidence metadata, quote-safety filter (cries of pain are not turning lines), voice rules
 - [Still zod/v4 import](still-zod.md) — use `import { z } from "zod"`, NOT `zod/v4` subpath; esbuild won't resolve it

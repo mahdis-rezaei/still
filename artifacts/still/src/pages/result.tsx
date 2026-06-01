@@ -37,29 +37,46 @@ function quoteSectionLabel(mode: string): string {
   return "IN YOUR OWN WORDS";
 }
 
+function spanAt(
+  fullText: string,
+  start: number,
+  length: number
+): { before: string; match: string; after: string } {
+  return {
+    before: fullText.slice(0, start),
+    match: fullText.slice(start, start + length),
+    after: fullText.slice(start + length),
+  };
+}
+
 function highlightFragment(
   fullText: string,
   fragment: string
 ): { before: string; match: string; after: string } | null {
-  if (!fragment) return null;
-  const idx = fullText.indexOf(fragment);
-  if (idx !== -1) {
-    return {
-      before: fullText.slice(0, idx),
-      match: fullText.slice(idx, idx + fragment.length),
-      after: fullText.slice(idx + fragment.length),
-    };
+  const trimmed = fragment.trim();
+  if (!trimmed) return null;
+
+  // Exact substring.
+  const idx = fullText.indexOf(trimmed);
+  if (idx !== -1) return spanAt(fullText, idx, trimmed.length);
+
+  // Case-insensitive substring.
+  const lidx = fullText.toLowerCase().indexOf(trimmed.toLowerCase());
+  if (lidx !== -1) return spanAt(fullText, lidx, trimmed.length);
+
+  // Whitespace- and case-tolerant match for near-verbatim fragments
+  // (handles differences in spacing, line breaks, and capitalization).
+  const escaped = trimmed
+    .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    .replace(/\s+/g, "\\s+");
+  try {
+    const re = new RegExp(escaped, "i");
+    const m = re.exec(fullText);
+    if (m) return spanAt(fullText, m.index, m[0].length);
+  } catch {
+    // Malformed regex — fall through to no highlight.
   }
-  const lower = fullText.toLowerCase();
-  const fragLower = fragment.toLowerCase();
-  const lidx = lower.indexOf(fragLower);
-  if (lidx !== -1) {
-    return {
-      before: fullText.slice(0, lidx),
-      match: fullText.slice(lidx, lidx + fragment.length),
-      after: fullText.slice(lidx + fragment.length),
-    };
-  }
+
   return null;
 }
 
