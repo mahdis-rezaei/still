@@ -14,6 +14,15 @@ function formatSavedDate(date: Date): string {
   return date.toLocaleDateString("en-US", { month: "long", day: "numeric" });
 }
 
+const REGISTER_RECALL: Record<string, string> = {
+  thread: "something that kept returning",
+  memory: "a page from your past",
+  distance: "how far you've come",
+  value_signal: "what mattered then",
+  becoming: "who you were becoming",
+  survival: "what survived",
+};
+
 export default function Home() {
   const [, setLocation] = useLocation();
   const { scoreResult, savedAt, reset } = useStill();
@@ -29,7 +38,7 @@ export default function Home() {
         A companion for your past selves.
       </p>
       <p className="text-lg text-soft-ink leading-relaxed mb-12 max-w-md mx-auto">
-        Paste entries from different years. Still looks for what endured across the writing — and stays quiet when nothing honest surfaces.
+        Paste old journal entries. Still finds one thing worth returning to today — a forgotten page, something that kept returning, how far you've come — and stays quiet when nothing honest surfaces.
       </p>
 
       {hasSaved ? (
@@ -41,7 +50,7 @@ export default function Home() {
         >
           <div className="flex flex-col items-center gap-3 px-6 py-5 border border-border rounded-sm bg-surface/60 w-full">
             <p className="text-sm font-sans text-soft-ink">
-              You have a thread from {formatSavedDate(savedAt!)}.
+              Still found {REGISTER_RECALL[scoreResult?.register ?? ""] ?? "something"} — {formatSavedDate(savedAt!)}.
             </p>
             <button
               onClick={() => setLocation("/result")}
