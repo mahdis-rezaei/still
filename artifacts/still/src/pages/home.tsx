@@ -25,9 +25,10 @@ const REGISTER_RECALL: Record<string, string> = {
 
 export default function Home() {
   const [, setLocation] = useLocation();
-  const { scoreResult, savedAt, reset } = useStill();
+  const { scoreResult, savedAt, history, reset } = useStill();
 
   const hasSaved = Boolean(scoreResult && savedAt);
+  const historyCount = history.length;
 
   return (
     <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6 text-center max-w-[680px] mx-auto">
@@ -60,6 +61,23 @@ export default function Home() {
             </button>
           </div>
 
+          {historyCount > 1 && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+              className="text-xs font-sans text-faint-ink"
+            >
+              You have {historyCount} thread{historyCount !== 1 ? "s" : ""}.{" "}
+              <button
+                onClick={() => setLocation("/history")}
+                className="text-soft-ink hover:text-ink border-b border-soft-ink/30 pb-0.5 transition-colors"
+              >
+                View history
+              </button>
+            </motion.p>
+          )}
+
           <div className="flex items-center gap-4 w-full">
             <div className="flex-1 h-px bg-border" />
             <span className="text-xs font-sans text-faint-ink">or</span>
@@ -77,7 +95,7 @@ export default function Home() {
               Read across time
             </button>
             <span className="text-xs font-sans text-faint-ink">
-              This will clear your saved thread
+              Your history will be kept
             </span>
           </div>
         </motion.div>

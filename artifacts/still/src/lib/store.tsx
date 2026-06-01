@@ -4,9 +4,11 @@ import type {
   ExtractResult,
 } from "@workspace/api-client-react/src/generated/api.schemas";
 
-const STORAGE_KEY = "still:saved_result";
+const HISTORY_KEY = "still:history";
+const MAX_HISTORY = 5;
 
-interface SavedEntry {
+export interface HistoryEntry {
+  id: string;
   result: ScoreResult;
   savedAt: string;
 }
@@ -19,32 +21,28 @@ interface StillState {
   scoreResult: ScoreResult | null;
   setScoreResult: (result: ScoreResult | null) => void;
   savedAt: Date | null;
+  history: HistoryEntry[];
+  deleteHistoryEntry: (id: string) => void;
+  clearHistory: () => void;
+  viewHistoryEntry: (entry: HistoryEntry) => void;
   reset: () => void;
 }
 
 const StillContext = createContext<StillState | undefined>(undefined);
 
-function loadFromStorage(): SavedEntry | null {
+function loadHistory(): HistoryEntry[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as SavedEntry;
+    const raw = localStorage.getItem(HISTORY_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw) as HistoryEntry[];
   } catch {
-    return null;
+    return [];
   }
 }
 
-function saveToStorage(result: ScoreResult) {
+function persistHistory(history: HistoryEntry[]) {
   try {
-    const entry: SavedEntry = { result, savedAt: new Date().toISOString() };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(entry));
-  } catch {
-  }
-}
-
-function clearStorage() {
-  try {
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
   } catch {
   }
 }
@@ -54,21 +52,58 @@ export function StillProvider({ children }: { children: ReactNode }) {
   const [extractResult, setExtractResult] = useState<ExtractResult | null>(null);
   const [scoreResult, setScoreResultState] = useState<ScoreResult | null>(null);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
 
   useEffect(() => {
-    const saved = loadFromStorage();
-    if (saved) {
-      setScoreResultState(saved.result);
-      setSavedAt(new Date(saved.savedAt));
+    const saved = loadHistory();
+    setHistory(saved);
+    if (saved.length > 0) {
+      const latest = saved[0];
+      setScoreResultState(latest.result);
+      setSavedAt(new Date(latest.savedAt));
     }
   }, []);
 
   const setScoreResult = (result: ScoreResult | null) => {
     setScoreResultState(result);
     if (result) {
-      saveToStorage(result);
-      setSavedAt(new Date());
+      const now = new Date();
+      setSavedAt(now);
+      const entry: HistoryEntry = {
+        id: crypto.randomUUID(),
+        result,
+        savedAt: now.toISOString(),
+      };
+      setHistory((prev) => {
+        const next = [entry, ...prev].slice(0, MAX_HISTORY);
+        persistHistory(next);
+        return next;
+      });
     }
+  };
+
+  const deleteHistoryEntry = (id: string) => {
+    setHistory((prev) => {
+      const next = prev.filter((e) => e.id !== id);
+      persistHistory(next);
+      if (scoreResult && prev.find((e) => e.id === id)?.result === scoreResult) {
+        setScoreResultState(next.length > 0 ? next[0].result : null);
+        setSavedAt(next.length > 0 ? new Date(next[0].savedAt) : null);
+      }
+      return next;
+    });
+  };
+
+  const clearHistory = () => {
+    setHistory([]);
+    persistHistory([]);
+    setScoreResultState(null);
+    setSavedAt(null);
+  };
+
+  const viewHistoryEntry = (entry: HistoryEntry) => {
+    setScoreResultState(entry.result);
+    setSavedAt(new Date(entry.savedAt));
   };
 
   const reset = () => {
@@ -76,7 +111,6 @@ export function StillProvider({ children }: { children: ReactNode }) {
     setExtractResult(null);
     setScoreResultState(null);
     setSavedAt(null);
-    clearStorage();
   };
 
   return (
@@ -89,6 +123,10 @@ export function StillProvider({ children }: { children: ReactNode }) {
         scoreResult,
         setScoreResult,
         savedAt,
+        history,
+        deleteHistoryEntry,
+        clearHistory,
+        viewHistoryEntry,
         reset,
       }}
     >

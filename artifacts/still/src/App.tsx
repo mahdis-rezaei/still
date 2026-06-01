@@ -8,6 +8,7 @@ import Home from "@/pages/home";
 import Paste from "@/pages/paste";
 import Processing from "@/pages/processing";
 import Result from "@/pages/result";
+import History from "@/pages/history";
 
 import { StillProvider } from "@/lib/store";
 import { DevPanel } from "@/components/dev-panel";
@@ -21,6 +22,7 @@ function Router() {
       <Route path="/paste" component={Paste} />
       <Route path="/processing" component={Processing} />
       <Route path="/result" component={Result} />
+      <Route path="/history" component={History} />
       <Route component={NotFound} />
     </Switch>
   );

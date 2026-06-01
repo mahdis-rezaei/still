@@ -116,7 +116,7 @@ export default function Result() {
         </div>
       )}
 
-      <div className={`mt-24 ${isNothing ? "text-center" : "text-left"}`}>
+      <div className={`mt-24 flex items-center gap-6 ${isNothing ? "justify-center" : "justify-start"}`}>
         <button
           onClick={() => {
             reset();
@@ -125,6 +125,12 @@ export default function Result() {
           className="text-soft-ink hover:text-ink font-sans text-sm transition-colors"
         >
           Begin again
+        </button>
+        <button
+          onClick={() => setLocation("/history")}
+          className="text-faint-ink hover:text-soft-ink font-sans text-sm transition-colors"
+        >
+          View history
         </button>
       </div>
     </div>
