@@ -1,0 +1,52 @@
+# Replit Fix Prompt — Still: react to ONE moment, like a close friend (stop the tour)
+
+> Paste as an update to the existing Still app. Voice of the observation only. No architecture, scoring, or evidence-display changes.
+
+## The real problem (why five rounds of "warmer" haven't worked)
+
+Every version still does the same underlying move: it **recites the sequence of what it found** — "First a dream, then the teacher, then the writing turns, then the figure." Even in warm words, that is a *report of the AI's analysis* ("here is the structure I detected"). That is why it never feels like a close friend. A close friend who read these pages would NOT narrate the four-step arc back. They would be struck by ONE thing and say that — skipping most of the sequence — because intimacy lives in selectivity and personal reaction, not in comprehensive coverage.
+
+The fix is structural, not lexical: **stop narrating the sequence. React to one moment.**
+
+## How a close friend actually talks (this is the target register)
+
+A close friend, after reading something of yours, does not summarize it or walk you through its structure. They stop on the one part that got them and tell you about *that*:
+
+> "The line where you wrote 'fear just wants my attention' — I had to stop for a second. You were so scared of being alone, and then there's this page where you just… turn and face it. I keep thinking about that."
+
+Notice:
+- ONE moment, not four. They skip most of it.
+- Their honest reaction to that moment ("I had to stop," "I keep thinking about that").
+- No tour, no "first/then/then," no listing the arc.
+- They earn the right to react personally because they know you — so they're not careful and comprehensive, they're moved by one line.
+
+## The new rule
+
+1. **Do NOT narrate the sequence.** Banned: "they move in a sequence," "first… then… then… and then," describing the order or structure of the entries. If the observation walks through more than one beat in order, it has failed. Pick ONE.
+
+2. **Choose the single moment that lands hardest** — usually one quote, the emotional center of the whole set — and build the observation around just that. The other quotes still appear below as evidence/pages to read; the observation does not need to mention them all. It is allowed (encouraged) to ignore most of them and dwell on one.
+
+3. **React to it like someone who knows the writer.** A close friend's register: "I had to stop on this," "I keep coming back to this line," "this is the one that got me," "I read this part twice." Warm, plain, specific, a little informal. Not a witness giving a careful tour — a friend mentioning the part they can't stop thinking about.
+
+4. **Keep the non-negotiables:** speak about the writing/the reading, never claim what the writer felt or did internally (no "you welcomed your fear," no "you learned"); the quote carries the payoff, the prose just reacts to it; 1–3 sentences; all §3 safety floors.
+
+## Before / after
+
+BAD (current — narrates the sequence, gives a tour):
+"I kept coming back to these four pages. They move in a clear sequence. First a dream — trying to understand why darkness and aloneness felt so frightening. Then the fear brought into a room with a teacher. Then the writing turning toward the fear. And then, two days later, a small figure placed in the hand."
+
+GOOD (reacts to one moment, like a friend):
+"There's one page in here I keep stopping on — the night you wrote 'fear just wants my attention. Why not welcome it?' You'd been so frightened of being alone, and then there it is, just turning to face it. That's the one that stayed with me."
+
+ALSO GOOD (even simpler):
+"The line that got me is 'fear just wants my attention.' After everything else in these pages, you just… turned toward it."
+
+## Acceptance test
+
+Re-run the Nov 2015 monastery entries. The observation must:
+- center on ONE moment/quote, not narrate the four-entry sequence;
+- contain NO "first/then/then" or any ordering of the entries;
+- sound like a close friend reacting to the one part that got them, not a witness summarizing the arc;
+- leave the other quotes to appear below as pages to read, without listing them in the prose.
+
+If it still walks through the sequence in order, the change has not taken — the single most important instruction is: pick one moment, skip the rest, react like a friend.
