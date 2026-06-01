@@ -212,9 +212,6 @@ components:
           enum: [thread, memory, distance, value_signal, becoming, survival, nothing]
         label:
           type: ["string", "null"]
-        date_anchor:
-          type: ["string", "null"]
-          description: Short time anchor shown above the observation (e.g. "November 2015", "2015–2026", "From 2015 to 2021")
         observation:
           type: ["string", "null"]
         quotes:
