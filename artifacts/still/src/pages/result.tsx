@@ -1,17 +1,20 @@
-import { useState } from "react";
-import { Link, useLocation } from "wouter";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { useStill } from "@/lib/store";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 export default function Result() {
   const [, setLocation] = useLocation();
   const { scoreResult, reset } = useStill();
   const [showEvidence, setShowEvidence] = useState(false);
 
-  if (!scoreResult) {
-    setLocation("/paste");
-    return null;
-  }
+  useEffect(() => {
+    if (!scoreResult) {
+      setLocation("/paste");
+    }
+  }, [scoreResult, setLocation]);
+
+  if (!scoreResult) return null;
 
   const isThread = scoreResult.register === "thread";
 

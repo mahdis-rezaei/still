@@ -13,7 +13,7 @@ const MESSAGES = [
 
 export default function Processing() {
   const [, setLocation] = useLocation();
-  const { entries, setScoreResult } = useStill();
+  const { entries, setExtractResult, setScoreResult } = useStill();
   const [messageIndex, setMessageIndex] = useState(0);
   const started = useRef(false);
 
@@ -39,18 +39,18 @@ export default function Processing() {
     async function process() {
       try {
         const extractResult = await extractMutation.mutateAsync({ data: { entries } });
+        setExtractResult(extractResult);
         const scoreResult = await scoreMutation.mutateAsync({ data: { candidates: extractResult.candidates } });
         setScoreResult(scoreResult);
         setLocation("/result");
       } catch (error) {
         console.error("Processing failed:", error);
-        // Fallback or error state? for now just go back.
         setLocation("/paste");
       }
     }
 
     process();
-  }, [entries, extractMutation, scoreMutation, setLocation, setScoreResult]);
+  }, [entries, extractMutation, scoreMutation, setLocation, setExtractResult, setScoreResult]);
 
   return (
     <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6 text-center max-w-[680px] mx-auto">
@@ -68,18 +68,12 @@ export default function Processing() {
           </motion.p>
         </AnimatePresence>
       </div>
-      
+
       <div className="w-12 h-[1px] bg-accent-sepia/50 overflow-hidden relative">
-        <motion.div 
+        <motion.div
           className="absolute top-0 left-0 h-full w-full bg-accent-sepia"
-          animate={{
-            x: ["-100%", "100%"]
-          }}
-          transition={{
-            repeat: Infinity,
-            duration: 2.5,
-            ease: "easeInOut"
-          }}
+          animate={{ x: ["-100%", "100%"] }}
+          transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
         />
       </div>
     </div>
