@@ -29,7 +29,7 @@ interface StillState {
   reset: () => void;
 }
 
-function parseEntries(raw: string): Record<string, string> {
+export function parseEntries(raw: string): Record<string, string> {
   const result: Record<string, string> = {};
   const regex = /\[(\d{4}-\d{2}-\d{2})\]/g;
   const matches = [...raw.matchAll(regex)];
@@ -38,6 +38,29 @@ function parseEntries(raw: string): Record<string, string> {
     const start = (match.index ?? 0) + match[0].length;
     const end = i + 1 < matches.length ? (matches[i + 1].index ?? raw.length) : raw.length;
     result[date] = raw.slice(start, end).trim();
+  });
+  return result;
+}
+
+// Lossless variant for the persistence path: splits a batch on [YYYY-MM-DD]
+// markers but stores each block's text EXACTLY as written — no trimming,
+// no normalization. Only the date marker itself and the single line break
+// that ends the marker line are dropped (they are format, not content).
+export function parseEntriesVerbatim(
+  raw: string,
+): { date: string; text: string }[] {
+  const result: { date: string; text: string }[] = [];
+  const regex = /\[(\d{4}-\d{2}-\d{2})\]/g;
+  const matches = [...raw.matchAll(regex)];
+  matches.forEach((match, i) => {
+    const date = match[1];
+    let start = (match.index ?? 0) + match[0].length;
+    // Drop only the line break that terminates the "[date]" marker line.
+    if (raw[start] === "\r") start += 1;
+    if (raw[start] === "\n") start += 1;
+    const end =
+      i + 1 < matches.length ? (matches[i + 1].index ?? raw.length) : raw.length;
+    result.push({ date, text: raw.slice(start, end) });
   });
   return result;
 }

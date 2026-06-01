@@ -6,6 +6,7 @@ import NotFound from "@/pages/not-found";
 
 import Home from "@/pages/home";
 import Paste from "@/pages/paste";
+import Entries from "@/pages/entries";
 import Processing from "@/pages/processing";
 import Result from "@/pages/result";
 import History from "@/pages/history";
@@ -20,6 +21,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/paste" component={Paste} />
+      <Route path="/entries" component={Entries} />
       <Route path="/processing" component={Processing} />
       <Route path="/result" component={Result} />
       <Route path="/history" component={History} />

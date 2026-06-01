@@ -1,7 +1,27 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useStill } from "@/lib/store";
+import { useListEntries, type Entry } from "@workspace/api-client-react";
 import { motion, AnimatePresence } from "framer-motion";
+
+function resolveFullText(
+  date: string,
+  fragment: string,
+  stored: Entry[] | undefined,
+  fallback: Record<string, string>
+): string | null {
+  const onDate = (stored ?? []).filter((e) => e.date === date);
+  if (onDate.length > 0) {
+    // Prefer the stored entry whose text actually contains the fragment.
+    const withFragment = onDate.find(
+      (e) =>
+        fragment &&
+        e.text.toLowerCase().includes(fragment.toLowerCase())
+    );
+    return (withFragment ?? onDate[0]).text;
+  }
+  return fallback[date] ?? null;
+}
 
 const MODE_LABELS: Record<string, string> = {
   thread: "WHAT KEPT RETURNING",
@@ -46,6 +66,7 @@ function highlightFragment(
 export default function Result() {
   const [, setLocation] = useLocation();
   const { scoreResult, parsedEntries, reset } = useStill();
+  const { data: storedEntries } = useListEntries();
   const [showWhy, setShowWhy] = useState(false);
   const [expandedEntries, setExpandedEntries] = useState<Set<number>>(new Set());
 
@@ -107,7 +128,7 @@ export default function Result() {
               </span>
               <div className="flex flex-col gap-8">
                 {scoreResult.quotes.map((q, idx) => {
-                  const fullText = parsedEntries[q.date];
+                  const fullText = resolveFullText(q.date, q.fragment, storedEntries, parsedEntries);
                   const isExpanded = expandedEntries.has(idx);
                   const highlighted = fullText ? highlightFragment(fullText, q.fragment) : null;
 

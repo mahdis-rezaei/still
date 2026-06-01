@@ -13,6 +13,19 @@ export interface ErrorResponse {
   error: string;
 }
 
+export interface Entry {
+  id: number;
+  date: string;
+  text: string;
+  createdAt: string;
+}
+
+export interface EntryInput {
+  /** @minLength 1 */
+  date: string;
+  text: string;
+}
+
 export type QuoteSourceType = typeof QuoteSourceType[keyof typeof QuoteSourceType];
 
 

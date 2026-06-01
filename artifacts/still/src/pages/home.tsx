@@ -128,8 +128,14 @@ export default function Home() {
             Read across time
           </Link>
           <span className="text-sm font-sans text-faint-ink">
-            Your writing is read once for this prototype. Nothing is stored.
+            A quick read — your writing is read once and not kept.
           </span>
+          <button
+            onClick={() => setLocation("/entries")}
+            className="mt-2 text-soft-ink hover:text-ink font-sans text-sm border-b border-soft-ink/30 pb-0.5 transition-colors"
+          >
+            Or keep an archive that stays →
+          </button>
         </div>
       )}
     </div>

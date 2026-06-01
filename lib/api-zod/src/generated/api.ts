@@ -92,3 +92,42 @@ export const ScoreCandidatesResponse = zod.object({
 })
 
 
+/**
+ * @summary List all stored journal entries
+ */
+export const ListEntriesResponseItem = zod.object({
+  "id": zod.number(),
+  "date": zod.string(),
+  "text": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+export const ListEntriesResponse = zod.array(ListEntriesResponseItem)
+
+
+/**
+ * @summary Store a single journal entry verbatim
+ */
+
+
+
+export const CreateEntryBody = zod.object({
+  "date": zod.string().min(1),
+  "text": zod.string()
+})
+
+
+/**
+ * @summary Fetch a single stored entry's full text by id
+ */
+export const GetEntryParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetEntryResponse = zod.object({
+  "id": zod.number(),
+  "date": zod.string(),
+  "text": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+
+
