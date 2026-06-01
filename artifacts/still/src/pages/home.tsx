@@ -23,6 +23,27 @@ const REGISTER_RECALL: Record<string, string> = {
   survival: "what survived",
 };
 
+function truncateLabel(label: string, maxChars = 42): string {
+  if (label.length <= maxChars) return label;
+  return label.slice(0, maxChars).trimEnd() + "…";
+}
+
+function buildRecallLine(
+  register: string | undefined,
+  label: string | null | undefined,
+  date: Date
+): string {
+  const dateStr = formatSavedDate(date);
+  if (register === "nothing") {
+    return `You sat with your writing ${dateStr}. Nothing surfaced.`;
+  }
+  const base = REGISTER_RECALL[register ?? ""] ?? "something";
+  if (register === "thread" && label) {
+    return `Still found ${base} — "${truncateLabel(label)}" — ${dateStr}.`;
+  }
+  return `Still found ${base} — ${dateStr}.`;
+}
+
 export default function Home() {
   const [, setLocation] = useLocation();
   const { scoreResult, savedAt, history, reset } = useStill();
@@ -51,7 +72,7 @@ export default function Home() {
         >
           <div className="flex flex-col items-center gap-3 px-6 py-5 border border-border rounded-sm bg-surface/60 w-full">
             <p className="text-sm font-sans text-soft-ink">
-              Still found {REGISTER_RECALL[scoreResult?.register ?? ""] ?? "something"} — {formatSavedDate(savedAt!)}.
+              {buildRecallLine(scoreResult?.register, scoreResult?.label, savedAt!)}
             </p>
             <button
               onClick={() => setLocation("/result")}
