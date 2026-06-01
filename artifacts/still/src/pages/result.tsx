@@ -3,18 +3,17 @@ import { useLocation } from "wouter";
 import { useStill } from "@/lib/store";
 import { motion } from "framer-motion";
 
-const REGISTER_LABELS: Record<string, string> = {
+const MODE_LABELS: Record<string, string> = {
   thread: "WHAT KEPT RETURNING",
   memory: "A PAGE FROM THEN",
   distance: "LOOK HOW FAR",
   value_signal: "WHAT MATTERED THEN",
-  becoming: "WHO YOU WERE BECOMING",
-  survival: "WHAT SURVIVED",
+  wisdom: "WHAT YOU KNEW",
   nothing: "NOTHING THIS TIME",
 };
 
-function quoteSectionLabel(register: string): string {
-  if (register === "value_signal") return "IN THE WORDS YOU SAVED";
+function quoteSectionLabel(mode: string): string {
+  if (mode === "value_signal") return "IN THE WORDS YOU SAVED";
   return "IN YOUR OWN WORDS";
 }
 
@@ -31,8 +30,8 @@ export default function Result() {
 
   if (!scoreResult) return null;
 
-  const isNothing = scoreResult.register === "nothing";
-  const label = REGISTER_LABELS[scoreResult.register] ?? scoreResult.register.toUpperCase();
+  const isNothing = scoreResult.mode === "nothing";
+  const label = MODE_LABELS[scoreResult.mode] ?? scoreResult.mode.toUpperCase();
 
   return (
     <div className="min-h-[100dvh] flex flex-col p-6 max-w-[680px] mx-auto py-12 md:py-24">
@@ -68,7 +67,7 @@ export default function Result() {
           {scoreResult.quotes && scoreResult.quotes.length > 0 && (
             <div className="flex flex-col gap-1 mt-2">
               <span className="text-[10px] font-sans tracking-widest uppercase text-faint-ink mb-4">
-                {quoteSectionLabel(scoreResult.register)}
+                {quoteSectionLabel(scoreResult.mode)}
               </span>
               <div className="flex flex-col gap-8">
                 {scoreResult.quotes.map((q, idx) => (

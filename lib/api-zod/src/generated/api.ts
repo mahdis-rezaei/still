@@ -26,7 +26,8 @@ export const ExtractCandidatesBody = zod.object({
 
 export const ExtractCandidatesResponse = zod.object({
   "candidates": zod.array(zod.object({
-  "register": zod.enum(['thread', 'memory', 'distance', 'value_signal', 'becoming', 'survival']),
+  "mode": zod.enum(['thread', 'memory', 'distance', 'value_signal', 'wisdom']),
+  "candidate_title": zod.string().optional(),
   "function": zod.string(),
   "description": zod.string(),
   "evidence": zod.array(zod.object({
@@ -44,7 +45,8 @@ export const ExtractCandidatesResponse = zod.object({
  */
 export const ScoreCandidatesBody = zod.object({
   "candidates": zod.array(zod.object({
-  "register": zod.enum(['thread', 'memory', 'distance', 'value_signal', 'becoming', 'survival']),
+  "mode": zod.enum(['thread', 'memory', 'distance', 'value_signal', 'wisdom']),
+  "candidate_title": zod.string().optional(),
   "function": zod.string(),
   "description": zod.string(),
   "evidence": zod.array(zod.object({
@@ -58,19 +60,26 @@ export const ScoreCandidatesBody = zod.object({
 
 export const ScoreCandidatesResponse = zod.object({
   "scores": zod.array(zod.object({
-  "function": zod.string(),
-  "register": zod.string(),
-  "evidence_strength": zod.number(),
-  "recognition": zod.number(),
-  "emotional_truth": zod.number(),
+  "mode": zod.string(),
+  "candidate_title": zod.string().optional(),
   "safety": zod.number(),
   "worth_returning_to": zod.number(),
-  "non_horoscope_specificity": zod.number(),
-  "perspective_not_wound": zod.number(),
+  "recognition": zod.number(),
+  "specificity": zod.number(),
+  "persistence": zod.number().nullish(),
+  "same_function_different_language": zod.number().nullish(),
+  "vividness": zod.number().nullish(),
+  "revealing": zod.number().nullish(),
+  "contrast": zod.number().nullish(),
+  "evidence_across_time": zod.number().nullish(),
+  "meaningfulness_of_selection": zod.number().nullish(),
+  "attribution_confidence": zod.number().nullish(),
+  "clarity": zod.number().nullish(),
+  "earnedness": zod.number().nullish(),
   "surfaceable": zod.boolean(),
   "why": zod.string()
 })),
-  "register": zod.enum(['thread', 'memory', 'distance', 'value_signal', 'becoming', 'survival', 'nothing']),
+  "mode": zod.enum(['thread', 'memory', 'distance', 'value_signal', 'wisdom', 'nothing']),
   "label": zod.string().nullish(),
   "observation": zod.string().nullish(),
   "quotes": zod.array(zod.object({

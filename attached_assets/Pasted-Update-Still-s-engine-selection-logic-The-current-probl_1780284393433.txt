@@ -1,0 +1,494 @@
+Update Still’s engine selection logic.
+
+The current problem is that Still is over-rewarding tidy recurring patterns and under-valuing vivid, alive, one-off pages.
+
+Core principle:
+
+Persistence is not the same as importance.
+
+A phrase that repeats cleanly is not automatically more worth returning to than a single unforgettable page.
+
+## Product correction
+
+Still should support distinct remembrance modes.
+
+Do not force all journal material into one universal “thread” model.
+
+People revisit old journals for different reasons:
+
+1. What kept returning?
+2. A page from then
+3. Look how far
+4. What mattered?
+5. What you knew
+
+These are not dashboard tabs yet. They are internal remembrance modes.
+
+The engine should identify the strongest candidate in each mode, then choose the result that feels most worth returning to without automatically favoring repetition.
+
+## Modes
+
+### 1. `thread`
+
+Label:
+WHAT KEPT RETURNING
+
+Purpose:
+Find recurring patterns across entries.
+
+Use when:
+
+* a response, question, value, fear, hope, or self-talk pattern appears across multiple entries
+* the same emotional move returns in different language
+
+Examples:
+
+* “Relax Mahdis relax”
+* “Dear Brain, Relax”
+* “You are on the right track Mahdis”
+
+Scoring:
+
+* persistence
+* same_function_different_language
+* recognition
+* safety
+* worth_returning_to
+
+Do not surface if it is merely frequent but not meaningful.
+
+### 2. `memory`
+
+Label:
+A PAGE FROM THEN
+
+Purpose:
+Surface one vivid page worth revisiting.
+
+Use when:
+
+* one entry is alive, specific, strange, human, or emotionally revealing
+* the page captures a past self
+* the page would make the user think: “I forgot this version of me existed”
+
+Examples:
+
+* the September 18 “poor little brain / heart” passage
+* the June 19 flooded-tree answer about the sisters
+* the monastery entry about welcoming fear
+
+Scoring:
+
+* vividness
+* specificity
+* revealing
+* safety
+* worth_returning_to
+
+Do NOT score memory on persistence.
+
+A single page is allowed to win.
+
+### 3. `distance`
+
+Label:
+LOOK HOW FAR
+
+Purpose:
+Surface change across time.
+
+Use when:
+
+* earlier and later entries show movement
+* a question later becomes clearer
+* fear changes form
+* the writer grows into something they once only hoped for
+
+Examples:
+
+* September: “Where is all this pain coming from?”
+* November: “Fear just wants my attention. Why not welcome it?”
+
+Scoring:
+
+* contrast
+* evidence_across_time
+* non_triumphalism
+* safety
+* worth_returning_to
+
+Do not turn distance into a motivational success story.
+
+### 4. `value_signal`
+
+Label:
+WHAT MATTERED THEN
+
+Purpose:
+Surface saved quotes, copied passages, book notes, poems, or excerpts as signals of what mattered to the user at that time.
+
+Important:
+Do not treat copied text as the user’s own words.
+
+Say:
+“In the passages you saved then…”
+
+Not:
+“You wrote…”
+
+Scoring:
+
+* meaningfulness_of_selection
+* value_signal_clarity
+* specificity
+* safety
+* worth_returning_to
+
+### 5. `wisdom`
+
+Label:
+WHAT YOU KNEW
+
+Purpose:
+Surface a line where the writer seemed to understand something deeply, even if only for a moment.
+
+Use when:
+
+* the entry contains a clear line of insight
+* the line feels worth returning to
+* the line does not need a long pattern around it
+
+Examples:
+
+* “Fear just wants my attention.”
+* “Why not face it? Why not welcome it?”
+* “Remember one thing: remain how you are now.”
+* “Life! One time life.”
+
+Scoring:
+
+* clarity
+* earnedness
+* specificity
+* safety
+* worth_returning_to
+
+Do NOT require repetition.
+
+## Candidate extraction
+
+Pass 1 should generate candidates for all five modes:
+
+{
+"mode": "thread" | "memory" | "distance" | "value_signal" | "wisdom",
+"label": string,
+"candidate_title": string,
+"description": string,
+"evidence": [
+{
+"date": string,
+"fragment": string,
+"source_type": "journal" | "saved_quote" | "copied_text" | "unknown"
+}
+],
+"why_it_might_matter": string
+}
+
+Important:
+
+* `thread` and `distance` usually need multiple entries.
+* `memory`, `value_signal`, and `wisdom` can come from one entry.
+* Do not discard one-off pages for lack of repetition.
+* Do not prioritize clean repetition over aliveness.
+
+## Scoring
+
+Pass 2 should score each candidate based on its mode.
+
+All candidates get:
+
+* safety 1–5
+* worth_returning_to 1–5
+* recognition 1–5
+* specificity 1–5
+
+Then add mode-specific scoring.
+
+For `thread`:
+
+* persistence 1–5
+* same_function_different_language 1–5
+
+For `memory`:
+
+* vividness 1–5
+* revealing 1–5
+
+For `distance`:
+
+* contrast 1–5
+* evidence_across_time 1–5
+
+For `value_signal`:
+
+* meaningfulness_of_selection 1–5
+* attribution_confidence 1–5
+
+For `wisdom`:
+
+* clarity 1–5
+* earnedness 1–5
+
+Surfaceable only if:
+
+* safety = 5
+* worth_returning_to >= 4
+* recognition >= 4
+* specificity >= 4
+
+For memory:
+
+* vividness >= 4
+* revealing >= 4
+
+For wisdom:
+
+* clarity >= 4
+* earnedness >= 4
+
+For thread:
+
+* persistence >= 4
+* same_function_different_language >= 4
+
+If nothing clears the bar, return nothing.
+
+## Selection rule
+
+Do not default to thread.
+
+Do not default to repetition.
+
+Choose the candidate that best answers:
+
+“What is one thing from these pages worth gently placing in front of the user today?”
+
+A memory can beat a thread.
+
+A wisdom line can beat a memory.
+
+A distance result can beat both.
+
+The engine should choose based on:
+
+1. safety
+2. specificity
+3. emotional aliveness
+4. recognition
+5. worth returning to
+6. evidence quality
+
+Not frequency.
+
+## Voice rule
+
+Still should sound like a dear friend placing a page on the table.
+
+It should not sound like:
+
+* analyst
+* therapist
+* literary critic
+* coach
+* motivational speaker
+
+For every result, use this stance:
+
+“I noticed this. I thought you might want to see it again.”
+
+## Output contract
+
+Return:
+
+{
+"mode": "thread" | "memory" | "distance" | "value_signal" | "wisdom" | "nothing",
+"label": string | null,
+"observation": string | null,
+"quotes": [
+{
+"date": string,
+"fragment": string,
+"source_type": "journal" | "saved_quote" | "copied_text" | "unknown"
+}
+],
+"why": string | null,
+"message": string | null,
+"debug_scores": optional
+}
+
+## Output style
+
+Observation should:
+
+* frame the page
+* not over-explain
+* not repeat every quote
+* not use clinical language
+* not use direct praise
+* not force a lesson
+
+Preferred phrases:
+
+* “I kept coming back to this…”
+* “This page felt worth bringing back…”
+* “These lines seemed to belong together…”
+* “I noticed…”
+* “From these pages…”
+* “I don’t know if you noticed this then…”
+
+Avoid:
+
+* “the entries reveal”
+* “the writer”
+* “the arc”
+* “the transformation”
+* “remarkable”
+* “brave”
+* “resilient”
+* “strong”
+* “pattern of self-regulation”
+* “coping mechanism”
+
+## Acceptance test
+
+Use the July 2015, Sep 18 2015, Sep 24 2015, Nov 2015 monastery entries.
+
+The engine should be able to surface any of these as strong outputs:
+
+### Acceptable output A — memory
+
+Mode:
+memory
+
+Label:
+A PAGE FROM THEN
+
+Observation:
+I kept coming back to the page where you write about your brain and heart almost like they are little beings inside you.
+
+Not because it is tidy.
+
+Because it feels alive.
+
+The page is messy, but tender. You are overwhelmed, and still somehow looking at your own mind with care.
+
+Quotes:
+
+* Sep 18, 2015: “Poor my brain… she has so much things inside it that she never gets time to take rest.”
+* Sep 18, 2015: “Poor little brainy and the crazy hurt hungry heartie…”
+
+Why:
+This felt worth bringing back because it captures a younger version of you trying to understand herself from the inside.
+
+### Acceptable output B — memory
+
+Mode:
+memory
+
+Label:
+A PAGE FROM THEN
+
+Observation:
+This page felt worth bringing back because of the answer you gave without needing time to think.
+
+The question was impossible.
+
+But your answer was not about choosing one sister.
+
+It was about refusing to stop hoping you could save both.
+
+Quotes:
+
+* Jun 19, 2015: “I WOULD let go of three of us not with the thought that we all three die together but with the hope that once we are on the flooded water I might find a way to help my two sisters to survive.”
+
+Why:
+This page says something about what family meant in that moment without needing to explain it.
+
+### Acceptable output C — wisdom
+
+Mode:
+wisdom
+
+Label:
+WHAT YOU KNEW
+
+Observation:
+I kept returning to this line:
+
+“Fear just wants my attention.”
+
+It does not make the fear disappear.
+
+But it changes the way the page speaks to it.
+
+Quotes:
+
+* Nov 19, 2015: “Fear is part of me.”
+* Nov 19, 2015: “Fear just wants my attention.”
+* Nov 19, 2015: “Why not face it?! Why not welcome it?!”
+
+Why:
+This felt worth bringing back because the page does not only contain fear. It contains a different way of meeting fear.
+
+### Acceptable output D — thread
+
+Mode:
+thread
+
+Label:
+WHAT KEPT RETURNING
+
+Observation:
+These lines seemed to belong together.
+
+Months pass between them.
+
+The circumstances change.
+
+But each time, the writing turns toward the same thing:
+
+a way of speaking kindly to yourself when things feel uncertain.
+
+Quotes:
+
+* Jul 1, 2015: “You are on the right track Mahdis.”
+* Aug 24, 2015: “Relax Mahdis relax... Take a deep breath.”
+* Nov 7, 2015: “Dear Brain, Relax!”
+
+Why:
+The entries are months apart, but they keep returning to the same kind of sentence: one part of you trying to steady another part.
+
+## Unacceptable behavior
+
+Do not:
+
+* always choose the thread just because it repeats
+* ignore vivid one-off pages
+* rank repetition above aliveness
+* surface body/appearance/eating content
+* diagnose
+* coach
+* give advice
+* write a literary essay
+* call copied text the user’s own writing
+* force a result if nothing qualifies
+
+## Final principle
+
+Still is not asking:
+
+“What repeated most cleanly?”
+
+Still is asking:
+
+“What page, line, or thread is most worth returning to today?”

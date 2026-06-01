@@ -6,14 +6,14 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type CandidateRegister = typeof CandidateRegister[keyof typeof CandidateRegister];
+export type ScoreResultMode = typeof ScoreResultMode[keyof typeof ScoreResultMode];
 
 
-export const CandidateRegister = {
+export const ScoreResultMode = {
   thread: 'thread',
   memory: 'memory',
   distance: 'distance',
   value_signal: 'value_signal',
-  becoming: 'becoming',
-  survival: 'survival',
+  wisdom: 'wisdom',
+  nothing: 'nothing',
 } as const;

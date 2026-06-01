@@ -29,20 +29,20 @@ export interface Quote {
   source_type: QuoteSourceType;
 }
 
-export type CandidateRegister = typeof CandidateRegister[keyof typeof CandidateRegister];
+export type CandidateMode = typeof CandidateMode[keyof typeof CandidateMode];
 
 
-export const CandidateRegister = {
+export const CandidateMode = {
   thread: 'thread',
   memory: 'memory',
   distance: 'distance',
   value_signal: 'value_signal',
-  becoming: 'becoming',
-  survival: 'survival',
+  wisdom: 'wisdom',
 } as const;
 
 export interface Candidate {
-  register: CandidateRegister;
+  mode: CandidateMode;
+  candidate_title?: string;
   function: string;
   description: string;
   evidence: Quote[];
@@ -58,15 +58,32 @@ export interface ExtractResult {
 }
 
 export interface CandidateScore {
-  function: string;
-  register: string;
-  evidence_strength: number;
-  recognition: number;
-  emotional_truth: number;
+  mode: string;
+  candidate_title?: string;
   safety: number;
   worth_returning_to: number;
-  non_horoscope_specificity: number;
-  perspective_not_wound: number;
+  recognition: number;
+  specificity: number;
+  /** @nullable */
+  persistence?: number | null;
+  /** @nullable */
+  same_function_different_language?: number | null;
+  /** @nullable */
+  vividness?: number | null;
+  /** @nullable */
+  revealing?: number | null;
+  /** @nullable */
+  contrast?: number | null;
+  /** @nullable */
+  evidence_across_time?: number | null;
+  /** @nullable */
+  meaningfulness_of_selection?: number | null;
+  /** @nullable */
+  attribution_confidence?: number | null;
+  /** @nullable */
+  clarity?: number | null;
+  /** @nullable */
+  earnedness?: number | null;
   surfaceable: boolean;
   why: string;
 }
@@ -75,22 +92,21 @@ export interface ScoreInput {
   candidates: Candidate[];
 }
 
-export type ScoreResultRegister = typeof ScoreResultRegister[keyof typeof ScoreResultRegister];
+export type ScoreResultMode = typeof ScoreResultMode[keyof typeof ScoreResultMode];
 
 
-export const ScoreResultRegister = {
+export const ScoreResultMode = {
   thread: 'thread',
   memory: 'memory',
   distance: 'distance',
   value_signal: 'value_signal',
-  becoming: 'becoming',
-  survival: 'survival',
+  wisdom: 'wisdom',
   nothing: 'nothing',
 } as const;
 
 export interface ScoreResult {
   scores: CandidateScore[];
-  register: ScoreResultRegister;
+  mode: ScoreResultMode;
   /** @nullable */
   label?: string | null;
   /** @nullable */

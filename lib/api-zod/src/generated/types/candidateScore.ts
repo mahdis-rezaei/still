@@ -7,15 +7,32 @@
  */
 
 export interface CandidateScore {
-  function: string;
-  register: string;
-  evidence_strength: number;
-  recognition: number;
-  emotional_truth: number;
+  mode: string;
+  candidate_title?: string;
   safety: number;
   worth_returning_to: number;
-  non_horoscope_specificity: number;
-  perspective_not_wound: number;
+  recognition: number;
+  specificity: number;
+  /** @nullable */
+  persistence?: number | null;
+  /** @nullable */
+  same_function_different_language?: number | null;
+  /** @nullable */
+  vividness?: number | null;
+  /** @nullable */
+  revealing?: number | null;
+  /** @nullable */
+  contrast?: number | null;
+  /** @nullable */
+  evidence_across_time?: number | null;
+  /** @nullable */
+  meaningfulness_of_selection?: number | null;
+  /** @nullable */
+  attribution_confidence?: number | null;
+  /** @nullable */
+  clarity?: number | null;
+  /** @nullable */
+  earnedness?: number | null;
   surfaceable: boolean;
   why: string;
 }

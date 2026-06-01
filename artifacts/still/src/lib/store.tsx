@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import type {
   ScoreResult,
   ExtractResult,
-} from "@workspace/api-client-react/src/generated/api.schemas";
+} from "@workspace/api-client-react";
 
 const HISTORY_KEY = "still:history";
 const MAX_HISTORY = 5;

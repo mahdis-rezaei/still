@@ -7,11 +7,11 @@
  */
 import type { CandidateScore } from './candidateScore';
 import type { Quote } from './quote';
-import type { ScoreResultRegister } from './scoreResultRegister';
+import type { ScoreResultMode } from './scoreResultMode';
 
 export interface ScoreResult {
   scores: CandidateScore[];
-  register: ScoreResultRegister;
+  mode: ScoreResultMode;
   /** @nullable */
   label?: string | null;
   /** @nullable */

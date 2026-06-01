@@ -7,7 +7,7 @@
  */
 
 export * from './candidate';
-export * from './candidateRegister';
+export * from './candidateMode';
 export * from './candidateScore';
 export * from './errorResponse';
 export * from './extractInput';
@@ -17,4 +17,4 @@ export * from './quote';
 export * from './quoteSourceType';
 export * from './scoreInput';
 export * from './scoreResult';
-export * from './scoreResultRegister';
+export * from './scoreResultMode';

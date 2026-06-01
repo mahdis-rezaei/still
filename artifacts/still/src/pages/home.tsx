@@ -14,13 +14,12 @@ function formatSavedDate(date: Date): string {
   return date.toLocaleDateString("en-US", { month: "long", day: "numeric" });
 }
 
-const REGISTER_RECALL: Record<string, string> = {
+const MODE_RECALL: Record<string, string> = {
   thread: "something that kept returning",
   memory: "a page from your past",
   distance: "how far you've come",
   value_signal: "what mattered then",
-  becoming: "who you were becoming",
-  survival: "what survived",
+  wisdom: "something you seemed to know",
 };
 
 function truncateLabel(label: string, maxChars = 42): string {
@@ -29,16 +28,16 @@ function truncateLabel(label: string, maxChars = 42): string {
 }
 
 function buildRecallLine(
-  register: string | undefined,
+  mode: string | undefined,
   label: string | null | undefined,
   date: Date
 ): string {
   const dateStr = formatSavedDate(date);
-  if (register === "nothing") {
+  if (mode === "nothing") {
     return `You sat with your writing ${dateStr}. Nothing surfaced.`;
   }
-  const base = REGISTER_RECALL[register ?? ""] ?? "something";
-  if (register === "thread" && label) {
+  const base = MODE_RECALL[mode ?? ""] ?? "something";
+  if (mode === "thread" && label) {
     return `Still found ${base} — "${truncateLabel(label)}" — ${dateStr}.`;
   }
   return `Still found ${base} — ${dateStr}.`;
@@ -72,7 +71,7 @@ export default function Home() {
         >
           <div className="flex flex-col items-center gap-3 px-6 py-5 border border-border rounded-sm bg-surface/60 w-full">
             <p className="text-sm font-sans text-soft-ink">
-              {buildRecallLine(scoreResult?.register, scoreResult?.label, savedAt!)}
+              {buildRecallLine(scoreResult?.mode, scoreResult?.label, savedAt!)}
             </p>
             <button
               onClick={() => setLocation("/result")}

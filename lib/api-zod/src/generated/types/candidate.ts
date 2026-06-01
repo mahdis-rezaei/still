@@ -5,11 +5,12 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { CandidateRegister } from './candidateRegister';
+import type { CandidateMode } from './candidateMode';
 import type { Quote } from './quote';
 
 export interface Candidate {
-  register: CandidateRegister;
+  mode: CandidateMode;
+  candidate_title?: string;
   function: string;
   description: string;
   evidence: Quote[];

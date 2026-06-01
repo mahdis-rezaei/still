@@ -2,13 +2,12 @@ import { useLocation } from "wouter";
 import { useStill, type HistoryEntry } from "@/lib/store";
 import { motion } from "framer-motion";
 
-const REGISTER_PREVIEW: Record<string, string> = {
+const MODE_PREVIEW: Record<string, string> = {
   thread: "something that kept returning",
   memory: "a page from your past",
   distance: "how far you've come",
   value_signal: "what mattered then",
-  becoming: "who you were becoming",
-  survival: "what survived",
+  wisdom: "something you seemed to know",
   nothing: "Nothing surfaced",
 };
 
@@ -40,8 +39,8 @@ function ThreadRow({
   onDelete: () => void;
   index: number;
 }) {
-  const isNothing = entry.result.register === "nothing";
-  const preview = REGISTER_PREVIEW[entry.result.register] ?? entry.result.register;
+  const isNothing = entry.result.mode === "nothing";
+  const preview = MODE_PREVIEW[entry.result.mode] ?? entry.result.mode;
 
   return (
     <motion.div

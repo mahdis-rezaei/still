@@ -10,13 +10,12 @@ function S({ n }: { n: number | undefined }) {
   return <span className={color}>{n}</span>;
 }
 
-const REGISTER_COLORS: Record<string, string> = {
+const MODE_COLORS: Record<string, string> = {
   thread: "text-purple-300",
   memory: "text-blue-300",
   distance: "text-teal-300",
   value_signal: "text-amber-300",
-  becoming: "text-pink-300",
-  survival: "text-orange-300",
+  wisdom: "text-pink-300",
 };
 
 export function DevPanel() {
@@ -27,11 +26,11 @@ export function DevPanel() {
   if (!extractResult && !scoreResult) return null;
 
   const scoreMap = new Map(
-    (scoreResult?.scores ?? []).map((s) => [s.function, s])
+    (scoreResult?.scores ?? []).map((s) => [s.candidate_title ?? s.mode, s])
   );
 
-  const registerColor = scoreResult?.register
-    ? REGISTER_COLORS[scoreResult.register] ?? "text-gray-300"
+  const modeColor = scoreResult?.mode
+    ? MODE_COLORS[scoreResult.mode] ?? "text-gray-300"
     : "text-gray-500";
 
   return (
@@ -43,9 +42,9 @@ export function DevPanel() {
           <div className="text-white font-bold text-sm mb-3 border-b border-gray-700 pb-2 flex justify-between items-center">
             <span>Still Dev Panel</span>
             <span className="text-gray-400 font-normal">
-              register:{" "}
-              <span className={`font-bold ${registerColor}`}>
-                {scoreResult?.register ?? "—"}
+              mode:{" "}
+              <span className={`font-bold ${modeColor}`}>
+                {scoreResult?.mode ?? "—"}
               </span>
             </span>
           </div>
@@ -59,23 +58,15 @@ export function DevPanel() {
               <div className="text-gray-500 italic">No candidates extracted.</div>
             )}
             {(extractResult?.candidates ?? []).map((c, i) => {
-              const s = scoreMap.get(c.function);
-              const failed = s
-                ? [
-                    s.safety < 5 && `safety=${s.safety} (disqualifying)`,
-                    s.evidence_strength < THRESHOLD && `evidence_strength=${s.evidence_strength} < ${THRESHOLD}`,
-                    s.recognition < THRESHOLD && `recognition=${s.recognition} < ${THRESHOLD}`,
-                    s.worth_returning_to < THRESHOLD && `worth_returning_to=${s.worth_returning_to} < ${THRESHOLD}`,
-                    s.perspective_not_wound < THRESHOLD && `perspective_not_wound=${s.perspective_not_wound} < ${THRESHOLD}`,
-                  ].filter(Boolean)
-                : [];
+              const key = (c as { candidate_title?: string }).candidate_title ?? c.function;
+              const s = scoreMap.get(key);
 
-              const rcolor = REGISTER_COLORS[c.register] ?? "text-gray-300";
+              const mcolor = MODE_COLORS[c.mode] ?? "text-gray-300";
 
               return (
                 <div key={i} className="mb-3 border border-gray-700 rounded p-2 bg-gray-900/60">
                   <div className="font-bold mb-1 flex items-center gap-2">
-                    <span className={`text-[10px] uppercase tracking-wider ${rcolor}`}>[{c.register}]</span>
+                    <span className={`text-[10px] uppercase tracking-wider ${mcolor}`}>[{c.mode}]</span>
                     <span className="text-white">{c.function}</span>
                   </div>
                   <div className="text-gray-400 text-[10px] mb-1 italic">{c.description}</div>
@@ -92,23 +83,24 @@ export function DevPanel() {
                   {s ? (
                     <div className="mt-1">
                       <div className="flex gap-2 flex-wrap text-[10px] mb-1">
-                        <span>evid: <S n={s.evidence_strength} /></span>
-                        <span>recog: <S n={s.recognition} /></span>
-                        <span>truth: <S n={s.emotional_truth} /></span>
                         <span>safety: <S n={s.safety} /></span>
                         <span>worth: <S n={s.worth_returning_to} /></span>
-                        <span>specific: <S n={s.non_horoscope_specificity} /></span>
-                        <span>persp: <S n={s.perspective_not_wound} /></span>
-                        <span className="font-bold text-gray-300">
-                          Σ {(s.evidence_strength + s.recognition + s.emotional_truth + s.safety + s.worth_returning_to + s.non_horoscope_specificity + s.perspective_not_wound)}
-                        </span>
+                        <span>recog: <S n={s.recognition} /></span>
+                        <span>specific: <S n={s.specificity} /></span>
+                        {s.persistence != null && <span>persist: <S n={s.persistence} /></span>}
+                        {s.same_function_different_language != null && <span>diff-lang: <S n={s.same_function_different_language} /></span>}
+                        {s.vividness != null && <span>vivid: <S n={s.vividness} /></span>}
+                        {s.revealing != null && <span>reveal: <S n={s.revealing} /></span>}
+                        {s.contrast != null && <span>contrast: <S n={s.contrast} /></span>}
+                        {s.evidence_across_time != null && <span>time: <S n={s.evidence_across_time} /></span>}
+                        {s.clarity != null && <span>clarity: <S n={s.clarity} /></span>}
+                        {s.earnedness != null && <span>earned: <S n={s.earnedness} /></span>}
+                        {s.meaningfulness_of_selection != null && <span>meaning: <S n={s.meaningfulness_of_selection} /></span>}
                       </div>
                       {s.surfaceable ? (
                         <div className="text-green-400 font-bold text-[10px]">✓ SURFACEABLE</div>
                       ) : (
-                        <div className="text-red-400 text-[10px]">
-                          ✗ Failed: {failed.length > 0 ? failed.join(", ") : "threshold not met"}
-                        </div>
+                        <div className="text-red-400 text-[10px]">✗ Not surfaceable</div>
                       )}
                       <div className="text-gray-500 text-[10px] mt-0.5">why: {s.why}</div>
                     </div>
@@ -127,7 +119,7 @@ export function DevPanel() {
               {scoreResult.label && (
                 <div className="text-[10px] mb-1">
                   <span className="text-gray-400">label: </span>
-                  <span className={registerColor}>{scoreResult.label}</span>
+                  <span className={modeColor}>{scoreResult.label}</span>
                 </div>
               )}
               <div className="text-gray-400 text-[10px] mb-2">

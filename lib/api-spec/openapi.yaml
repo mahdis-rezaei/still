@@ -119,9 +119,11 @@ components:
     Candidate:
       type: object
       properties:
-        register:
+        mode:
           type: string
-          enum: [thread, memory, distance, value_signal, becoming, survival]
+          enum: [thread, memory, distance, value_signal, wisdom]
+        candidate_title:
+          type: string
         function:
           type: string
         description:
@@ -133,7 +135,7 @@ components:
         why_it_matters:
           type: string
       required:
-        - register
+        - mode
         - function
         - description
         - evidence
@@ -157,38 +159,48 @@ components:
     CandidateScore:
       type: object
       properties:
-        function:
+        mode:
           type: string
-        register:
+        candidate_title:
           type: string
-        evidence_strength:
-          type: number
-        recognition:
-          type: number
-        emotional_truth:
-          type: number
         safety:
           type: number
         worth_returning_to:
           type: number
-        non_horoscope_specificity:
+        recognition:
           type: number
-        perspective_not_wound:
+        specificity:
           type: number
+        persistence:
+          type: ["number", "null"]
+        same_function_different_language:
+          type: ["number", "null"]
+        vividness:
+          type: ["number", "null"]
+        revealing:
+          type: ["number", "null"]
+        contrast:
+          type: ["number", "null"]
+        evidence_across_time:
+          type: ["number", "null"]
+        meaningfulness_of_selection:
+          type: ["number", "null"]
+        attribution_confidence:
+          type: ["number", "null"]
+        clarity:
+          type: ["number", "null"]
+        earnedness:
+          type: ["number", "null"]
         surfaceable:
           type: boolean
         why:
           type: string
       required:
-        - function
-        - register
-        - evidence_strength
-        - recognition
-        - emotional_truth
+        - mode
         - safety
         - worth_returning_to
-        - non_horoscope_specificity
-        - perspective_not_wound
+        - recognition
+        - specificity
         - surfaceable
         - why
     ScoreInput:
@@ -207,9 +219,9 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/CandidateScore"
-        register:
+        mode:
           type: string
-          enum: [thread, memory, distance, value_signal, becoming, survival, nothing]
+          enum: [thread, memory, distance, value_signal, wisdom, nothing]
         label:
           type: ["string", "null"]
         observation:
@@ -224,6 +236,6 @@ components:
           type: ["string", "null"]
       required:
         - scores
-        - register
+        - mode
         - quotes
         - why
