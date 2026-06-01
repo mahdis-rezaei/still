@@ -1,0 +1,63 @@
+# Replit Build Prompt — Still: single-user storage (entries + "show full entry"), NOT auth, NOT import pipeline
+
+> Paste as an update to the existing Still app. This adds the smallest persistence layer that makes "show full entry" actually work and lets you build up an archive. Keep scope tight — the "DO NOT build" list at the bottom is part of the spec.
+
+## Why this exists
+
+"Show full entry" can't work while the app is stateless — there's nothing stored to show. This adds a minimal single-user datastore so entries can be created, kept, and reopened in full. There is exactly ONE user right now (the builder), so this deliberately skips authentication and accounts — those are only needed to separate multiple users' data, which is not yet a problem to solve.
+
+## Change 1 — Single-user datastore
+
+Add the simplest persistent store that survives reloads (e.g. SQLite, a local JSON store, or Replit DB — builder's choice; do not over-engineer). One implicit user; no user table, no login, no sessions. Schema is just entries:
+
+```
+entry {
+  id: string
+  date: string        // the entry's own date (YYYY-MM-DD), user-provided
+  text: string        // the full original entry, stored verbatim, unmodified
+  created_at: string  // when it was added to the app
+}
+```
+
+Store entry text EXACTLY as written — never clean, trim, or reformat it. The whole point is that the stored copy is the real page.
+
+## Change 2 — Entry creation (write or paste)
+
+A simple way to add entries to the store:
+- A "new entry" view with a date field and a text area. Save writes one entry to the store.
+- A "paste batch" option: paste multiple dated entries in the existing `[YYYY-MM-DD]` block format; the app splits them on the date markers and stores each as a separate entry. (This is what "import" means for now — paste and store. No file parsing.)
+- After saving, entries persist across reloads.
+
+Keep the creation UI in the existing paper/archive aesthetic — quiet, like writing on a page, not a form-heavy app.
+
+## Change 3 — Wire "show full entry" to the stored original
+
+The "show full entry" expand (already in the UI) should now pull the COMPLETE stored entry for that date from the datastore and reveal it in full, with the surfaced fragment highlighted inside it. This is the feature that motivated storage — make sure the expand reads from the store, not from whatever was in the paste box at analysis time.
+
+If a surfaced fragment's source entry isn't in the store (e.g. analyzed from a one-off paste that wasn't saved), "show full entry" should degrade gracefully — show what it has, don't error.
+
+## Change 4 — Analyze from the stored archive
+
+Let the engine run on the stored entries, not only on a fresh paste. A simple "read across my entries" action that feeds the stored archive through the existing extract→score pipeline. (The paste-and-analyze flow can stay as-is for quick tests.)
+
+## Privacy note (do not skip)
+
+These entries are the most sensitive content a person owns. Even single-user: store locally / in the project's own datastore, do not send entry text anywhere except the existing server-side Claude calls for analysis, and do not add any third-party analytics that touch entry content. Where the archive lives is a real design decision — keep it contained and private by default.
+
+## DO NOT build in this pass
+
+- NO authentication, login, signup, sessions, password reset, or accounts.
+- NO multi-user support or user table.
+- NO file-upload / Apple Notes / Google Docs / email import pipeline. "Import" = paste a batch, nothing more.
+- NO editing/versioning of past entries, tags, search, folders, or export.
+- NO cloud sync or multi-device.
+
+These are deferred until there is an actual second user or a concrete feature that requires them. Adding them now is infrastructure for problems that don't exist yet.
+
+## Acceptance test
+
+- Create an entry (date + text), reload the page — it persists.
+- Paste a batch of dated entries — each is stored separately, all persist.
+- Run analysis on the stored archive — a result surfaces (or "nothing"), same as the paste flow.
+- On a result, "show full entry" reveals the complete stored original for that date, fragment highlighted, and collapses again.
+- No login screen appears anywhere; the app opens straight into use.
