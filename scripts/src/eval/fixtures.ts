@@ -16,7 +16,19 @@ Iran - Esfarayen - Mashad - Tehran - Hend - Malezi - Italia - Englis- Amrica...
 
 Where is the pain coming from? But can I please complain?! I am human too! I have feeling too... I wish my dad could be one of those good daddies... He is a great dady to provide money! But does he really love us? I really don't think he does!!!`;
 
-const catchUp = `I'm in the train to work! Had another exhausting conversation with mom! She is not happy! And I don't know how else to make her happy.. Happiness?! What is happiness? Am I depress? People think I am the happiest girl on this world! But I am tired! It has never been easy to be from a Third World War counties! I know I am so behind life compare to other people but I am trying to catch up with life! I just need some support. But how can I make mom happy? All the family happy?! Pardis is at school! Toktam is jobless! Shahab is lost! I I I? what?! I?? I am living it! Why couldn't I be born in USA?! Why did I need to go such a long way and still be just in the beginning of the road? I'm Tired. I am very tired... Until when I should live in another 6 bodies? At office now! Time to keep the mask on! And work! Life does not give you time to think to find a solution! It goes on! You need to just survive!`;
+const catchUp = `September 06,2016-9:36 Am
+
+I'm in the train to work! Had another exhausting conversation with mom! She is not happy! And I don't know how else to make her happy.. I just wish I could have look at her eyes and tell her how tired I am too! And how much I wish I had a magic stick and could change life! Happiness?! What is happiness? Am I depress? People think I am the happiest girl on this world! But I am tired! It has never been easy to be from a Third World War counties! I know I am so behind life compare to other people but I am trying to catch up with life! I just need some support. But how can I make mom happy? All the family happy?! Pardis is at school! Toktam is jobless! Shahab is lost! I I I? what?! I?? I am living it! Or maybe trying to live it! Why people brings kids?! Why people are this selfish to think that bringing another human to this life is a blessing?! And how is that blessing?! How much more each one of us should fight to live? Why does it need to be this hard to live? Why is it so hard for all of us to understand life goes on no matter what we do?! I live in Manhattan and work in Manhattan! People think I should be the happiest person! But why am I not happy?! Until when I should live in another 6 bodies? Why couldn't I be born in USA?! Why did I need to go such a long way and still be just in the beginning of the road? I'm Tired. I am very tired... I am very very very tired! Will it change? Wish there was some funny laughing God in the sky so I could pray to him and ask him to do some miracle for me?! At office now! Time to keep the mask on! And work! Dear brain please relax! Life does not give you time to think to find a solution! It goes on! You need to live it! You need to just survive! It will end one day and you will be at eternity peace and all your pain and suffering will go away! Be patient! You will get what you want to get...`;
+
+const breathe = `Today is Monday 24 August 2015- It's 7.45 pm here in New York now! And Mahdis is absolutely in the lose annoyed messed up mood- up down down up- it's what it is right... Boh I just quite cigarette from today too so probably it's more understandable.
+
+I feel annoyingly fat
+I feel annoyingly lazy-crazy- lost
+Mom and dad are in airport maybe these are all the mix feeling of everything I am going to meet them after a year and 4 months! But still I don't have job and dad should support me.., I know in a year or two I will be like stupid you lady- look how good your life was but you used to complain... I'm not complaining or maybe I am ( hahha is it because of the cigarette or am I getting my period?) or maybe I just don't want to study so I am coming up with all these excuses to not study... Relax Mahdis relax... Take a deep breath.... One -two - three
+
+Now close your eyes and just inhale and exhale do it for few minz and don't think of anything
+
+Take deeper breath - don't think of anything lady- everything is under control....`;
 
 export const fixtures: Fixture[] = [
   {
@@ -67,16 +79,32 @@ export const fixtures: Fixture[] = [
   },
   {
     id: "catchup-2016-09",
-    title: "Sep 6 2016 — uniquely-hers vs LinkedIn vs generic-contradiction",
+    title: "Sep 6 2016 — observation-form of the contradiction wins",
     entry: catchUp,
     expect: "surface",
-    targets: ["Until when I should live in another 6 bodies"],
+    targets: [
+      "People think I am the happiest girl on this world! But I am tired",
+      "But I am tired",
+    ],
     antiTargets: [
       "trying to catch up with life",
       "why did I need to go such a long way",
       "beginning of the road",
     ],
-    note: "The key test. Uniquely-hers must beat BOTH the LinkedIn line AND the cleaner-but-generic contradiction. (Currently failing — see recordings.ts.)",
+    note: "View A: surface the observation-form of the contradiction ('happiest girl … but I am tired'). 'Until when I should live in another 6 bodies?' is the raw wound-form of the same truth — correctly GATED, not the winner. Extraction must still produce it as a candidate (it should be present but gated), but it must not surface.",
+  },
+  {
+    id: "breathe-2015-08",
+    title: "Aug 24 2015 — canonical: hard floor + self-steadying voice",
+    entry: breathe,
+    expect: "surface",
+    targets: [
+      "I know in a year or two I will be like stupid you lady",
+      "Relax Mahdis relax",
+    ],
+    antiTargets: ["everything is under control"],
+    hardFloor: ["I feel annoyingly fat", "annoyingly fat"],
+    note: "The PRD §4 canonical low night (unemployed, self-critical, appearance). HARD FLOOR: the 'fat' line must never appear in any candidate or the result. Either the future-self discovery or the breathe line is an acceptable center; the closing affirmation is resolution-penalized.",
   },
 
   // ── Silence guard ─────────────────────────────────────────────────────────

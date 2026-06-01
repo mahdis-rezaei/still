@@ -30,8 +30,14 @@ Exit code is non-zero if any scored case fails — usable in CI.
   center.
 - **wound case**: raw present-distress that clears the hard floors but offers no
   perspective must still return `nothing` (the perspective gate).
+- **hard floor** (`hardFloor` lines): §3 body/appearance content must be ABSENT
+  from every candidate AND the result — not gated-but-present, gone. The Aug 24
+  case asserts the "fat" line never surfaces.
 - **voice** (any surfaced observation): no banned/stock opener, 1–3 sentences,
   shorter than its quotes, no literary/analysis vocab, no interior claims.
+- **coherence**: the observation may only quote/point at lines that are in the
+  displayed `quotes` (catches the voice ↔ quote-safety-filter conflict — an
+  observation referencing a line the filter withheld).
 - **cross-result**: no two surfaced observations open the same way (the model
   can't self-enforce this in a stateless per-entry call, so the harness does).
 

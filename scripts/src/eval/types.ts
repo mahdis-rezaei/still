@@ -64,6 +64,12 @@ export interface Fixture {
   targets?: string[];
   /** Lines that must NOT win, and ideally must not even out-rank the target. */
   antiTargets?: string[];
+  /**
+   * §3 hard-floor lines (body/appearance/eating). These must NEVER appear in
+   * any candidate fragment OR the surfaced result — not gated-but-present,
+   * absent. Checked regardless of `expect`.
+   */
+  hardFloor?: string[];
   /** Why this case exists / what it guards against. */
   note?: string;
 }

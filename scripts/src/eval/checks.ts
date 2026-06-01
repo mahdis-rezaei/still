@@ -47,6 +47,23 @@ function resultText(r: EngineResult): string {
 function selectionChecks(fx: Fixture, res: EngineResult): Check[] {
   const checks: Check[] = [];
 
+  // §3 hard floor: body/appearance content must be ABSENT — not gated-but-present.
+  // Scans every candidate fragment AND the surfaced result. Runs for all cases.
+  if (fx.hardFloor?.length) {
+    const haystack = [
+      ...res.candidates.map(candidateText),
+      resultText(res),
+    ].join(" · ");
+    const breach = fx.hardFloor.find((h) => includesLine(haystack, h));
+    checks.push({
+      name: "hard floor: banned content absent",
+      pass: !breach,
+      detail: breach
+        ? `HARD FLOOR BREACH: "${breach}" present in candidates/result`
+        : "no body/appearance content extracted or surfaced",
+    });
+  }
+
   if (fx.expect === "nothing") {
     const isNothing =
       res.result.register === "nothing" && !res.result.observation;
@@ -136,6 +153,23 @@ const INTERIOR_CLAIMS: RegExp[] = [
   /you welcomed/i,
 ];
 
+// Pull quoted spans out of an observation so we can check the voice only points
+// at lines that are actually displayed. Conservative on purpose: matches double
+// quotes (straight/curly) and curly single quotes, requires a space inside, and
+// skips straight single quotes entirely — apostrophes in contractions ("don't")
+// would otherwise create false pairs and fail good results.
+function extractQuotedSnippets(s: string): string[] {
+  const out: string[] = [];
+  const patterns = [/"([^"]{10,}?)"/g, /“([^”]{10,}?)”/g, /‘([^’]{10,}?)’/g];
+  for (const re of patterns) {
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(s)) !== null) {
+      if (m[1].includes(" ")) out.push(m[1]);
+    }
+  }
+  return out;
+}
+
 function countSentences(s: string): number {
   // Strip embedded quoted material so a quoted "…life!" doesn't inflate the count.
   const stripped = s.replace(/['"‘’“”][^'"‘’“”]*['"‘’“”]/g, " ");
@@ -184,6 +218,22 @@ function voiceChecks(res: EngineResult): Check[] {
     name: "no interior claims",
     pass: !interior,
     detail: interior ? `interior claim: ${interior}` : "ok",
+  });
+
+  // Coherence: the observation may only quote/point at lines that are actually
+  // displayed. Catches the voice ↔ quote-safety-filter conflict — an observation
+  // referencing a line the filter withheld from the shown quotes.
+  const displayedQuotes = res.result.quotes.map((q) => q.text).join(" · ");
+  const referenced = extractQuotedSnippets(obs);
+  const orphan = referenced.find((q) => !includesLine(displayedQuotes, q));
+  checks.push({
+    name: "observation quotes only shown lines",
+    pass: !orphan,
+    detail: orphan
+      ? `references a line not in displayed quotes: "${orphan.slice(0, 50)}…"`
+      : referenced.length
+        ? "all referenced quotes are shown"
+        : "no inline quotes (points without quoting)",
   });
 
   return checks;
