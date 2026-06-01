@@ -138,4 +138,18 @@ export const fixtures: Fixture[] = [
     expect: "nothing",
     note: "Clears the hard floors but offers no meaning-over-wound. The perspective gate must disqualify it → nothing, not a raw line surfaced.",
   },
+
+  // ── Over-silence guard ────────────────────────────────────────────────────
+  {
+    id: "survived-guard",
+    title: "Survived difficulty — must surface, not be over-gated to silence",
+    entry:
+      "Three years ago I wrote almost every night that I didn't belong here, that I'd give anything to go back. I found that notebook today. The strange part: I can't remember the last time I felt that. Somewhere in there it just... stopped. I didn't notice it leave.",
+    expect: "surface",
+    targets: [
+      "I can't remember the last time I felt that",
+      "I didn't notice it leave",
+    ],
+    note: "The counterweight to the silence/wound cases: survived past difficulty with real perspective (a fear named and shown to have dissolved, §3.1/§6.4). It MUST surface — if the two stacked gates return nothing here, they are over-gating. No recording yet: skipped offline, runs live (STILL_MODE=http).",
+  },
 ];
