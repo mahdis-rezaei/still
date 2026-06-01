@@ -11,12 +11,14 @@ export interface HistoryEntry {
   id: string;
   result: ScoreResult;
   savedAt: string;
+  sourceEntries?: Record<string, string>;
 }
 
 interface StillState {
   entries: string;
   setEntries: (entries: string) => void;
   parsedEntries: Record<string, string>;
+  activeSourceEntries: Record<string, string>;
   extractResult: ExtractResult | null;
   setExtractResult: (result: ExtractResult | null) => void;
   scoreResult: ScoreResult | null;
@@ -29,7 +31,7 @@ interface StillState {
   reset: () => void;
 }
 
-export function parseEntries(raw: string): Record<string, string> {
+function parseEntries(raw: string): Record<string, string> {
   const result: Record<string, string> = {};
   const regex = /\[(\d{4}-\d{2}-\d{2})\]/g;
   const matches = [...raw.matchAll(regex)];
@@ -90,6 +92,7 @@ export function StillProvider({ children }: { children: ReactNode }) {
   const [scoreResult, setScoreResultState] = useState<ScoreResult | null>(null);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [activeSourceEntries, setActiveSourceEntries] = useState<Record<string, string>>({});
 
   const parsedEntries = useMemo(() => parseEntries(entries), [entries]);
 
@@ -100,6 +103,7 @@ export function StillProvider({ children }: { children: ReactNode }) {
       const latest = saved[0];
       setScoreResultState(latest.result);
       setSavedAt(new Date(latest.savedAt));
+      setActiveSourceEntries(latest.sourceEntries ?? {});
     }
   }, []);
 
@@ -108,16 +112,21 @@ export function StillProvider({ children }: { children: ReactNode }) {
     if (result) {
       const now = new Date();
       setSavedAt(now);
+      const sourceEntries = parseEntries(entries);
+      setActiveSourceEntries(sourceEntries);
       const entry: HistoryEntry = {
         id: crypto.randomUUID(),
         result,
         savedAt: now.toISOString(),
+        sourceEntries,
       };
       setHistory((prev) => {
         const next = [entry, ...prev].slice(0, MAX_HISTORY);
         persistHistory(next);
         return next;
       });
+    } else {
+      setActiveSourceEntries({});
     }
   };
 
@@ -128,6 +137,7 @@ export function StillProvider({ children }: { children: ReactNode }) {
       if (scoreResult && prev.find((e) => e.id === id)?.result === scoreResult) {
         setScoreResultState(next.length > 0 ? next[0].result : null);
         setSavedAt(next.length > 0 ? new Date(next[0].savedAt) : null);
+        setActiveSourceEntries(next.length > 0 ? next[0].sourceEntries ?? {} : {});
       }
       return next;
     });
@@ -138,11 +148,13 @@ export function StillProvider({ children }: { children: ReactNode }) {
     persistHistory([]);
     setScoreResultState(null);
     setSavedAt(null);
+    setActiveSourceEntries({});
   };
 
   const viewHistoryEntry = (entry: HistoryEntry) => {
     setScoreResultState(entry.result);
     setSavedAt(new Date(entry.savedAt));
+    setActiveSourceEntries(entry.sourceEntries ?? {});
   };
 
   const reset = () => {
@@ -150,6 +162,7 @@ export function StillProvider({ children }: { children: ReactNode }) {
     setExtractResult(null);
     setScoreResultState(null);
     setSavedAt(null);
+    setActiveSourceEntries({});
   };
 
   return (
@@ -158,6 +171,7 @@ export function StillProvider({ children }: { children: ReactNode }) {
         entries,
         setEntries,
         parsedEntries,
+        activeSourceEntries,
         extractResult,
         setExtractResult,
         scoreResult,

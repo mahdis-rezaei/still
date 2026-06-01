@@ -82,7 +82,7 @@ function highlightFragment(
 
 export default function Result() {
   const [, setLocation] = useLocation();
-  const { scoreResult, parsedEntries, reset } = useStill();
+  const { scoreResult, activeSourceEntries, reset } = useStill();
   const { data: storedEntries } = useListEntries();
   const [showWhy, setShowWhy] = useState(false);
   const [expandedEntries, setExpandedEntries] = useState<Set<number>>(new Set());
@@ -145,7 +145,7 @@ export default function Result() {
               </span>
               <div className="flex flex-col gap-8">
                 {scoreResult.quotes.map((q, idx) => {
-                  const fullText = resolveFullText(q.date, q.fragment, storedEntries, parsedEntries);
+                  const fullText = resolveFullText(q.date, q.fragment, storedEntries, activeSourceEntries);
                   const isExpanded = expandedEntries.has(idx);
                   const highlighted = fullText ? highlightFragment(fullText, q.fragment) : null;
 
