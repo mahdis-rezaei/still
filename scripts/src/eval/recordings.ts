@@ -5,146 +5,207 @@ import type { EngineResult } from "./types";
 // are point-in-time captures, not live truth — for current quality, run live
 // (STILL_MODE=http). Each recording notes when it was taken.
 //
-// - catchup-2016-09: post-extraction-fix, post-voice-fix. "6 bodies" is now
-//   extracted but correctly GATED (wound-form); the observation-form of the
-//   contradiction wins (View A). Voice still fails the 80/20 length check.
+// - catchup-2016-09: the over-gating run (#3). "6 bodies" (center 5) and the
+//   "living it/trying" discovery are both gated/filtered, so a generic
+//   anti-target ("long way / beginning of the road") won the specificity
+//   tiebreak. RED on purpose — the tracked regression for the gate-criterion
+//   refinement. (Earlier runs of this entry picked valid winners; non-determinism.)
 // - breathe-2015-08: PRE-voice-fix capture. Selection + hard floor are correct;
 //   the observation still uses the banned "There's a line…" opener, so its voice
 //   checks fail by design — it records the before-state.
 
 export const recordings: Record<string, EngineResult> = {
   "catchup-2016-09": {
-    mode: "wisdom",
+    mode: "memory",
     candidates: [
       {
         lens: "wisdom",
         fragments: ["At office now! Time to keep the mask on! And work!"],
-        scores: { center: 3, specific: 3, discovery: 3, contra: 3, worth: 3 },
-        gates: { floors: true, perspective: true, evidence: true },
+        scores: { center: 2, specific: 2, discovery: 2, contra: 3, worth: 3 },
+        gates: {
+          floors: true,
+          perspective: true,
+          evidence: true,
+          displayable: true,
+        },
         surfaceable: true,
-        why: "Vivid threshold moment, but a transition gesture, not the core.",
+        why: "Names the performance plainly but sits at the edge of the entry, not its center.",
       },
       {
         lens: "wisdom",
         fragments: [
-          "Life does not give you time to think to find a solution! It goes on! You need to live it! You need to just survive!",
+          "People think I am the happiest girl on this world! But I am tired!",
         ],
-        scores: { center: 3, specific: 2, discovery: 3, contra: 2, worth: 3 },
-        gates: { floors: true, perspective: true, evidence: true },
+        scores: { center: 4, specific: 3, discovery: 3, contra: 5, worth: 4 },
+        gates: {
+          floors: true,
+          perspective: true,
+          evidence: true,
+          displayable: true,
+        },
         surfaceable: true,
-        why: "Hard-won recognition, but fairly universal — not enough specificity.",
+        why: "Strong contradiction between external perception and internal reality, but the phrasing is not uniquely hers.",
       },
       {
         lens: "memory",
         fragments: ["Until when I should live in another 6 bodies?"],
-        scores: { center: 4, specific: 5, discovery: 4, contra: 2, worth: 4 },
-        gates: { floors: true, perspective: false, evidence: true },
+        scores: { center: 4, specific: 5, discovery: 4, contra: 3, worth: 5 },
+        gates: {
+          floors: true,
+          perspective: false,
+          evidence: true,
+          displayable: false,
+        },
         surfaceable: false,
-        why: "Fails gate_perspective_not_wound — a rhetorical cry of burden with no turn. The raw wound-form of the contradiction; left behind the click.",
+        why: "Pure wound with no turn or self-address — fails perspective gate AND displayable quote gate. The page's strongest line, stripped by the stacked gates.",
+      },
+      {
+        lens: "wisdom",
+        fragments: [
+          "Life does not give you time to think to find a solution! It goes on!",
+        ],
+        scores: { center: 3, specific: 2, discovery: 3, contra: 2, worth: 3 },
+        gates: {
+          floors: true,
+          perspective: true,
+          evidence: true,
+          displayable: true,
+        },
+        surfaceable: true,
+        why: "A genuine noticing but not uniquely hers — the phrasing could belong to anyone.",
       },
       {
         lens: "memory",
         fragments: [
           "Why did I need to go such a long way and still be just in the beginning of the road?",
         ],
+        scores: { center: 4, specific: 4, discovery: 3, contra: 4, worth: 5 },
+        gates: {
+          floors: true,
+          perspective: true,
+          evidence: true,
+          displayable: true,
+        },
+        surfaceable: true,
+        why: "WINNER (won on specificity tiebreak). The generic anti-target — it only won because the stronger uniquely-hers lines were gated/filtered out.",
+      },
+      {
+        lens: "memory",
+        fragments: [
+          "Why people brings kids?! Why people are this selfish to think that bringing another human to this life is a blessing?!",
+        ],
         scores: { center: 3, specific: 3, discovery: 3, contra: 2, worth: 3 },
-        gates: { floors: true, perspective: false, evidence: true },
+        gates: {
+          floors: true,
+          perspective: false,
+          evidence: true,
+          displayable: false,
+        },
         surfaceable: false,
-        why: "Fails gate_perspective_not_wound — grief about effort without progress, no turn.",
-      },
-      {
-        lens: "wisdom",
-        fragments: [
-          "People are this selfish to think that bringing another human to this life is a blessing?! And how is that blessing?!",
-        ],
-        scores: { center: 3, specific: 4, discovery: 4, contra: 4, worth: 4 },
-        gates: { floors: true, perspective: true, evidence: true },
-        surfaceable: true,
-        why: "Genuine philosophical eruption with real contradiction, but emotional_center is 3 — not what the page hangs on.",
-      },
-      {
-        lens: "memory",
-        fragments: [
-          "People think I am the happiest girl on this world! But I am tired!",
-        ],
-        scores: { center: 5, specific: 3, discovery: 3, contra: 5, worth: 5 },
-        gates: { floors: true, perspective: true, evidence: true },
-        surfaceable: true,
-        why: "The emotional core the entire entry leans on — the gap between what others see and what she experiences. Highest emotional_center, highest contradiction. Winner.",
-      },
-      {
-        lens: "memory",
-        fragments: [
-          "How much I wish I had a magic stick and could change life!",
-        ],
-        scores: { center: 2, specific: 3, discovery: 2, contra: 1, worth: 3 },
-        gates: { floors: true, perspective: true, evidence: true },
-        surfaceable: true,
-        why: "Unguarded and charming, but a passing wish — not load-bearing.",
+        why: "Raw eruption with no turn or self-address — fails perspective gate.",
       },
       {
         lens: "memory",
         fragments: [
           "Wish there was some funny laughing God in the sky so I could pray to him and ask him to do some miracle for me?!",
         ],
-        scores: { center: 3, specific: 5, discovery: 4, contra: 3, worth: 4 },
-        gates: { floors: true, perspective: true, evidence: true },
+        scores: { center: 3, specific: 5, discovery: 4, contra: 2, worth: 4 },
+        gates: {
+          floors: true,
+          perspective: true,
+          evidence: true,
+          displayable: true,
+        },
         surfaceable: true,
-        why: "Maximum specificity, strong discovery — but emotional_center is 3, losing to Happiest Girl Myth at the first axis.",
+        why: "Highly specific and strange — only this writer — but not the emotional center.",
       },
       {
         lens: "wisdom",
         fragments: [
-          "It has never been easy to be from a Third World War counties! I know I am so behind life compare to other people but I am trying to catch up with life!",
+          "It has never been easy to be from a Third World War counties!",
         ],
-        scores: { center: 3, specific: 4, discovery: 3, contra: 3, worth: 3 },
-        gates: { floors: true, perspective: true, evidence: true },
+        scores: { center: 2, specific: 3, discovery: 3, contra: 2, worth: 3 },
+        gates: {
+          floors: true,
+          perspective: true,
+          evidence: true,
+          displayable: true,
+        },
         surfaceable: true,
-        why: "Structural-personal connection is specific and real, but not the load-bearing line.",
+        why: "Interesting slip but not the emotional center — sits as context.",
       },
       {
         lens: "memory",
         fragments: [
           "I I I? what?! I?? I am living it! Or maybe trying to live it!",
         ],
-        scores: { center: 3, specific: 4, discovery: 4, contra: 2, worth: 3 },
-        gates: { floors: true, perspective: false, evidence: true },
-        surfaceable: false,
-        why: "Fails gate_perspective_not_wound — raw breakdown with no turn.",
+        scores: { center: 3, specific: 3, discovery: 3, contra: 3, worth: 3 },
+        gates: {
+          floors: true,
+          perspective: true,
+          evidence: true,
+          displayable: true,
+        },
+        surfaceable: true,
+        why: "The self-correction has a turn, but the most striking part ('I I I? what?! I??') is filtered out, leaving a weaker displayable line. (Last run this split into its own strong discovery candidate — candidate-boundary drift.)",
       },
       {
         lens: "wisdom",
-        fragments: [
-          "It will end one day and you will be at eternity peace and all your pain and suffering will go away! Be patient!",
-        ],
-        scores: { center: 3, specific: 3, discovery: 2, contra: 2, worth: 2 },
-        gates: { floors: true, perspective: true, evidence: true },
-        resolutionPenalized: true,
+        fragments: ["You need to live it! You need to just survive!"],
+        scores: { center: 3, specific: 3, discovery: 4, contra: 4, worth: 4 },
+        gates: {
+          floors: true,
+          perspective: true,
+          evidence: true,
+          displayable: true,
+        },
         surfaceable: true,
-        why: "Resolution-type (self-coaching toward patience). Penalty fires; demoted. Low worth given re-surfacing risk.",
+        why: "The shift from live to survive is a genuine discovery but not the emotional center.",
       },
       {
         lens: "memory",
-        fragments: ["I just need some support."],
-        scores: { center: 3, specific: 1, discovery: 2, contra: 1, worth: 3 },
-        gates: { floors: true, perspective: true, evidence: true },
+        fragments: [
+          "How much I wish I had a magic stick and could change life!",
+        ],
+        scores: { center: 2, specific: 2, discovery: 2, contra: 2, worth: 2 },
+        gates: {
+          floors: true,
+          perspective: true,
+          evidence: true,
+          displayable: true,
+        },
         surfaceable: true,
-        why: "Clearest, most unguarded sentence, but anyone could write it — specificity 1.",
+        why: "Childlike image but too generic to carry the entry.",
+      },
+      {
+        lens: "memory",
+        fragments: [
+          "It will end one day and you will be at eternity peace and all your pain and suffering will go away!",
+        ],
+        scores: { center: 3, specific: 2, discovery: 2, contra: 2, worth: 2 },
+        gates: {
+          floors: false,
+          perspective: false,
+          evidence: true,
+          displayable: false,
+        },
+        surfaceable: false,
+        why: "Cessation framing in context of active exhaustion touches crisis territory — fails hard floors and perspective gate.",
       },
     ],
     result: {
       register: "memory",
       label: "A PAGE FROM THEN",
       observation:
-        'The page is sprawling — philosophical questions, exhaustion, a mask, a funny laughing God — and right at the center of all of it: "People think I am the happiest girl on this world! But I am tired!" That\'s the line the rest of the page is trying to explain.',
+        "The whole entry is exhaustion and weight — and then this question, almost rhetorical but not quite: 'Why did I need to go such a long way and still be just in the beginning of the road?' The distance traveled and the ground not yet covered, held in one sentence.",
       quotes: [
         {
           date: "September 06, 2016",
-          text: "People think I am the happiest girl on this world! But I am tired!",
+          text: "Why did I need to go such a long way and still be just in the beginning of the road?",
         },
       ],
-      wonAt: "emotional_center",
-      why: "The one question that holds all the others: what people see and what you know. That gap is what the whole entry is built around.",
+      wonAt: "specificity",
+      why: "This question holds something specific to where you were in 2016 — the gap between how far you'd come and how far you still felt from where you wanted to be.",
     },
   },
 

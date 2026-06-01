@@ -19,6 +19,8 @@ export interface CandidateGates {
   floors?: boolean;
   perspective?: boolean;
   evidence?: boolean;
+  /** gate_displayable_quote: a safe fragment survives the quote-safety filter. */
+  displayable?: boolean;
 }
 
 export interface Candidate {

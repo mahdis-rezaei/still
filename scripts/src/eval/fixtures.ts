@@ -79,19 +79,23 @@ export const fixtures: Fixture[] = [
   },
   {
     id: "catchup-2016-09",
-    title: "Sep 6 2016 — observation-form of the contradiction wins",
+    title: "Sep 6 2016 — over-gating regression (anti-target won)",
     entry: catchUp,
     expect: "surface",
+    // Acceptable winners (View A): the observation-form of the contradiction, or
+    // the self-correction discovery. Either is a true center.
     targets: [
       "People think I am the happiest girl on this world! But I am tired",
       "But I am tired",
+      "I am living it! Or maybe trying to live it",
+      "Or maybe trying to live it",
     ],
     antiTargets: [
       "trying to catch up with life",
       "why did I need to go such a long way",
       "beginning of the road",
     ],
-    note: "View A: surface the observation-form of the contradiction ('happiest girl … but I am tired'). 'Until when I should live in another 6 bodies?' is the raw wound-form of the same truth — correctly GATED, not the winner. Extraction must still produce it as a candidate (it should be present but gated), but it must not surface.",
+    note: "RED on purpose — captures the over-gating run (#3). The two stacked gates removed the page's strongest lines ('6 bodies' gated; 'living it/trying' filtered to weakness), so a generic anti-target ('long way / beginning of the road') won the specificity tiebreak. Other runs pick a valid winner — this is the non-deterministic miss the gate-criterion refinement should fix. 'Until when I should live in another 6 bodies?' must appear as a candidate but stays gated (wound-form).",
   },
   {
     id: "breathe-2015-08",
