@@ -96,7 +96,23 @@ function normalizeResponse(raw: unknown): EngineResult {
       })),
       wonAt: result.wonAt ?? result.won_at,
       why: result.why,
+      secondaryThread: mapSecondaryThread(
+        result.secondaryThread ?? result.secondary_thread,
+      ),
     },
+  };
+}
+
+function mapSecondaryThread(
+  st: any,
+): EngineResult["result"]["secondaryThread"] {
+  if (!st) return null;
+  return {
+    observation: st.observation ?? null,
+    quotes: (st.quotes ?? st.evidence ?? []).map((q: any) => ({
+      date: q.date ?? "",
+      text: q.text ?? q.fragment ?? "",
+    })),
   };
 }
 
