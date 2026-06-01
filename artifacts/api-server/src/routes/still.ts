@@ -10,7 +10,8 @@ const client = new Anthropic({
 });
 
 const MODEL = "claude-sonnet-4-6";
-const MAX_TOKENS = 1500;
+const MAX_TOKENS_PASS1 = 2000;
+const MAX_TOKENS_PASS2 = 4000;
 
 const PASS1_SYSTEM = `You are analyzing personal journal entries to find RECURRING patterns across time. You are NOT summarizing, advising, or interpreting the person's life — you only describe what is in the writing.
 
@@ -47,8 +48,14 @@ VOICE of the final thread:
 
 Output ONLY valid JSON (no markdown fences): {"scores":[{function, persistence, persistence_of_function, recognition, endurance_not_wound, safety, surfaceable, why}], "register":"thread"|"nothing", "thread":string|null, "evidence":[{date,fragment}], "why":string}`;
 
-function stripFences(raw: string): string {
-  return raw.replace(/^```(?:json)?\n?/m, "").replace(/\n?```$/m, "").trim();
+function extractJson(raw: string): string {
+  // Strip markdown code fences if present
+  const defenced = raw.replace(/^```(?:json)?\n?/m, "").replace(/\n?```$/m, "").trim();
+  // Find the outermost JSON object, ignoring any prose before/after
+  const start = defenced.indexOf("{");
+  const end = defenced.lastIndexOf("}");
+  if (start === -1 || end === -1 || end <= start) return defenced;
+  return defenced.slice(start, end + 1);
 }
 
 const ExtractInputSchema = z.object({
@@ -78,7 +85,7 @@ router.post("/still/extract", async (req, res) => {
   try {
     const message = await client.messages.create({
       model: MODEL,
-      max_tokens: MAX_TOKENS,
+      max_tokens: MAX_TOKENS_PASS1,
       system: PASS1_SYSTEM,
       messages: [
         {
@@ -94,7 +101,7 @@ router.post("/still/extract", async (req, res) => {
       return;
     }
 
-    const raw = stripFences(block.text);
+    const raw = extractJson(block.text);
     let result: unknown;
     try {
       result = JSON.parse(raw);
@@ -123,7 +130,7 @@ router.post("/still/score", async (req, res) => {
   try {
     const message = await client.messages.create({
       model: MODEL,
-      max_tokens: MAX_TOKENS,
+      max_tokens: MAX_TOKENS_PASS2,
       system: PASS2_SYSTEM,
       messages: [
         {
@@ -139,7 +146,7 @@ router.post("/still/score", async (req, res) => {
       return;
     }
 
-    const raw = stripFences(block.text);
+    const raw = extractJson(block.text);
     let result: unknown;
     try {
       result = JSON.parse(raw);
