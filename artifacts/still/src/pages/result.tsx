@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useStill } from "@/lib/store";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const MODE_LABELS: Record<string, string> = {
   thread: "WHAT KEPT RETURNING",
@@ -17,10 +17,37 @@ function quoteSectionLabel(mode: string): string {
   return "IN YOUR OWN WORDS";
 }
 
+function highlightFragment(
+  fullText: string,
+  fragment: string
+): { before: string; match: string; after: string } | null {
+  if (!fragment) return null;
+  const idx = fullText.indexOf(fragment);
+  if (idx !== -1) {
+    return {
+      before: fullText.slice(0, idx),
+      match: fullText.slice(idx, idx + fragment.length),
+      after: fullText.slice(idx + fragment.length),
+    };
+  }
+  const lower = fullText.toLowerCase();
+  const fragLower = fragment.toLowerCase();
+  const lidx = lower.indexOf(fragLower);
+  if (lidx !== -1) {
+    return {
+      before: fullText.slice(0, lidx),
+      match: fullText.slice(lidx, lidx + fragment.length),
+      after: fullText.slice(lidx + fragment.length),
+    };
+  }
+  return null;
+}
+
 export default function Result() {
   const [, setLocation] = useLocation();
-  const { scoreResult, reset } = useStill();
+  const { scoreResult, parsedEntries, reset } = useStill();
   const [showWhy, setShowWhy] = useState(false);
+  const [expandedEntries, setExpandedEntries] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     if (!scoreResult) {
@@ -32,6 +59,15 @@ export default function Result() {
 
   const isNothing = scoreResult.mode === "nothing";
   const label = MODE_LABELS[scoreResult.mode] ?? scoreResult.mode.toUpperCase();
+
+  function toggleEntry(idx: number) {
+    setExpandedEntries((prev) => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx);
+      else next.add(idx);
+      return next;
+    });
+  }
 
   return (
     <div className="min-h-[100dvh] flex flex-col p-6 max-w-[680px] mx-auto py-12 md:py-24">
@@ -70,22 +106,73 @@ export default function Result() {
                 {quoteSectionLabel(scoreResult.mode)}
               </span>
               <div className="flex flex-col gap-8">
-                {scoreResult.quotes.map((q, idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.1 + 0.2, duration: 0.6 }}
-                    className="flex flex-col gap-2"
-                  >
-                    <span className="text-[11px] font-sans text-faint-ink tracking-wide">
-                      {q.date}
-                    </span>
-                    <p className="font-body text-xl text-ink leading-relaxed pb-6 border-b border-border">
-                      "{q.fragment}"
-                    </p>
-                  </motion.div>
-                ))}
+                {scoreResult.quotes.map((q, idx) => {
+                  const fullText = parsedEntries[q.date];
+                  const isExpanded = expandedEntries.has(idx);
+                  const highlighted = fullText ? highlightFragment(fullText, q.fragment) : null;
+
+                  return (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.1 + 0.2, duration: 0.6 }}
+                      className="flex flex-col gap-2"
+                    >
+                      <span className="text-[11px] font-sans text-faint-ink tracking-wide">
+                        {q.date}
+                      </span>
+                      <p className="font-body text-xl text-ink leading-relaxed">
+                        "{q.fragment}"
+                      </p>
+
+                      {/* Show full entry */}
+                      {fullText && (
+                        <div className="mt-1">
+                          <button
+                            onClick={() => toggleEntry(idx)}
+                            className="text-[11px] font-sans text-faint-ink/60 hover:text-faint-ink transition-colors border-b border-faint-ink/20 pb-px leading-none"
+                          >
+                            {isExpanded ? "hide entry" : "show full entry"}
+                          </button>
+
+                          <AnimatePresence>
+                            {isExpanded && (
+                              <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.35, ease: "easeInOut" }}
+                                className="overflow-hidden"
+                              >
+                                <div className="mt-4 pl-4 border-l border-border">
+                                  <p className="text-[11px] font-sans text-faint-ink tracking-wide mb-2">
+                                    {q.date}
+                                  </p>
+                                  <p className="font-body text-sm text-soft-ink leading-relaxed whitespace-pre-wrap">
+                                    {highlighted ? (
+                                      <>
+                                        {highlighted.before}
+                                        <span className="bg-deep-brown/8 text-ink rounded-sm px-0.5">
+                                          {highlighted.match}
+                                        </span>
+                                        {highlighted.after}
+                                      </>
+                                    ) : (
+                                      fullText
+                                    )}
+                                  </p>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      )}
+
+                      <div className="mt-4 border-b border-border" />
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
           )}

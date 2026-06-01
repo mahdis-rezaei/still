@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from "react";
 import type {
   ScoreResult,
   ExtractResult,
@@ -16,6 +16,7 @@ export interface HistoryEntry {
 interface StillState {
   entries: string;
   setEntries: (entries: string) => void;
+  parsedEntries: Record<string, string>;
   extractResult: ExtractResult | null;
   setExtractResult: (result: ExtractResult | null) => void;
   scoreResult: ScoreResult | null;
@@ -26,6 +27,19 @@ interface StillState {
   clearHistory: () => void;
   viewHistoryEntry: (entry: HistoryEntry) => void;
   reset: () => void;
+}
+
+function parseEntries(raw: string): Record<string, string> {
+  const result: Record<string, string> = {};
+  const regex = /\[(\d{4}-\d{2}-\d{2})\]/g;
+  const matches = [...raw.matchAll(regex)];
+  matches.forEach((match, i) => {
+    const date = match[1];
+    const start = (match.index ?? 0) + match[0].length;
+    const end = i + 1 < matches.length ? (matches[i + 1].index ?? raw.length) : raw.length;
+    result[date] = raw.slice(start, end).trim();
+  });
+  return result;
 }
 
 const StillContext = createContext<StillState | undefined>(undefined);
@@ -53,6 +67,8 @@ export function StillProvider({ children }: { children: ReactNode }) {
   const [scoreResult, setScoreResultState] = useState<ScoreResult | null>(null);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+
+  const parsedEntries = useMemo(() => parseEntries(entries), [entries]);
 
   useEffect(() => {
     const saved = loadHistory();
@@ -118,6 +134,7 @@ export function StillProvider({ children }: { children: ReactNode }) {
       value={{
         entries,
         setEntries,
+        parsedEntries,
         extractResult,
         setExtractResult,
         scoreResult,

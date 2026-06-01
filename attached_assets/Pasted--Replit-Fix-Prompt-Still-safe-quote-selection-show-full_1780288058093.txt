@@ -1,0 +1,43 @@
+# Replit Fix Prompt — Still: safe quote selection + "show full entry"
+
+> Paste as an update to the existing Still app. Two changes: (1) the evidence quotes must obey the same safety filter as the observation, and (2) add a "show full entry" expand. No voice changes — the observation voice is working, leave it alone.
+
+## Change 1 — Quotes must pass the same perspective-not-wound filter as the observation
+
+Right now the observation behaves safely (it points at the alive, turning line) but the supporting QUOTES below it can surface the rawest, most painful lines verbatim with no framing — e.g. grief about a brother who couldn't immigrate, "the dream of having my brother here is gone." The headline is gentle while the fine print is a raw wound. The quotes are being selected independently and are not inheriting the safety discipline. Fix that.
+
+Rules for selecting the supporting quote fragments:
+
+- **The quotes obey the same §3 perspective-not-wound rule as the observation.** A fragment is surfaced only if it offers meaning, aliveness, or a turn — not raw, unframed pain.
+- **Favor the alive / turning / self-addressing lines** over the rawest grief. From a page that contains both, prefer the line where the writing turns, argues, addresses itself, or comes to something ("Rumi says what you seek seeks you — he is wrong," "you will be fine girl… live love laugh") over the bare statement of loss ("the dream of having my brother here is gone").
+- **Never surface a raw wound as a naked fragment.** Do not pull the saddest, most unprocessed line out of context and display it alone as evidence. If painful material is genuinely central to why the page matters, it must be carried with framing (the way the observation frames things), never dumped as a bare quote.
+- **Respect the existing hard floors:** still never surface body/weight/appearance/eating lines (the Aug 2015 entry's appearance lines stay excluded), and never surface active-crisis content.
+- The quote's job is the same as the observation's: invite the reader back to the page with something alive, not re-expose a wound on a random day.
+
+When in doubt about a fragment, leave it out — the full entry is available behind "show full entry" (below) for the reader who chooses to descend. The surfaced fragments should be the safe, alive doorway; the raw page is reached only by the reader's own choice.
+
+## Change 2 — "Show full entry" expand
+
+Under each surfaced fragment, add a quiet, low-emphasis link: **"show full entry"**. When tapped, it expands inline to reveal the COMPLETE original journal entry for that date, in full, dated, exactly as written (unmodified — the writer's real page). Tap again to collapse.
+
+- Default state is collapsed — fragment only. The page stays calm and spare; full entries appear only when the reader chooses to descend (graduated disclosure: the safe fragment is the invitation, the full entry is the reader's chosen descent).
+- The expanded entry shows the raw original text. Within it, subtly highlight the surfaced fragment (faint background or slightly darker ink) so the reader sees the line in its real context — proof it wasn't invented or distorted.
+- Style: the expanded entry feels like unfolding a page, not opening a UI panel. The "show full entry" control is a faint, small link in the existing paper/archive aesthetic, not a button.
+
+**Important interaction with Change 1:** the full entry, once expanded by the reader's own choice, may of course contain the raw/painful lines — that is the reader choosing to read their own page, which is always allowed. The safety filter applies to what Still SURFACES unbidden (the fragments), not to what the reader chooses to open. The distinction is: Still never *pushes* a wound; the reader may always *open* their own page.
+
+## Data note
+
+Each surfaced quote must carry (or be able to look up) its complete original source entry by date, so "show full entry" reveals the real, full, unmodified text.
+
+## Keep everything else
+
+Do NOT change the observation voice (it's working — reacts to one moment, doesn't narrate the sequence, doesn't claim the writer's interior). Keep lens-specific scoring, the compassionate-witness register, and all other safety rules.
+
+## Acceptance test
+
+Re-run the Apr 2017 birthday / Mar–Apr 2018 entries:
+- The surfaced fragments favor the alive/turning lines (the "Rumi is wrong" argument, "you will be fine girl… live love laugh") and do NOT display the rawest grief lines ("the dream of having my brother here is gone") as naked fragments.
+- Each fragment has a quiet "show full entry" link; expanding reveals the complete original dated entry with the fragment highlighted; collapsing returns to the fragment.
+- The default view stays calm and spare; raw/painful material is reachable only by the reader choosing "show full entry," never surfaced unbidden.
+- Body/appearance and active-crisis lines remain excluded from fragments entirely.

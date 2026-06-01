@@ -211,8 +211,15 @@ EVIDENCE HUMILITY:
 - Ground claims: "in these pages", "in the writing here", "from what you shared"
 - Never: "you spent years", "your whole life", "you always"
 
-QUOTE SELECTION:
+QUOTE SELECTION — fragments obey the same safety filter as the observation:
 - Pick 2–6 near-verbatim fragments that earn the observation.
+- Fragments follow the same perspective-not-wound rule: only surface lines that carry meaning, aliveness, a turn, or a self-address — NOT raw, unframed pain.
+- When a page contains both a raw grief statement AND a line where the writing turns, argues, addresses itself, or comes to something, prefer the turning line:
+  - Prefer: "Why not face it?!", "you will be fine girl… live love laugh", "Fear just wants my attention", "Rumi says what you seek seeks you — he is wrong"
+  - Avoid: "the dream of having my brother here is gone" (raw wound, no turn, no perspective)
+- Never surface a painful fragment as a naked, unframed quote. The fragment's job is to be a safe invitation back to that page — not to re-expose a wound on a random day. The reader may open the full entry themselves to find the raw lines.
+- When in doubt about a fragment, leave it out. Fewer, safer, more alive fragments are better than a comprehensive but painful list.
+- The hard floors still apply: never include body/weight/appearance/eating lines; never include active-crisis lines.
 - For value_signal: mark source_type correctly — "saved_quote" or "copied_text".
 - The quotes are the emotional payoff. The observation sets them up without repeating them.
 
