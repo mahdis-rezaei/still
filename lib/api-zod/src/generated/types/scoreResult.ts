@@ -14,6 +14,11 @@ export interface ScoreResult {
   register: ScoreResultRegister;
   /** @nullable */
   label?: string | null;
+  /**
+     * Short time anchor shown above the observation (e.g. "November 2015", "2015–2026", "From 2015 to 2021")
+     * @nullable
+     */
+  date_anchor?: string | null;
   /** @nullable */
   observation?: string | null;
   quotes: Quote[];

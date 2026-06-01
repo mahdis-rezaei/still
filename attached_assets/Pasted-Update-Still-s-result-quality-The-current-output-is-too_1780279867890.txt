@@ -1,0 +1,194 @@
+Update Still’s result quality. The current output is too literary, too long, and too focused on summarizing events. The journal quote should carry the emotional weight.
+
+## Core correction
+
+Still should not sound like an essayist.
+
+Still should feel like a careful archivist who found the page worth returning to.
+
+The journal itself is the poetry.
+
+The AI’s job is to frame the page briefly, not rewrite it beautifully.
+
+## New hard rule
+
+The surfaced quotes should do at least 70% of the emotional work.
+
+The AI observation should be brief, concrete, and evidence-based.
+
+If removing the AI paragraph makes the result stronger, the paragraph is too long.
+
+## Update all result writing
+
+For every register — thread, memory, distance, value_signal, becoming, survival — change the output style:
+
+### Observation length
+
+Maximum 2–3 short sentences.
+
+No long paragraphs.
+
+No elaborate literary phrasing.
+
+No “something moved across just a few days…”
+
+No “as if she already knew they belonged together…”
+
+No over-narration.
+
+### Preferred structure
+
+Label
+
+Short date or time anchor
+
+One simple framing line
+
+Then quotes.
+
+Then optional “Why this surfaced” in 1–2 short sentences.
+
+## The engine should answer
+
+Not:
+“What happened?”
+
+But:
+“Why is this page worth returning to today?”
+
+## For memory results
+
+Do not summarize the sequence of events.
+
+Instead identify the emotional hinge.
+
+Example bad output:
+“In the entries from November 2015, something moved across just a few days: a body in real pain on a meditation cushion, a fear named out loud to a teacher, and then a decision...”
+
+Example good output:
+
+Label:
+A PAGE FROM THEN
+
+Observation:
+November 2015
+
+This page is worth returning to because fear is not treated as something to escape. In the writing, fear becomes something to face, welcome, and listen to.
+
+In your own words:
+
+* “I asked him about my fear of being alone.”
+* “Fear is part of me.”
+* “Fear just wants my attention.”
+* “Why not face it? Why not welcome it?”
+* “He told me I am never alone.”
+
+Why this surfaced:
+This is not only a monastery memory. It is a page where a younger version of you began relating to fear differently.
+
+## For thread results
+
+Bad:
+“Across the entries, the writer demonstrates a long arc of self-regulation and internal companionship...”
+
+Good:
+WHAT KEPT RETURNING
+
+Across these pages, when fear or uncertainty appeared, you repeatedly tried to steady yourself from within.
+
+In your own words:
+
+* “Relax Mahdis relax. Take a deep breath.”
+* “Everything is under control.”
+* “Make sure YOU hold the pen.”
+* “You got this Warrior.”
+* “You can do it Mahdis.”
+
+Why this surfaced:
+The language changes, but the move stays the same: you talk yourself back toward steadiness.
+
+## For distance results
+
+Bad:
+“In a sweeping arc from dependency to self-authorship...”
+
+Good:
+LOOK HOW FAR
+
+This page matters because the earlier writing shows fear and dependency, while later writing shows more self-direction.
+
+Then:
+
+* Then: quote
+* Later: quote
+
+## UI changes
+
+Make the quote section more prominent than the AI observation.
+
+Visual hierarchy:
+
+1. Label — small uppercase
+2. Date/time anchor — medium
+3. Observation — short, max 2–3 sentences
+4. “In your own words” — prominent
+5. Quotes — large, spacious, beautiful
+6. “Why this surfaced” — small, restrained
+
+Quotes should feel like archival fragments.
+
+Use larger quote text than the explanation.
+
+## Prompt changes
+
+Update Pass 2 prompt with these writing rules:
+
+* Do not write poetically.
+* Do not summarize events unless necessary.
+* Find the emotional hinge.
+* Use plain language.
+* Let the quotes carry the feeling.
+* Observation max 2–3 short sentences.
+* “Why this surfaced” max 2 short sentences.
+* Never call the user “the writer” in the final user-facing output.
+* Use “you” carefully, but ground it in “in these pages” or “in the writing.”
+* Always include dated quotes unless register is `nothing`.
+
+## Fix the November 2015 behavior
+
+When given the November 2015 monastery entries, the app should not produce a long literary paragraph.
+
+Expected acceptable output:
+
+Register:
+memory
+
+Label:
+A PAGE FROM THEN
+
+Date anchor:
+November 2015
+
+Observation:
+This page is worth returning to because fear is not treated as something to escape. In the writing, fear becomes something to face, welcome, and listen to.
+
+Quotes:
+
+* Nov 19, 2015: “I asked him about my fear of being alone.”
+* Nov 19, 2015: “Fear is part of me.”
+* Nov 19, 2015: “Fear just wants my attention.”
+* Nov 19, 2015: “Why not face it?! Why not welcome it?!”
+* Nov 21, 2015: “He told me I am never alone.”
+
+Why this surfaced:
+This is not only a monastery memory. It is a page where a younger version of you began relating to fear differently.
+
+Unacceptable:
+
+* Long poetic paragraph
+* Overwriting the user’s words
+* Summarizing monastery events as the main point
+* Calling the user “the writer”
+* Making the AI observation longer than the quote section
+* Saying “something moved across just a few days”
+* Surfacing body pain as the main emotional point

@@ -72,6 +72,7 @@ export const ScoreCandidatesResponse = zod.object({
 })),
   "register": zod.enum(['thread', 'memory', 'distance', 'value_signal', 'becoming', 'survival', 'nothing']),
   "label": zod.string().nullish(),
+  "date_anchor": zod.string().nullish().describe('Short time anchor shown above the observation (e.g. \"November 2015\", \"2015–2026\", \"From 2015 to 2021\")'),
   "observation": zod.string().nullish(),
   "quotes": zod.array(zod.object({
   "date": zod.string(),
