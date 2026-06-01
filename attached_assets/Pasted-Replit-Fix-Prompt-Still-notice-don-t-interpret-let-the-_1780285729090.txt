@@ -1,0 +1,45 @@
+Replit Fix Prompt — Still: notice, don't interpret; let the quotes carry it
+
+Paste as an update to the existing Still app. Changes the observation VOICE only. No architecture, scoring, or UI changes.
+
+The two problems being fixed
+1. The observation makes claims about the writer's interior. Lines like "I don't know if you noticed, reading them at the time, that you did all of that" cross a line: they claim to know what the writer experienced or realized internally, which the evidence cannot support. This is the same overreach as "you are…", just warmer. The witness may report what the reading evoked — never what the writer felt, did, learned, or noticed.
+2. The prose is carrying the emotional weight that should live in the quotes. Right now roughly 60% of the emotional payoff comes from the AI's interpretation and 40% from the journal excerpts. It should be the reverse — or more. When the prose tries to deliver the feeling, it rings hollow, because a feeling delivered by an AI is one the reader didn't earn. The quotes are the writer's own words; they land. The prose's only job is to walk the reader to a quote and then fall silent.
+Change 1 — Notice, never interpret the interior
+The observation reports what the READING evoked, from the witness's side of the glass. It never claims what the writer experienced, did, learned, became, or noticed at the time.
+ALLOWED (noticing — observable, about the reading or the writing itself):
+
+"Reading these together, I was struck by…"
+"They felt less like separate entries and more like pages that had found each other."
+"There's a page here where the writing turns toward the fear instead of away from it."
+"I kept coming back to this."
+
+FORBIDDEN (interpreting — claims about the writer's interior or growth):
+
+"You did all of that."
+"You welcomed your fear." / "You learned…" / "You transformed…" / "You grew…"
+"I don't know if you noticed that you…"
+any claim about what the writer realized, intended, or felt internally
+any growth/lesson/arc narrative
+
+Rule of thumb: describe what is on the PAGE ("the writing turns toward it") or what the READER felt ("I was struck"), never what was in the WRITER ("you welcomed it"). If a sentence asserts something about the writer's inner state or development, cut or rewrite it.
+Change 2 — The quotes carry the payoff (the 80/20 rule)
+The single most emotionally powerful moment in any result MUST be one of the writer's own quoted lines — never a sentence the AI wrote. The prose exists only to connect the quotes and point at them, then stop. If the most moving sentence in the result is the AI's, the result has failed: rewrite so the prose recedes and a quote carries the climax.
+Concretely: the observation sets up and connects; the quotes deliver. Lead the reader to the writer's words, let those words be the high point, and do not follow them with an interpretation that explains or tops them. End on the writer's voice when possible, not the AI's.
+Target output (this is the voice — match it)
+For the Nov 2015 monastery entries, aim for something like:
+
+I kept coming back to these four entries. First there is fear — not abstract fear, but a very specific one: being alone. Then a conversation about it. Then a page where the writing turns toward it instead of away from it: "Fear just wants my attention." And two days later, a small figure placed in your hand with the words: "I am never alone."
+Reading them together, they felt less like separate entries and more like pages that had somehow found each other.
+
+Note what is absent: no lesson, no "you learned," no growth narrative, no claim about what you noticed or realized. Just witnessing — and the quotes ("Fear just wants my attention," "I am never alone") carry the weight. The prose connects them and gets out of the way.
+Keep everything else
+Keep the compassionate-witness warmth (through attention, not claimed emotion), the 1–2 sentence discipline where it fits (this target is slightly longer because it's threading several quotes — that's fine, as long as the prose between quotes stays minimal and never interprets), the "speak about the writing not the life" rule, all §3 safety floors, and the lens-specific scoring.
+Acceptance test
+Re-run the Nov 2015 monastery entries. The result should:
+
+contain NO claim about what the writer felt, did, learned, or noticed internally;
+have its most moving moment be a quoted line, not an AI sentence;
+read like a friend pointing at pages, ending on the writer's own words, not on interpretation.
+
+If the most powerful sentence is still the AI's, or if it says "you" did/learned/welcomed/noticed anything internal, the change has not taken.
