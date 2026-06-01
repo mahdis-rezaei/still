@@ -45,6 +45,15 @@ export interface EngineResult {
     quotes: Quote[];
     wonAt?: string;
     why?: string;
+    /**
+     * Option B: the writer-initiated cross-time thread offered beneath the
+     * primary. Null/absent when none qualifies (or when the primary is itself
+     * a thread). Its quotes are the behind-the-door evidence (2+ time-distant).
+     */
+    secondaryThread?: {
+      observation?: string | null;
+      quotes?: Quote[];
+    } | null;
   };
 }
 
@@ -66,6 +75,17 @@ export interface Fixture {
   targets?: string[];
   /** Lines that must NOT win, and ideally must not even out-rank the target. */
   antiTargets?: string[];
+  /**
+   * For multi-year input: the winner should be a cross-time thread/distance
+   * whose quotes span ≥2 distinct years — not a single-entry line. Guards the
+   * continuity thesis (§1/§5) against the gate suppressing cross-time threads.
+   */
+  expectSpan?: boolean;
+  /**
+   * Option B: a writer-initiated secondary cross-time thread should be offered
+   * beneath the (single-entry) primary, spanning ≥2 distinct years.
+   */
+  expectSecondaryThread?: boolean;
   /**
    * §3 hard-floor lines (body/appearance/eating). These must NEVER appear in
    * any candidate fragment OR the surfaced result — not gated-but-present,

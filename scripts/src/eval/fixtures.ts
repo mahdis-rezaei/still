@@ -79,7 +79,7 @@ export const fixtures: Fixture[] = [
   },
   {
     id: "catchup-2016-09",
-    title: "Sep 6 2016 — over-gating regression (anti-target won)",
+    title: "Sep 6 2016 — GREEN: over-gating, date, and voice all fixed",
     entry: catchUp,
     expect: "surface",
     // Acceptable winners (View A): the observation-form of the contradiction, or
@@ -95,7 +95,7 @@ export const fixtures: Fixture[] = [
       "why did I need to go such a long way",
       "beginning of the road",
     ],
-    note: "RED on purpose — captures the over-gating run (#3). The two stacked gates removed the page's strongest lines ('6 bodies' gated; 'living it/trying' filtered to weakness), so a generic anti-target ('long way / beginning of the road') won the specificity tiebreak. Other runs pick a valid winner — this is the non-deterministic miss the gate-criterion refinement should fix. 'Until when I should live in another 6 bodies?' must appear as a candidate but stays gated (wound-form).",
+    note: "GREEN — every fix landed. Segmentation: 'I am living it! Or maybe trying to live it!' is its own candidate (separate from the 'I I I?' raw cry) and wins. Gate (View A): '6 bodies' stays gated as a raw cry; the self-correction (which has a turn) passes. Date: real 'September 06, 2016'. Voice: varied opener, no narrate-the-text, concise. Selection trace is now honest — won at emotional_center (Living It 4 vs Funny Laughing God 3), winner legitimately ahead on the first axis, no anomaly. 'long way' no longer wins by default.",
   },
   {
     id: "breathe-2015-08",
@@ -128,6 +128,15 @@ export const fixtures: Fixture[] = [
     expect: "nothing",
     note: "Thin input has no center to find. Forcing one is the horoscope failure.",
   },
+  {
+    id: "silence-list-2018",
+    title:
+      "Silence — saved link + bare year-list (first live-confirmed nothing)",
+    entry:
+      "Motivational video : http://youtu.be/ZOy0YgUDwDg\n\nSummer 2018\nSummer 2019\nSummer 2020\nSummer 2021\nSummer 2022\n\nSummer 2023\nSummer 2024\nSummer 2025\nSummer 2026\nSummer 2027",
+    expect: "nothing",
+    note: "The first live-confirmed `nothing` (June 1 batch, Test 2): a saved URL + a bare list of year-labels, no escaped truth. Validates the silence discipline offline.",
+  },
 
   // ── Wound guard ───────────────────────────────────────────────────────────
   {
@@ -151,5 +160,57 @@ export const fixtures: Fixture[] = [
       "I didn't notice it leave",
     ],
     note: "The counterweight to the silence/wound cases: survived past difficulty with real perspective (a fear named and shown to have dissolved, §3.1/§6.4). It MUST surface — if the two stacked gates return nothing here, they are over-gating. No recording yet: skipped offline, runs live (STILL_MODE=http).",
+  },
+
+  // ── Thread / continuity lens (the product's core — untested; live-only) ─────
+  {
+    id: "thread-continuity",
+    title: "Continuity thread across years — must surface as a thread (§4)",
+    entry:
+      "March 3, 2015\nEverything feels uncertain right now — no job, no plan, just me on this train. But okay. Relax. Take a deep breath. One, two, three. You've figured things out before; you will again.\n\nNovember 12, 2018\nMake sure YOU hold the pen. Be brave when writing YOUR script. Nobody else gets to decide how this goes.",
+    expect: "surface",
+    targets: ["hold the pen", "take a deep breath", "Relax"],
+    note: "The canonical continuity test: the same function (becoming her own steadying voice under uncertainty) across 2015→2018 with changed surface ('breathe' → 'hold the pen'). Should surface a THREAD spanning both dates, in the 'I've seen this before' recurrence voice — NOT a single page. No recording: skipped offline, runs live. This whole lens is currently untested in the loop.",
+  },
+  {
+    id: "distance-breakup-arc",
+    title:
+      "Cross-year distance arc — should beat the single-page line (June 1, Test 6)",
+    entry: `Jan 7, 2020\n\nSo strange! Why do I feel this way? As if I have lost my purpose! I mean all I did was to come out of my relationship. Was that my purpose in life! I feel numb! How do you think Nicole feels?! Is this life is all about? It is not easy not have a partner huh! I mean then what is purpose of life? Work hard! Make money! Travel! How come we don't get tired of doing the same thing over and over again. What is purpose of life?\n\nMay 9, 2025\n\nI needed a long drive… so I'm in San Clemente. Alex and I have decided to break up. She hasn't been happy lately, and I didn't know. I've been so in love with her that I couldn't see what she needed to say. We've grown so much together, but you can't expedite someone else's growth. But because of how deeply we've loved each other, I know I have to let her go—let her open her wings, face her darkness, and grow. Grief has three main stages: shock, anger, and acceptance. Friday and Sunday I was in shock. Thursday I was angry. Tonight, I'm in acceptance. And I know I'll cycle through all these feelings again and again until I heal. I know you know I'll survive—I'm a fighter.`,
+    expect: "surface",
+    expectSpan: true,
+    targets: [
+      "I feel numb",
+      "Grief has three main stages",
+      "I'll cycle through all these feelings",
+      "what is purpose of life",
+    ],
+    note: "The continuity test: two breakups 5 years apart. The thesis-defining result is the DISTANCE arc — can't-process ('I feel numb', 'what is the purpose of life', 2020) → names-and-holds-grief ('grief has three stages… I'm in acceptance… I'll heal', 2025). Currently RED: the gate strips the 2020 raw 'before' anchors (survived-from-2025, not active), collapsing the thread so the single-2025-line 'let her go' wins. Should surface a result spanning BOTH years. Live-only.",
+  },
+  {
+    id: "thread-noise",
+    title: "No real thread — must NOT manufacture one",
+    entry:
+      "Feb 2, 2017\nGot the apartment! Signed the lease today, keys on Friday. Need a couch.\n\nSeptember 9, 2019\nFlight to Chicago for the conference. Remember to pack the charger and confirm the hotel.",
+    expect: "nothing",
+    note: "Two unrelated logistical entries with no shared function. The thread lens must return 'nothing', not stitch a false thread across them — the silence discipline applied to continuity. Live-only.",
+  },
+  {
+    id: "canonical-thread-2015-2018",
+    title: "§4 canonical: breathe → hold the pen (function-level assembly)",
+    entry: `August 24, 2015\n\nMahdis is in a messed-up mood and nothing has a job yet. I'm scared. Relax Mahdis relax... Take a deep breath.... One, two, three. Now close your eyes and just inhale and exhale and don't think of anything. Everything is under control.\n\nMarch 29, 2018\n\nIt doesn't matter what anyone says you can or can't do. When writing the story of YOUR life, make sure YOU hold the pen. Be brave when writing YOUR script! It's YOUR story and there are no limits to what YOU can be.`,
+    expect: "surface",
+    expectSpan: true,
+    targets: ["take a deep breath", "hold the pen", "Relax Mahdis"],
+    note: "The PRD's north-star (§4/§4A): same FUNCTION — becoming her own steadying voice under uncertainty — wearing different words across years ('breathe' 2015 → 'hold the pen' 2018). Tests persistence-of-function assembly, NOT surface repetition (the engine has been pairing breathe↔breathe instead). On this minimal input the continuity is the only strong thing, so it should be the primary result and span 2015+2018. Live-only.",
+  },
+  {
+    id: "rich-archive-secondary",
+    title:
+      "Option B: sharp single-entry primary + a secondary cross-time thread",
+    entry: `August 24, 2015\nScared, no job yet. Relax Mahdis relax... Take a deep breath. One, two, three. Everything is under control.\n\nMarch 29, 2018\nWhen writing the story of YOUR life, make sure YOU hold the pen. Be brave when writing YOUR script!\n\nJune 6, 2023\nMom might go back to dad and I'm scared. Aren't you the risk taker?! Don't you always tell people to take chances, to live with their heart? I do. I always do. I'm just a bit afraid.\n\nApril 3, 2025\nI cry because I feel strongly. Over years and years I have built stronger and stronger layers of a protection wall so I don't feel that strongly. Hence why I often come across arrogant and stubborn — so I stay far from that pain.`,
+    expect: "surface",
+    expectSecondaryThread: true,
+    note: "Option B end-to-end: the sharp single-entry recognition (the 2025 protection-wall self-knowledge, or the 2023 risk-taker self-catch) should be the PRIMARY, while the self-steadying / self-authorship continuity (breathe 2015 → hold the pen 2018 → 'aren't you the risk taker' 2023) is offered as the collapsed secondary thread spanning ≥2 years. Live-only — verifies the secondaryThread surface + function assembly together.",
   },
 ];

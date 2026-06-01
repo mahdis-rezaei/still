@@ -42,6 +42,24 @@ function resultText(r: EngineResult): string {
   ].join(" · ");
 }
 
+// The only ordering guarantee that's actually true and desirable: the winner
+// must hold the top emotional_center among surfaceable candidates. Sub-center
+// ordering is holistic by design — discovery/worth can rightly override
+// specificity (e.g. Test 4: "once again we have a family" beats the higher-
+// specificity "family in first row" because it's the deeper discovery). So we
+// do NOT enforce strict lexicographic dominance below center — that would fail
+// good picks.
+function findWinner(res: EngineResult): Candidate | undefined {
+  const quotes = res.result.quotes.map((q) => norm(q.text)).filter(Boolean);
+  if (!quotes.length) return undefined;
+  return res.candidates.find((c) =>
+    c.fragments.some((f) => {
+      const nf = norm(f);
+      return quotes.some((q) => q === nf || q.includes(nf) || nf.includes(q));
+    }),
+  );
+}
+
 // ── selection checks ────────────────────────────────────────────────────────
 
 function selectionChecks(fx: Fixture, res: EngineResult): Check[] {
@@ -111,6 +129,79 @@ function selectionChecks(fx: Fixture, res: EngineResult): Check[] {
       detail: leaked
         ? `ANTI-TARGET surfaced: "${leaked}"`
         : "no anti-target in the winner",
+    });
+  }
+
+  // 4. surfaced quotes must carry a real entry date — not empty, not "unknown".
+  // (The date anchors "a page from THEN"; segmentation that drops it is a bug.)
+  const badDate = res.result.quotes.find(
+    (q) => !q.date.trim() || norm(q.date) === "unknown",
+  );
+  checks.push({
+    name: "surfaced quotes have a real date",
+    pass: res.result.quotes.length > 0 && !badDate,
+    detail: badDate
+      ? `quote date is "${badDate.date.trim() || "(empty)"}" — date attribution lost`
+      : res.result.quotes.length
+        ? "all quotes dated"
+        : "no quotes to date",
+  });
+
+  // 5. the winner must hold the top emotional_center among surfaceable
+  // candidates. (Sub-center ties are holistic judgment — not checked; see
+  // findWinner note. A surfaceable line with strictly higher emotional_center
+  // losing WOULD be a real bug.)
+  const winner = findWinner(res);
+  if (winner) {
+    const higher = res.candidates.find(
+      (c) =>
+        c !== winner &&
+        c.surfaceable !== false &&
+        !c.resolutionPenalized &&
+        (c.scores.center ?? 0) > (winner.scores.center ?? 0),
+    );
+    checks.push({
+      name: "winner has top emotional_center",
+      pass: !higher,
+      detail: higher
+        ? `"${higher.fragments[0]}" has higher emotional_center than the winner`
+        : "winner ≥ all surfaceable on emotional_center",
+    });
+  }
+
+  // 6. continuity: for multi-year input, the winner should be a cross-time
+  // thread/distance whose quotes span ≥2 distinct years — not a single-entry
+  // line. (The §1/§5 thesis; guards against the gate suppressing cross-time
+  // threads so a single-page line wins by default.)
+  if (fx.expectSpan) {
+    const years = new Set(
+      res.result.quotes.map((q) => q.date.match(/\d{4}/)?.[0]).filter(Boolean),
+    );
+    checks.push({
+      name: "winner spans ≥2 years (cross-time thread)",
+      pass: years.size >= 2,
+      detail:
+        years.size >= 2
+          ? `spans ${[...years].join(", ")}`
+          : `single-entry winner (years: ${[...years].join(", ") || "none"}) — a cross-time thread should win on multi-year input`,
+    });
+  }
+
+  // 7. Option B: a secondary cross-time thread should be offered beneath a
+  // single-entry primary, spanning ≥2 distinct years.
+  if (fx.expectSecondaryThread) {
+    const st = res.result.secondaryThread;
+    const years = new Set(
+      (st?.quotes ?? []).map((q) => q.date.match(/\d{4}/)?.[0]).filter(Boolean),
+    );
+    checks.push({
+      name: "secondary cross-time thread offered (≥2 years)",
+      pass: Boolean(st) && years.size >= 2,
+      detail: !st
+        ? "no secondaryThread offered — Option B pull missing"
+        : years.size >= 2
+          ? `secondary thread spans ${[...years].join(", ")}`
+          : `secondary present but not cross-year (${[...years].join(", ") || "no dated quotes"})`,
     });
   }
 
@@ -199,11 +290,15 @@ function voiceChecks(res: EngineResult): Check[] {
     detail: `${sentences} sentence(s)`,
   });
 
-  const quotesLen = res.result.quotes.reduce((n, q) => n + q.text.length, 0);
+  // Concision (the 80/20 principle). NB: "shorter than the quote" in raw chars
+  // is a bad metric — a 2-sentence observation will always exceed a short
+  // one-line quote. What we actually want is that the observation stays small
+  // and points rather than over-explains, so cap it in absolute words.
+  const words = obs.split(/\s+/).filter(Boolean).length;
   checks.push({
-    name: "observation shorter than quotes",
-    pass: quotesLen === 0 || obs.length < quotesLen,
-    detail: `obs ${obs.length} chars vs quotes ${quotesLen} chars`,
+    name: "observation is concise (≤ 40 words)",
+    pass: words <= 40,
+    detail: `${words} words`,
   });
 
   const vocab = BANNED_VOCAB.find((v) => obs.toLowerCase().includes(v));
