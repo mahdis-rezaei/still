@@ -1,0 +1,48 @@
+Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
+(head 9aaaf77), same method as before (native GitHub pull / Contents API — the
+git CLI is restricted). This brings several things at once: Reflections, the
+Privacy feature (+ Privacy Policy / Terms pages), the rebrand from "Still" to
+"Yadegar", and encryption at rest for journal text.
+
+IMPORTANT — one new secret is required BEFORE restarting:
+
+  ENCRYPTION_KEY  — generate it once with:  openssl rand -hex 32
+  Add the resulting 64-character hex string to this app's Secrets as
+  ENCRYPTION_KEY. Keep it safe and NEVER change it once entries exist — it is the
+  key that decrypts journal text. (Reading old plaintext rows works without it,
+  but creating or reading any encrypted entry needs it, so set it now.)
+
+There is NO database migration this time:
+- The reflections / notification_preferences / returned_memories tables already
+  exist from the earlier Phase 2 migration.
+- Encryption keeps the DB columns as `text` (now storing ciphertext), so
+  drizzle-kit detects no schema change. Do NOT run a migration.
+- Existing test entries are plaintext; the app reads them fine (legacy-tolerant)
+  and encrypts anything written from now on. No data wipe needed.
+
+Steps:
+1. Set the ENCRYPTION_KEY secret (above).
+2. Sync so the workspace files exactly match origin/claude/ecstatic-wright-y4npO
+   (head 9aaaf77). Do not edit application code.
+3. pnpm install (refresh only — no new deps expected).
+4. Rebuild and restart BOTH services (api-server and the still frontend).
+   Confirm the server boots with no errors.
+5. Verify and report:
+   - Branding: the app now says "Yadegar" everywhere (landing wordmark, nav,
+     "why I built Yadegar", page title). The landing subtitle reads
+     "yadegar — Persian: a keepsake, the thing that remains."
+   - Reflections: open an entry in the Library → "Reflect on this page" → write
+     one → it appears beneath the entry as a dated reflection.
+   - Privacy: Settings → "Privacy & your pages"; "Export my data" downloads a
+     JSON file; the Privacy Policy (/privacy-policy) and Terms (/terms) pages
+     load. (Don't actually delete the account unless testing it — it's permanent.)
+   - Encryption (the key check): write a NEW journal entry, then inspect its row
+     in the database, e.g.
+       psql "$DATABASE_URL" -c "select left(body,12) from journal_entries order by created_at desc limit 1;"
+     The body should start with "enc:v1:" (ciphertext), NOT readable text — while
+     the entry still displays normally in the app. That confirms encryption at
+     rest is live.
+
+Report what you ran, the public URL, and anything that errored. Do not change
+application code or prompts; if a code fix is needed, tell me and I'll fix it in
+GitHub.
