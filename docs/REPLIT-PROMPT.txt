@@ -12,6 +12,12 @@ latest from the branch claude/ecstatic-wright-y4npO:
 2. git reset --hard origin/claude/ecstatic-wright-y4npO
    (GitHub now holds everything, including the real engine, so a clean reset is
    safe and is the whole point — it guarantees Replit matches GitHub exactly.)
+
+   NOTE: if the git CLI is restricted in this sandbox (e.g. `git fetch` is
+   blocked, as it was during the engine push), do not fight it — instead use
+   your native GitHub integration to pull/checkout the branch, OR pull the
+   changed files via the GitHub Contents API. The ONLY goal of this step is to
+   make the workspace files exactly match origin/claude/ecstatic-wright-y4npO.
 3. pnpm install
 4. If the API contract (lib/api-spec/openapi.yaml) changed, regenerate the
    client: pnpm --filter @workspace/api-spec run codegen
