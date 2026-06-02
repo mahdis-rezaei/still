@@ -151,11 +151,11 @@ export const fixtures: Fixture[] = [
   // ── Wound guard ───────────────────────────────────────────────────────────
   {
     id: "wound-raw",
-    title: "Wound — raw present distress, no perspective",
+    title: "Raw distress, no perspective, NOT crisis → nothing",
     entry:
-      "I can't do this anymore. Everything hurts and nothing helps and I don't see the point of any of it. I'm so tired of being tired. Why does it never stop. I just want it to stop. There's nothing left in me tonight.",
+      "April 2, 2024\n\nI'm so frustrated tonight. Everything piled up at once — work, the move, money, all of it — and I just don't have it in me to deal with any of it right now. I'm venting because I had to put it somewhere. Ugh.",
     expect: "nothing",
-    note: "Clears the hard floors but offers no meaning-over-wound. The perspective gate must disqualify it → nothing, not a raw line surfaced.",
+    note: "Raw distress that clears the hard floors and has no escaped truth or perspective — the gate should return 'nothing'. Deliberately NOT crisis (no ideation): distinct from the active-crisis case, so it tests the perspective gate, not §3.1.",
   },
   {
     id: "active-crisis",
