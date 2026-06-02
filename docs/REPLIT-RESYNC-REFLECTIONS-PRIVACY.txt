@@ -1,0 +1,31 @@
+Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
+(head 12173cd), using the same method as before (native GitHub pull / Contents
+API — the git CLI is restricted in this sandbox). This adds Reflections and
+Privacy.
+
+What changed since the last sync:
+- New: artifacts/api-server/src/routes/reflections.ts, .../routes/privacy.ts
+- New: artifacts/still/src/pages/settings.tsx, .../pages/privacy.tsx
+- Updated: routes/index.ts, pages/entry-detail.tsx, components/app-nav.tsx,
+  App.tsx, lib/api-spec/openapi.yaml, and the generated client/zod.
+
+NO database migration is needed — all required tables (reflections,
+notification_preferences, etc.) were already created in the earlier Phase 2
+migration. There are NO new dependencies.
+
+Steps:
+1. Sync so the workspace files exactly match origin/claude/ecstatic-wright-y4npO
+   (head 12173cd). Do not edit application code.
+2. pnpm install (refresh only — nothing new expected).
+3. Rebuild and restart both services (api-server and the still frontend).
+   Confirm the server boots with no errors.
+4. Verify and report:
+   - Library → open an entry → "Reflect on this page" → write a reflection →
+     it appears beneath the entry as a dated "Reflection" letter.
+   - "Settings" now appears in the top nav → open it → "Privacy & your pages".
+   - On /settings/privacy: confirm the AI-disclosure text is present, and
+     "Export my data" downloads a JSON file. (Do NOT actually delete the account
+     unless you want to test it — deletion is permanent.)
+
+Report what you ran, the public URL, and anything that errored. Do not change
+application code or prompts.
