@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useStill } from "@/lib/store";
+import { useAuth } from "@/lib/auth";
 import { motion } from "framer-motion";
 
 function formatSavedDate(date: Date): string {
@@ -46,6 +47,7 @@ function buildRecallLine(
 export default function Home() {
   const [, setLocation] = useLocation();
   const { scoreResult, savedAt, history, reset } = useStill();
+  const { user, logout } = useAuth();
 
   const hasSaved = Boolean(scoreResult && savedAt);
   const historyCount = history.length;
@@ -138,6 +140,23 @@ export default function Home() {
           </button>
         </div>
       )}
+
+      <footer className="mt-16 flex items-center gap-3 text-xs font-sans text-faint-ink">
+        <span data-testid="text-account">
+          Signed in as {user?.name || user?.email}
+        </span>
+        <span aria-hidden>·</span>
+        <button
+          onClick={async () => {
+            await logout();
+            setLocation("/login");
+          }}
+          className="text-soft-ink hover:text-ink border-b border-soft-ink/30 pb-0.5 transition-colors"
+          data-testid="button-signout"
+        >
+          Sign out
+        </button>
+      </footer>
     </div>
   );
 }

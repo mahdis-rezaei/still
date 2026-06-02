@@ -131,3 +131,51 @@ export const GetEntryResponse = zod.object({
 })
 
 
+/**
+ * @summary Create an account with email and password
+ */
+export const registerBodyEmailMin = 3;
+
+export const registerBodyPasswordMin = 8;
+
+
+
+export const RegisterBody = zod.object({
+  "email": zod.string().email().min(registerBodyEmailMin),
+  "password": zod.string().min(registerBodyPasswordMin),
+  "name": zod.string().optional()
+})
+
+
+/**
+ * @summary Sign in with email and password
+ */
+export const loginBodyEmailMin = 3;
+
+
+
+
+export const LoginBody = zod.object({
+  "email": zod.string().min(loginBodyEmailMin),
+  "password": zod.string().min(1)
+})
+
+export const LoginResponse = zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "name": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish()
+})
+
+
+/**
+ * @summary Get the currently authenticated user
+ */
+export const GetCurrentUserResponse = zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "name": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish()
+})
+
+

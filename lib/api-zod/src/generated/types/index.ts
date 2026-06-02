@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './authUser';
 export * from './candidate';
 export * from './candidateMode';
 export * from './candidateScore';
@@ -15,8 +16,10 @@ export * from './errorResponse';
 export * from './extractInput';
 export * from './extractResult';
 export * from './healthStatus';
+export * from './loginInput';
 export * from './quote';
 export * from './quoteSourceType';
+export * from './registerInput';
 export * from './scoreInput';
 export * from './scoreResult';
 export * from './scoreResultMode';

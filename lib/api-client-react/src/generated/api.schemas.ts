@@ -13,6 +13,30 @@ export interface ErrorResponse {
   error: string;
 }
 
+export interface AuthUser {
+  id: number;
+  email: string;
+  /** @nullable */
+  name?: string | null;
+  /** @nullable */
+  avatarUrl?: string | null;
+}
+
+export interface RegisterInput {
+  /** @minLength 3 */
+  email: string;
+  /** @minLength 8 */
+  password: string;
+  name?: string;
+}
+
+export interface LoginInput {
+  /** @minLength 3 */
+  email: string;
+  /** @minLength 1 */
+  password: string;
+}
+
 export interface Entry {
   id: number;
   date: string;
