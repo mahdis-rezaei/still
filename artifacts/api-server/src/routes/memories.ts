@@ -20,7 +20,9 @@ import { RunMemoryBody, UpdateMemoryBody } from "@workspace/api-zod";
 import { requireAuth } from "../lib/auth";
 
 const router = Router();
-router.use(requireAuth);
+// Scope auth to /memories only — a path-less use would 401 the internal,
+// cookieless /still/* engine calls that run through this root-mounted router.
+router.use("/memories", requireAuth);
 
 const ENGINE_BASE = `http://127.0.0.1:${process.env.PORT}/api`;
 const CRISIS_FALLBACK =

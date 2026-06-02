@@ -17,7 +17,8 @@ import { requireAuth } from "../lib/auth";
 import { parseImport } from "../lib/parse-import";
 
 const router = Router();
-router.use(requireAuth);
+// Scope auth to /imports only (see entries.ts) so it never blocks /still/*.
+router.use("/imports", requireAuth);
 
 function toParsed(row: ParsedImportEntry) {
   return {

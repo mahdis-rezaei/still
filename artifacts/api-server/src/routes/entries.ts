@@ -6,9 +6,10 @@ import { requireAuth } from "../lib/auth";
 
 const router = Router();
 
-// Everything here is scoped to the authenticated user and excludes
-// soft-deleted rows (deleted_at IS NULL).
-router.use(requireAuth);
+// Scope auth to this router's own paths (NOT path-less) — a path-less
+// router.use would run for every request reaching this root-mounted router,
+// including the internal, cookieless /still/* engine calls.
+router.use("/entries", requireAuth);
 
 // GET /entries — the Library. Filters: year, month, favorite, source, search.
 router.get("/entries", async (req, res): Promise<void> => {
