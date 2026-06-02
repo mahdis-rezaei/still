@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { AmbientField } from "@/components/site-chrome";
@@ -53,6 +54,20 @@ const RETURNS: {
       "When writing the story of your life, make sure you hold the pen.",
     note: "A line you wrote years ago that still feels true.",
   },
+  {
+    tag: "a question you carried",
+    tone: "sage",
+    date: "2016 — 2026",
+    quote: "Where is home? I still don't know — but I'm less afraid of not knowing.",
+    note: "The same question, ten years on, asked more gently.",
+  },
+  {
+    tag: "the words you saved",
+    tone: "blush",
+    date: "2019",
+    quote: "We must wash our eyes and see differently. — Sohrab Sepehri",
+    note: "A line you copied down, back when it first found you.",
+  },
 ];
 
 const STEPS: { n: string; t: string; d: string }[] = [
@@ -103,6 +118,82 @@ function Reveal({
     >
       {children}
     </motion.div>
+  );
+}
+
+// A page Yadegar might bring back, styled like the real product's memory card.
+function DemoCard({ r }: { r: (typeof RETURNS)[number] }) {
+  return (
+    <motion.div
+      key={r.tag + r.quote}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="border border-border rounded-2xl bg-surface/90 p-6 md:p-7 text-left shadow-sm"
+    >
+      <div className="flex items-center justify-between mb-4">
+        <span
+          className="font-sans text-xs px-2.5 py-1 rounded-full"
+          style={TONES[r.tone]}
+        >
+          {r.tag}
+        </span>
+        <span className="font-sans text-xs text-faint-ink">{r.date}</span>
+      </div>
+      <p className="font-display italic text-xl md:text-2xl text-deep-brown leading-snug mb-3">
+        “{r.quote}”
+      </p>
+      <p className="font-body text-soft-ink">{r.note}</p>
+    </motion.div>
+  );
+}
+
+// Interactive taste of the engine — click to surface one return, cycle through
+// more. Curated examples (no live model call); same voice as the real product.
+function ReturnDemo({ onCreate }: { onCreate: () => void }) {
+  const [revealed, setRevealed] = useState(false);
+  const [i, setI] = useState(0);
+  const r = RETURNS[i % RETURNS.length];
+
+  if (!revealed) {
+    return (
+      <div className="text-center">
+        <button
+          onClick={() => setRevealed(true)}
+          className="rounded-full border border-accent-sepia/40 bg-surface px-6 py-3 font-sans text-sm text-ink hover:border-accent-sepia transition-colors"
+          data-testid="button-demo-return"
+        >
+          ✦ Bring a page back
+        </button>
+        <p className="font-sans text-xs text-faint-ink mt-3">
+          a glimpse of what Yadegar returns
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-[560px] mx-auto">
+      <DemoCard r={r} />
+      <div className="flex items-center justify-center gap-6 mt-5">
+        <button
+          onClick={() => setI((n) => n + 1)}
+          className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"
+          data-testid="button-demo-another"
+        >
+          Show me another →
+        </button>
+        <button
+          onClick={onCreate}
+          className="font-sans text-sm text-accent-sepia hover:text-deep-brown border-b border-accent-sepia/40 pb-0.5 transition-colors"
+        >
+          Read across your own years
+        </button>
+      </div>
+      <p className="font-sans text-xs text-faint-ink text-center mt-4">
+        These are examples. With your own journals, every page is yours.
+      </p>
+    </div>
   );
 }
 
@@ -194,36 +285,14 @@ export function Landing({
         <div className="max-w-[720px] mx-auto">
           <Reveal>
             <Eyebrow>What comes back</Eyebrow>
-            <h2 className="font-display text-3xl md:text-4xl text-deep-brown text-center leading-tight mb-12 max-w-[34rem] mx-auto">
+            <h2 className="font-display text-3xl md:text-4xl text-deep-brown text-center leading-tight mb-10 max-w-[34rem] mx-auto">
               Not a summary of your life. One page, returned at the moment it's
               true again.
             </h2>
           </Reveal>
-          <div className="grid sm:grid-cols-2 gap-5">
-            {RETURNS.map((r) => (
-              <Reveal key={r.tag}>
-                <div className="h-full border border-border rounded-2xl bg-surface/80 p-6 flex flex-col">
-                  <div className="flex items-center justify-between mb-4">
-                    <span
-                      className="font-sans text-xs px-2.5 py-1 rounded-full"
-                      style={TONES[r.tone]}
-                    >
-                      {r.tag}
-                    </span>
-                    <span className="font-sans text-xs text-faint-ink">
-                      {r.date}
-                    </span>
-                  </div>
-                  <p className="font-display italic text-xl text-deep-brown leading-snug mb-3">
-                    “{r.quote}”
-                  </p>
-                  <p className="font-body text-sm text-soft-ink mt-auto">
-                    {r.note}
-                  </p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
+          <Reveal>
+            <ReturnDemo onCreate={onCreate} />
+          </Reveal>
         </div>
       </section>
 
