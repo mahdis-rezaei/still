@@ -39,6 +39,9 @@ import type {
   MemoryUpdate,
   ParsedEntry,
   ParsedEntryUpdate,
+  Reflection,
+  ReflectionInput,
+  ReflectionUpdate,
   RegisterInput,
   ReturnedMemory,
   ScoreInput,
@@ -1012,6 +1015,297 @@ export const useConfirmImport = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getConfirmImportMutationOptions(options));
+    }
+
+export const getListReflectionsUrl = (id: string,) => {
+
+
+
+
+  return `/api/entries/${id}/reflections`
+}
+
+/**
+ * @summary List reflections written on an entry
+ */
+export const listReflections = async (id: string, options?: RequestInit): Promise<Reflection[]> => {
+
+  return customFetch<Reflection[]>(getListReflectionsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListReflectionsQueryKey = (id: string,) => {
+    return [
+    `/api/entries/${id}/reflections`
+    ] as const;
+    }
+
+
+export const getListReflectionsQueryOptions = <TData = Awaited<ReturnType<typeof listReflections>>, TError = ErrorType<ErrorResponse>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listReflections>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListReflectionsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listReflections>>> = ({ signal }) => listReflections(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listReflections>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListReflectionsQueryResult = NonNullable<Awaited<ReturnType<typeof listReflections>>>
+export type ListReflectionsQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary List reflections written on an entry
+ */
+
+export function useListReflections<TData = Awaited<ReturnType<typeof listReflections>>, TError = ErrorType<ErrorResponse>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listReflections>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListReflectionsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateReflectionUrl = (id: string,) => {
+
+
+
+
+  return `/api/entries/${id}/reflections`
+}
+
+/**
+ * @summary Write a reflection on an entry
+ */
+export const createReflection = async (id: string,
+    reflectionInput: ReflectionInput, options?: RequestInit): Promise<Reflection> => {
+
+  return customFetch<Reflection>(getCreateReflectionUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      reflectionInput,)
+  }
+);}
+
+
+
+
+export const getCreateReflectionMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createReflection>>, TError,{id: string;data: BodyType<ReflectionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createReflection>>, TError,{id: string;data: BodyType<ReflectionInput>}, TContext> => {
+
+const mutationKey = ['createReflection'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createReflection>>, {id: string;data: BodyType<ReflectionInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createReflection(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateReflectionMutationResult = NonNullable<Awaited<ReturnType<typeof createReflection>>>
+    export type CreateReflectionMutationBody = BodyType<ReflectionInput>
+    export type CreateReflectionMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Write a reflection on an entry
+ */
+export const useCreateReflection = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createReflection>>, TError,{id: string;data: BodyType<ReflectionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createReflection>>,
+        TError,
+        {id: string;data: BodyType<ReflectionInput>},
+        TContext
+      > => {
+      return useMutation(getCreateReflectionMutationOptions(options));
+    }
+
+export const getUpdateReflectionUrl = (id: string,) => {
+
+
+
+
+  return `/api/reflections/${id}`
+}
+
+/**
+ * @summary Edit a reflection
+ */
+export const updateReflection = async (id: string,
+    reflectionUpdate: ReflectionUpdate, options?: RequestInit): Promise<Reflection> => {
+
+  return customFetch<Reflection>(getUpdateReflectionUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      reflectionUpdate,)
+  }
+);}
+
+
+
+
+export const getUpdateReflectionMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateReflection>>, TError,{id: string;data: BodyType<ReflectionUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateReflection>>, TError,{id: string;data: BodyType<ReflectionUpdate>}, TContext> => {
+
+const mutationKey = ['updateReflection'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateReflection>>, {id: string;data: BodyType<ReflectionUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateReflection(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateReflectionMutationResult = NonNullable<Awaited<ReturnType<typeof updateReflection>>>
+    export type UpdateReflectionMutationBody = BodyType<ReflectionUpdate>
+    export type UpdateReflectionMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Edit a reflection
+ */
+export const useUpdateReflection = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateReflection>>, TError,{id: string;data: BodyType<ReflectionUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateReflection>>,
+        TError,
+        {id: string;data: BodyType<ReflectionUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateReflectionMutationOptions(options));
+    }
+
+export const getDeleteReflectionUrl = (id: string,) => {
+
+
+
+
+  return `/api/reflections/${id}`
+}
+
+/**
+ * @summary Delete a reflection (soft delete)
+ */
+export const deleteReflection = async (id: string, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteReflectionUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteReflectionMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteReflection>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteReflection>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteReflection'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteReflection>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteReflection(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteReflectionMutationResult = NonNullable<Awaited<ReturnType<typeof deleteReflection>>>
+
+    export type DeleteReflectionMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Delete a reflection (soft delete)
+ */
+export const useDeleteReflection = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteReflection>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteReflection>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeleteReflectionMutationOptions(options));
     }
 
 export const getRunMemoryUrl = () => {

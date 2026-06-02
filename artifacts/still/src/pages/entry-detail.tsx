@@ -5,8 +5,12 @@ import {
   useGetEntry,
   useUpdateEntry,
   useDeleteEntry,
+  useListReflections,
+  useCreateReflection,
+  useDeleteReflection,
   getListEntriesQueryKey,
   getGetEntryQueryKey,
+  getListReflectionsQueryKey,
   type EntryUpdateResurfacingPreference,
 } from "@workspace/api-client-react";
 import { AppNav } from "@/components/app-nav";
@@ -42,10 +46,32 @@ export default function EntryDetail() {
   const updateEntry = useUpdateEntry();
   const deleteEntry = useDeleteEntry();
 
+  const { data: reflections } = useListReflections(id);
+  const createReflection = useCreateReflection();
+  const deleteReflection = useDeleteReflection();
+
   const [editing, setEditing] = useState(false);
   const [draftBody, setDraftBody] = useState("");
   const [draftDate, setDraftDate] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [reflecting, setReflecting] = useState(false);
+  const [reflectionDraft, setReflectionDraft] = useState("");
+
+  async function addReflection() {
+    if (!reflectionDraft.trim()) return;
+    await createReflection.mutateAsync({
+      id,
+      data: { body: reflectionDraft.trim() },
+    });
+    setReflectionDraft("");
+    setReflecting(false);
+    queryClient.invalidateQueries({ queryKey: getListReflectionsQueryKey(id) });
+  }
+
+  async function removeReflection(reflectionId: string) {
+    await deleteReflection.mutateAsync({ id: reflectionId });
+    queryClient.invalidateQueries({ queryKey: getListReflectionsQueryKey(id) });
+  }
 
   function refresh() {
     queryClient.invalidateQueries({ queryKey: getGetEntryQueryKey(id) });
@@ -156,6 +182,77 @@ export default function EntryDetail() {
               <p className="font-body text-lg md:text-xl text-ink leading-relaxed whitespace-pre-wrap">
                 {entry.body}
               </p>
+            )}
+
+            {!editing && (
+              <div className="mt-12">
+                {(reflections ?? []).length > 0 && (
+                  <div className="space-y-7 mb-8">
+                    {(reflections ?? []).map((r) => (
+                      <div
+                        key={r.id}
+                        className="border-l-2 border-accent-sepia/30 pl-5"
+                      >
+                        <div className="flex items-baseline justify-between gap-3 mb-1.5">
+                          <span className="font-sans text-xs uppercase tracking-[0.16em] text-faint-ink">
+                            Reflection · {longDate(r.reflectionDate)}
+                          </span>
+                          <button
+                            onClick={() => removeReflection(r.id)}
+                            className="font-sans text-xs text-faint-ink hover:text-soft-ink transition-colors"
+                            aria-label="Delete reflection"
+                          >
+                            remove
+                          </button>
+                        </div>
+                        <p className="font-body text-lg text-soft-ink leading-relaxed whitespace-pre-wrap">
+                          {r.body}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {reflecting ? (
+                  <div className="flex flex-col gap-3">
+                    <textarea
+                      value={reflectionDraft}
+                      onChange={(e) => setReflectionDraft(e.target.value)}
+                      autoFocus
+                      placeholder="Write to the person who wrote this…"
+                      className="w-full min-h-[140px] bg-surface border border-border rounded-lg p-4 text-lg text-ink font-body leading-relaxed placeholder:text-faint-ink focus:outline-none focus:border-accent-sepia resize-none"
+                      data-testid="input-reflection"
+                    />
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={addReflection}
+                        disabled={!reflectionDraft.trim()}
+                        className="rounded-full bg-deep-brown text-background px-6 py-2 font-sans text-sm hover:bg-ink disabled:opacity-50 transition-colors"
+                        data-testid="button-add-reflection"
+                      >
+                        Add reflection
+                      </button>
+                      <button
+                        onClick={() => {
+                          setReflecting(false);
+                          setReflectionDraft("");
+                        }}
+                        className="font-sans text-sm text-soft-ink hover:text-ink"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setReflecting(true)}
+                    className="font-sans text-sm text-accent-sepia hover:text-deep-brown border-b border-accent-sepia/40 pb-0.5 transition-colors"
+                    data-testid="button-reflect"
+                  >
+                    Reflect on this page
+                  </button>
+                )}
+              </div>
             )}
 
             {!editing && (

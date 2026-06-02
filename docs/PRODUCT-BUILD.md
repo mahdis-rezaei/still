@@ -69,8 +69,14 @@ Implements the MVP schema from `docs/PRD/mvp-v1.md` (decisions #1–#5 locked).
   /imports/:id/parsed/:pid` (date/include) → `POST /imports/:id/confirm`. UI:
   `/import` (paste or .txt/.md upload → review with editable dates + include →
   keep). Confirmed entries get source `pasted_import`/`file_import`.
-- **Next:** reflections, notification settings + nudges, privacy
-  (export/delete), onboarding; then the destructive sync + migration to Replit.
+- **Reflections (done):** `routes/reflections.ts` — `GET/POST
+  /entries/:id/reflections`, `PATCH/DELETE /reflections/:id` (soft delete);
+  original entry never modified. UI: "Reflect on this page" composer + existing
+  reflections rendered beneath the entry as letters across time (date label,
+  left rule). `lib/db` reflections table already existed.
+- **Next:** privacy (export/delete + honest AI disclosure), notification
+  settings + nudges, onboarding. Engine V2 is captured in
+  `docs/PRD/memory-engine-v2-vision.md` (future — not implemented).
 
 ### ⚠️ This migration is DESTRUCTIVE (prototype reset)
 Switching serial→UUID and renaming `entries`→`journal_entries` cannot be done

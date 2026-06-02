@@ -310,6 +310,71 @@ export const ConfirmImportResponse = zod.object({
 
 
 /**
+ * @summary List reflections written on an entry
+ */
+export const ListReflectionsParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ListReflectionsResponseItem = zod.object({
+  "id": zod.string(),
+  "journalEntryId": zod.string(),
+  "body": zod.string(),
+  "reflectionDate": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const ListReflectionsResponse = zod.array(ListReflectionsResponseItem)
+
+
+/**
+ * @summary Write a reflection on an entry
+ */
+export const CreateReflectionParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+
+
+export const CreateReflectionBody = zod.object({
+  "body": zod.string().min(1)
+})
+
+
+/**
+ * @summary Edit a reflection
+ */
+export const UpdateReflectionParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+
+
+export const UpdateReflectionBody = zod.object({
+  "body": zod.string().min(1)
+})
+
+export const UpdateReflectionResponse = zod.object({
+  "id": zod.string(),
+  "journalEntryId": zod.string(),
+  "body": zod.string(),
+  "reflectionDate": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a reflection (soft delete)
+ */
+export const DeleteReflectionParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+/**
  * @summary Run the engine over eligible entries and surface one thing (or stay quiet)
  */
 export const RunMemoryBody = zod.object({

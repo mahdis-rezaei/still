@@ -98,6 +98,26 @@ export interface EntryUpdate {
   resurfacingPreference?: EntryUpdateResurfacingPreference;
 }
 
+export interface Reflection {
+  id: string;
+  journalEntryId: string;
+  body: string;
+  /** @nullable */
+  reflectionDate?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReflectionInput {
+  /** @minLength 1 */
+  body: string;
+}
+
+export interface ReflectionUpdate {
+  /** @minLength 1 */
+  body: string;
+}
+
 export type ParsedEntryDateConfidence = typeof ParsedEntryDateConfidence[keyof typeof ParsedEntryDateConfidence];
 
 
