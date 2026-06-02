@@ -14,4 +14,5 @@ export interface AuthUser {
   /** @nullable */
   avatarUrl?: string | null;
   onboardingCompleted: boolean;
+  emailVerified: boolean;
 }

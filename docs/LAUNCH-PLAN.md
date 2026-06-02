@@ -54,7 +54,12 @@ real domain).
       removed (can't ILIKE ciphertext); Library search is client-side.
       NOTE: `returned_memories.full_engine_response` (jsonb debug trace) is left
       unencrypted for now — a fast-follow.
-- [ ] Auth completeness: password reset + email verification (needs email).
+- [x] Auth completeness: password reset + email verification (via Resend).
+      Soft verification (non-blocking; a banner prompts + resends). Tokens in a
+      new `auth_tokens` table (hashed, single-use, expiring); `users.emailVerified`
+      added. Email sent via the Resend REST API (no SDK), from `EMAIL_FROM`.
+      Pages: /verify-email, /forgot-password, /reset-password. **Needs a DB push**
+      (new column + table) on next sync, and a verified Resend domain.
 - [x] Rate limiting (in-memory, no deps): per-user cap on /memories/run (the
       costly LLM path, 30/hr), per-IP throttle on login/register (30 / 15 min),
       and a per-IP guard on the raw /still/* engine endpoints (60/hr, loopback

@@ -21,6 +21,9 @@ import Login from "@/pages/login";
 import Why from "@/pages/why";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import Terms from "@/pages/terms";
+import VerifyEmail from "@/pages/verify-email";
+import ForgotPassword from "@/pages/forgot-password";
+import ResetPassword from "@/pages/reset-password";
 import Today from "@/pages/today";
 import Library from "@/pages/library";
 import EntryDetail from "@/pages/entry-detail";
@@ -113,6 +116,9 @@ function Router() {
       <Route path="/why" component={Why} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms" component={Terms} />
+      <Route path="/verify-email" component={VerifyEmail} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
       <Route component={ProtectedApp} />
     </Switch>
   );

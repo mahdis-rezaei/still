@@ -6,8 +6,15 @@ import {
 } from "node:crypto";
 import { promisify } from "node:util";
 import type { Request, Response, NextFunction } from "express";
-import { and, eq, gt } from "drizzle-orm";
-import { db, usersTable, sessionsTable, type User } from "@workspace/db";
+import { and, eq, gt, isNull } from "drizzle-orm";
+import {
+  db,
+  usersTable,
+  sessionsTable,
+  authTokensTable,
+  type User,
+  type AuthTokenKind,
+} from "@workspace/db";
 
 const scrypt = promisify(scryptCb);
 
@@ -80,6 +87,49 @@ export async function getUserForToken(
 export async function deleteSession(token: string | undefined): Promise<void> {
   if (!token) return;
   await db.delete(sessionsTable).where(eq(sessionsTable.id, hashToken(token)));
+}
+
+// ── Single-use email tokens (verification + password reset) ──────────────────
+// The raw token goes in the emailed link; only its hash is stored.
+
+export async function createAuthToken(
+  userId: string,
+  kind: AuthTokenKind,
+  ttlMs: number,
+): Promise<string> {
+  const raw = randomBytes(32).toString("hex");
+  await db.insert(authTokensTable).values({
+    userId,
+    kind,
+    tokenHash: hashToken(raw),
+    expiresAt: new Date(Date.now() + ttlMs),
+  });
+  return raw;
+}
+
+// Validate and burn a token. Returns the userId on success, else null.
+export async function consumeAuthToken(
+  raw: string | undefined,
+  kind: AuthTokenKind,
+): Promise<string | null> {
+  if (!raw) return null;
+  const [row] = await db
+    .select()
+    .from(authTokensTable)
+    .where(
+      and(
+        eq(authTokensTable.tokenHash, hashToken(raw)),
+        eq(authTokensTable.kind, kind),
+        isNull(authTokensTable.usedAt),
+        gt(authTokensTable.expiresAt, new Date()),
+      ),
+    );
+  if (!row) return null;
+  await db
+    .update(authTokensTable)
+    .set({ usedAt: new Date() })
+    .where(eq(authTokensTable.id, row.id));
+  return row.userId;
 }
 
 export function setSessionCookie(

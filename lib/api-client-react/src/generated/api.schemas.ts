@@ -21,6 +21,24 @@ export interface AuthUser {
   /** @nullable */
   avatarUrl?: string | null;
   onboardingCompleted: boolean;
+  emailVerified: boolean;
+}
+
+export interface VerifyEmailInput {
+  /** @minLength 1 */
+  token: string;
+}
+
+export interface RequestResetInput {
+  /** @minLength 3 */
+  email: string;
+}
+
+export interface ResetPasswordInput {
+  /** @minLength 1 */
+  token: string;
+  /** @minLength 8 */
+  password: string;
 }
 
 export interface RegisterInput {

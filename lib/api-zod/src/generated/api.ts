@@ -519,6 +519,43 @@ export const ExportDataResponse = zod.object({
 
 
 /**
+ * @summary Confirm an email address with a token
+ */
+
+
+
+export const VerifyEmailBody = zod.object({
+  "token": zod.string().min(1)
+})
+
+
+/**
+ * @summary Request a password-reset email (always succeeds)
+ */
+export const requestPasswordResetBodyEmailMin = 3;
+
+
+
+export const RequestPasswordResetBody = zod.object({
+  "email": zod.string().min(requestPasswordResetBodyEmailMin)
+})
+
+
+/**
+ * @summary Set a new password using a reset token
+ */
+
+export const resetPasswordBodyPasswordMin = 8;
+
+
+
+export const ResetPasswordBody = zod.object({
+  "token": zod.string().min(1),
+  "password": zod.string().min(resetPasswordBodyPasswordMin)
+})
+
+
+/**
  * @summary Create an account with email and password
  */
 export const registerBodyEmailMin = 3;
@@ -552,7 +589,8 @@ export const LoginResponse = zod.object({
   "email": zod.string(),
   "name": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
-  "onboardingCompleted": zod.boolean()
+  "onboardingCompleted": zod.boolean(),
+  "emailVerified": zod.boolean()
 })
 
 
@@ -564,7 +602,8 @@ export const CompleteOnboardingResponse = zod.object({
   "email": zod.string(),
   "name": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
-  "onboardingCompleted": zod.boolean()
+  "onboardingCompleted": zod.boolean(),
+  "emailVerified": zod.boolean()
 })
 
 
@@ -576,7 +615,8 @@ export const GetCurrentUserResponse = zod.object({
   "email": zod.string(),
   "name": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
-  "onboardingCompleted": zod.boolean()
+  "onboardingCompleted": zod.boolean(),
+  "emailVerified": zod.boolean()
 })
 
 

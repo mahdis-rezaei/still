@@ -209,6 +209,17 @@ export default function Login() {
                 </form>
               </div>
 
+              {view === "signin" && (
+                <p className="text-center mt-4">
+                  <Link
+                    href="/forgot-password"
+                    className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"
+                  >
+                    Forgot password?
+                  </Link>
+                </p>
+              )}
+
               <p className="text-center text-soft-ink mt-6 font-body">
                 {view === "signin"
                   ? "New to Yadegar?"

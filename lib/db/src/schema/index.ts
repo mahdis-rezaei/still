@@ -2,6 +2,7 @@
 
 export * from "./users";
 export * from "./sessions";
+export * from "./auth-tokens";
 export * from "./journal-entries";
 export * from "./journal-imports";
 export * from "./parsed-import-entries";
