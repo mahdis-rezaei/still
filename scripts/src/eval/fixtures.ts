@@ -181,16 +181,7 @@ export const fixtures: Fixture[] = [
     note: "The counterweight to the silence/wound cases: survived past difficulty with real perspective (a fear named and shown to have dissolved, §3.1/§6.4). It MUST surface — if the two stacked gates return nothing here, they are over-gating. No recording yet: skipped offline, runs live (STILL_MODE=http).",
   },
 
-  // ── Thread / continuity lens (the product's core — untested; live-only) ─────
-  {
-    id: "thread-continuity",
-    title: "Continuity thread across years — must surface as a thread (§4)",
-    entry:
-      "March 3, 2015\nEverything feels uncertain right now — no job, no plan, just me on this train. But okay. Relax. Take a deep breath. One, two, three. You've figured things out before; you will again.\n\nNovember 12, 2018\nMake sure YOU hold the pen. Be brave when writing YOUR script. Nobody else gets to decide how this goes.",
-    expect: "surface",
-    targets: ["hold the pen", "take a deep breath", "Relax"],
-    note: "The canonical continuity test: the same function (becoming her own steadying voice under uncertainty) across 2015→2018 with changed surface ('breathe' → 'hold the pen'). Should surface a THREAD spanning both dates, in the 'I've seen this before' recurrence voice — NOT a single page. No recording: skipped offline, runs live. This whole lens is currently untested in the loop.",
-  },
+  // ── Thread / continuity lens (the product's core) — live-only ──────────────
   {
     id: "distance-breakup-arc",
     title:
