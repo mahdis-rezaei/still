@@ -2,6 +2,27 @@
 
 Goal: publish Still as a real, trustworthy product on a real domain.
 
+## ✅ LIVE (2026-06-02): https://yadegarjournal.com
+Deployed (Replit autoscale) on the custom domain, with a production database.
+Verified live end-to-end: email/password **and Google** sign-in, **email
+verification** (real email delivered via Resend from the domain) + password
+reset, encryption at rest, onboarding, the full write → import → run → returns →
+reflect loop, privacy export/delete, and the legal pages. Every "harden first"
+item is complete.
+
+### Remaining (optional / post-launch; none blocking)
+- **Nudges + notification settings** — the "on this day" / cadence reminders
+  (writing + memory nudge; weekly/monthly/off). `notification_preferences` table
+  exists; the scheduler + Settings UI are not built. (On Mahdis's original
+  wishlist — the "Facebook-memory" idea — so it's the natural next build.)
+- **Filter year/month → run** UI (the backend `/memories/run` already accepts it).
+- **Google Doc import** (paste + .txt/.md are done).
+- **Option B `secondaryThread`** surfaced in the Returns/Today UI.
+- **Polish:** landing "what Yadegar returns / how it works" sections; encrypt
+  `returned_memories.full_engine_response`; OG image/favicon.
+- **Before broad public launch:** human/legal review of Privacy + Terms.
+- **Engine V2** — future eval (`docs/PRD/memory-engine-v2-vision.md`).
+
 ## Decisions (locked with Mahdis)
 - **Posture: harden first, then invite real journals.** Get the trust/safety
   layer done before opening to real (non-sample) journals.
