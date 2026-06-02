@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { motion } from "framer-motion";
+import { motion, useScroll, useReducedMotion } from "framer-motion";
 import { AmbientField, SiteNav } from "@/components/site-chrome";
 
 // The maker's note — Mahdis's own words, in her own line-by-line cadence.
@@ -231,10 +231,22 @@ const NOTE: Block[] = [
 
 export default function Why() {
   const [, setLocation] = useLocation();
+  const reduce = useReducedMotion();
+  const { scrollYProgress } = useScroll();
 
   return (
     <div className="min-h-[100dvh] flex flex-col">
       <AmbientField />
+
+      {/* A quiet reading-progress thread along the very top. */}
+      {!reduce && (
+        <motion.div
+          className="fixed top-0 left-0 right-0 h-0.5 bg-accent-sepia/60 origin-left z-50"
+          style={{ scaleX: scrollYProgress }}
+          aria-hidden="true"
+        />
+      )}
+
       <SiteNav showWhy={false} />
 
       <main className="flex-1 w-full max-w-[620px] mx-auto px-6 py-16 md:py-24">
@@ -250,9 +262,14 @@ export default function Why() {
             why I built Still
           </h1>
 
-          <article className="space-y-4">
+          <article className="space-y-5">
             {NOTE.map((block, i) => (
-              <NoteBlock key={i} block={block} first={i === 0} />
+              <NoteBlock
+                key={i}
+                block={block}
+                first={i === 0}
+                reduce={!!reduce}
+              />
             ))}
           </article>
 
@@ -275,50 +292,88 @@ export default function Why() {
   );
 }
 
-function NoteBlock({ block, first }: { block: Block; first: boolean }) {
+// Each line gently surfaces — a soft fade and rise — as it scrolls into view,
+// echoing "wash our eyes and see differently." Static under reduced-motion.
+function Reveal({
+  reduce,
+  children,
+}: {
+  reduce: boolean;
+  children: React.ReactNode;
+}) {
+  if (reduce) return <>{children}</>;
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.6 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function NoteBlock({
+  block,
+  first,
+  reduce,
+}: {
+  block: Block;
+  first: boolean;
+  reduce: boolean;
+}) {
   if (block.kind === "quote") {
     return (
-      <blockquote className="my-12 text-center">
-        <p className="font-display italic text-2xl md:text-3xl text-deep-brown leading-snug">
-          “{block.text}”
-        </p>
-      </blockquote>
+      <Reveal reduce={reduce}>
+        <blockquote className="my-10 text-center">
+          <p className="font-display italic text-2xl md:text-3xl text-deep-brown leading-snug">
+            “{block.text}”
+          </p>
+        </blockquote>
+      </Reveal>
     );
   }
 
   if (block.kind === "whisper") {
     return (
-      <div className="my-10 text-center space-y-1.5">
-        {block.lines.map((line, i) => (
-          <p
-            key={i}
-            className="font-body italic text-xl md:text-2xl text-deep-brown leading-snug"
-          >
-            {line}
-          </p>
-        ))}
-      </div>
+      <Reveal reduce={reduce}>
+        <div className="my-10 text-center space-y-1.5">
+          {block.lines.map((line, i) => (
+            <p
+              key={i}
+              className="font-body italic text-xl md:text-2xl text-deep-brown leading-snug"
+            >
+              {line}
+            </p>
+          ))}
+        </div>
+      </Reveal>
     );
   }
 
   if (block.kind === "still") {
     return (
-      <p className="font-body text-lg md:text-xl text-soft-ink leading-relaxed">
-        And perhaps that is why I called it{" "}
-        <em className="italic text-deep-brown">Still</em>.
-      </p>
+      <Reveal reduce={reduce}>
+        <p className="font-body text-lg md:text-xl text-soft-ink leading-relaxed">
+          And perhaps that is why I called it{" "}
+          <em className="italic text-deep-brown">Still</em>.
+        </p>
+      </Reveal>
     );
   }
 
   // A line — the opening one sits a shade darker to draw the reader in.
   return (
-    <p
-      className={
-        "font-body text-lg md:text-xl leading-relaxed " +
-        (first ? "text-ink" : "text-soft-ink")
-      }
-    >
-      {block.text}
-    </p>
+    <Reveal reduce={reduce}>
+      <p
+        className={
+          "font-body text-lg md:text-xl leading-relaxed " +
+          (first ? "text-ink" : "text-soft-ink")
+        }
+      >
+        {block.text}
+      </p>
+    </Reveal>
   );
 }
