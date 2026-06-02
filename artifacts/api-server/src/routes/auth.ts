@@ -51,26 +51,21 @@ router.post("/auth/register", async (req, res): Promise<void> => {
       .select()
       .from(usersTable)
       .where(eq(usersTable.email, email));
-    if (existing?.passwordHash) {
+    // SECURITY: never attach a password (and a session) to an existing account
+    // via an unauthenticated register call — including a Google-only account.
+    // Doing so would let anyone who knows the email take it over. Linking a
+    // password to a Google account must happen from an authenticated session
+    // (a future "set a password" flow), not here.
+    if (existing) {
       res.status(409).json({ error: "That email is already registered" });
       return;
     }
 
     const passwordHash = await hashPassword(parsed.data.password);
-    let user: User;
-    if (existing) {
-      // Email exists from a Google-only account — set a password to link it.
-      [user] = await db
-        .update(usersTable)
-        .set({ passwordHash, name: existing.name ?? parsed.data.name ?? null })
-        .where(eq(usersTable.id, existing.id))
-        .returning();
-    } else {
-      [user] = await db
-        .insert(usersTable)
-        .values({ email, passwordHash, name: parsed.data.name ?? null })
-        .returning();
-    }
+    const [user] = await db
+      .insert(usersTable)
+      .values({ email, passwordHash, name: parsed.data.name ?? null })
+      .returning();
 
     await startSession(res, user.id);
     res.status(201).json(toAuthUser(user));
