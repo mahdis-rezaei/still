@@ -5,10 +5,19 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { EntryResurfacingPreference } from './entryResurfacingPreference';
+import type { EntrySource } from './entrySource';
 
 export interface Entry {
-  id: number;
-  date: string;
-  text: string;
+  id: string;
+  /** @nullable */
+  title?: string | null;
+  body: string;
+  /** @nullable */
+  entryDate?: string | null;
+  source: EntrySource;
+  favorite: boolean;
+  resurfacingPreference: EntryResurfacingPreference;
   createdAt: Date;
+  updatedAt: Date;
 }

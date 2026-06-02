@@ -14,7 +14,7 @@ export interface ErrorResponse {
 }
 
 export interface AuthUser {
-  id: number;
+  id: string;
   email: string;
   /** @nullable */
   name?: string | null;
@@ -37,17 +37,65 @@ export interface LoginInput {
   password: string;
 }
 
+export type EntrySource = typeof EntrySource[keyof typeof EntrySource];
+
+
+export const EntrySource = {
+  manual: 'manual',
+  pasted_import: 'pasted_import',
+  file_import: 'file_import',
+  google_doc: 'google_doc',
+  sample: 'sample',
+} as const;
+
+export type EntryResurfacingPreference = typeof EntryResurfacingPreference[keyof typeof EntryResurfacingPreference];
+
+
+export const EntryResurfacingPreference = {
+  normal: 'normal',
+  more_often: 'more_often',
+  never: 'never',
+} as const;
+
 export interface Entry {
-  id: number;
-  date: string;
-  text: string;
+  id: string;
+  /** @nullable */
+  title?: string | null;
+  body: string;
+  /** @nullable */
+  entryDate?: string | null;
+  source: EntrySource;
+  favorite: boolean;
+  resurfacingPreference: EntryResurfacingPreference;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface EntryInput {
+  title?: string;
   /** @minLength 1 */
-  date: string;
-  text: string;
+  body: string;
+  entryDate?: string;
+}
+
+export type EntryUpdateResurfacingPreference = typeof EntryUpdateResurfacingPreference[keyof typeof EntryUpdateResurfacingPreference];
+
+
+export const EntryUpdateResurfacingPreference = {
+  normal: 'normal',
+  more_often: 'more_often',
+  never: 'never',
+} as const;
+
+export interface EntryUpdate {
+  /** @nullable */
+  title?: string | null;
+  /** @minLength 1 */
+  body?: string;
+  /** @nullable */
+  entryDate?: string | null;
+  favorite?: boolean;
+  resurfacingPreference?: EntryUpdateResurfacingPreference;
 }
 
 export type QuoteSourceType = typeof QuoteSourceType[keyof typeof QuoteSourceType];
@@ -153,4 +201,12 @@ export interface ScoreResult {
   /** @nullable */
   message?: string | null;
 }
+
+export type ListEntriesParams = {
+year?: number;
+month?: number;
+favorite?: boolean;
+source?: string;
+search?: string;
+};
 

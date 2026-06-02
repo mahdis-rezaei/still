@@ -12,6 +12,8 @@ tags:
     description: Health operations
   - name: still
     description: Still journaling companion
+  - name: entries
+    description: Journal entries
   - name: auth
     description: Authentication and accounts
 paths:
@@ -88,14 +90,40 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-  /still/entries:
+  /entries:
     get:
       operationId: listEntries
-      tags: [still]
-      summary: List all stored journal entries
+      tags: [entries]
+      summary: List the current user's journal entries
+      parameters:
+        - name: year
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: month
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: favorite
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: source
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
       responses:
         "200":
-          description: Stored entries, most recent entry date first
+          description: The user's entries, most recent first
           content:
             application/json:
               schema:
@@ -110,8 +138,8 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
     post:
       operationId: createEntry
-      tags: [still]
-      summary: Store a single journal entry verbatim
+      tags: [entries]
+      summary: Create a journal entry
       requestBody:
         required: true
         content:
@@ -137,20 +165,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-  /still/entries/{id}:
+  /entries/{id}:
     get:
       operationId: getEntry
-      tags: [still]
-      summary: Fetch a single stored entry's full text by id
+      tags: [entries]
+      summary: Fetch a single entry by id
       parameters:
         - name: id
           in: path
           required: true
           schema:
-            type: integer
+            type: string
       responses:
         "200":
-          description: The stored entry
+          description: The entry
           content:
             application/json:
               schema:
@@ -163,6 +191,60 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "500":
           description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateEntry
+      tags: [entries]
+      summary: Update an entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EntryUpdate"
+      responses:
+        "200":
+          description: The updated entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Entry"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteEntry
+      tags: [entries]
+      summary: Delete an entry (soft delete)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
           content:
             application/json:
               schema:
@@ -273,7 +355,7 @@ components:
       type: object
       properties:
         id:
-          type: integer
+          type: string
         email:
           type: string
         name:
@@ -314,30 +396,62 @@ components:
       type: object
       properties:
         id:
-          type: integer
-        date:
           type: string
-        text:
+        title:
+          type: ["string", "null"]
+        body:
           type: string
+        entryDate:
+          type: ["string", "null"]
+        source:
+          type: string
+          enum: [manual, pasted_import, file_import, google_doc, sample]
+        favorite:
+          type: boolean
+        resurfacingPreference:
+          type: string
+          enum: [normal, more_often, never]
         createdAt:
+          type: string
+          format: date-time
+        updatedAt:
           type: string
           format: date-time
       required:
         - id
-        - date
-        - text
+        - body
+        - source
+        - favorite
+        - resurfacingPreference
         - createdAt
+        - updatedAt
     EntryInput:
       type: object
       properties:
-        date:
+        title:
+          type: string
+        body:
           type: string
           minLength: 1
-        text:
+        entryDate:
           type: string
       required:
-        - date
-        - text
+        - body
+    EntryUpdate:
+      type: object
+      properties:
+        title:
+          type: ["string", "null"]
+        body:
+          type: string
+          minLength: 1
+        entryDate:
+          type: ["string", "null"]
+        favorite:
+          type: boolean
+        resurfacingPreference:
+          type: string
+          enum: [normal, more_often, never]
     Quote:
       type: object
       properties:

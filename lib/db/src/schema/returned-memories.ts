@@ -1,0 +1,50 @@
+import {
+  pgTable,
+  uuid,
+  text,
+  date,
+  boolean,
+  jsonb,
+  timestamp,
+} from "drizzle-orm/pg-core";
+import { usersTable } from "./users";
+import { journalEntriesTable } from "./journal-entries";
+
+// A memory the engine surfaced. Persisted only for real lenses — never
+// `crisis` (→ a support response, not a memory) or `nothing` (→ honest
+// silence). All resurfacing goes through the engine, so its safety gates apply.
+export type MemoryLens =
+  | "memory"
+  | "thread"
+  | "distance"
+  | "wisdom"
+  | "value_signal"
+  | "becoming"
+  | "survival";
+
+export const returnedMemoriesTable = pgTable("returned_memories", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  journalEntryId: uuid("journal_entry_id").references(
+    () => journalEntriesTable.id,
+    { onDelete: "set null" },
+  ),
+  engineRunId: uuid("engine_run_id"),
+  label: text("label"),
+  observation: text("observation"),
+  quote: text("quote"),
+  quoteDate: date("quote_date"),
+  lens: text("lens").$type<MemoryLens>(),
+  fullEngineResponse: jsonb("full_engine_response"),
+  dismissed: boolean("dismissed").notNull().default(false),
+  favorite: boolean("favorite").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  openedAt: timestamp("opened_at", { withTimezone: true }),
+});
+
+export type ReturnedMemory = typeof returnedMemoriesTable.$inferSelect;
+export type InsertReturnedMemory = typeof returnedMemoriesTable.$inferInsert;

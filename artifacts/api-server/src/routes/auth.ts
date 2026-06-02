@@ -30,7 +30,7 @@ function toAuthUser(u: User) {
   return { id: u.id, email: u.email, name: u.name, avatarUrl: u.avatarUrl };
 }
 
-async function startSession(res: import("express").Response, userId: number) {
+async function startSession(res: import("express").Response, userId: string) {
   const { token, expiresAt } = await createSession(userId);
   setSessionCookie(res, token, expiresAt);
 }

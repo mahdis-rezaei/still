@@ -18,8 +18,13 @@ function today(): string {
 
 function buildArchiveText(entries: Entry[]): string {
   return [...entries]
-    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
-    .map((e) => `[${e.date}]\n${e.text}`)
+    .filter((e) => e.entryDate)
+    .sort((a, b) => {
+      const ad = a.entryDate ?? "";
+      const bd = b.entryDate ?? "";
+      return ad < bd ? -1 : ad > bd ? 1 : 0;
+    })
+    .map((e) => `[${e.entryDate}]\n${e.body}`)
     .join("\n\n");
 }
 
@@ -36,7 +41,7 @@ export default function Entries() {
   const [text, setText] = useState("");
   const [batch, setBatch] = useState("");
   const [saving, setSaving] = useState(false);
-  const [expanded, setExpanded] = useState<Set<number>>(new Set());
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [query, setQuery] = useState("");
   const yearRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -49,14 +54,15 @@ export default function Entries() {
     if (!q) return list;
     return list.filter(
       (e) =>
-        e.text.toLowerCase().includes(q) || e.date.toLowerCase().includes(q),
+        e.body.toLowerCase().includes(q) ||
+        (e.entryDate ?? "").toLowerCase().includes(q),
     );
   }, [list, query]);
 
   const yearGroups = useMemo(() => {
     const map = new Map<string, Entry[]>();
     for (const e of filtered) {
-      const year = e.date.slice(0, 4) || "—";
+      const year = e.entryDate?.slice(0, 4) || "Undated";
       const arr = map.get(year);
       if (arr) arr.push(e);
       else map.set(year, [e]);
@@ -71,7 +77,7 @@ export default function Entries() {
     });
   }
 
-  function toggle(id: number) {
+  function toggle(id: string) {
     setExpanded((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -88,7 +94,7 @@ export default function Entries() {
     if (!date || !text.trim()) return;
     setSaving(true);
     try {
-      await createEntry.mutateAsync({ data: { date, text } });
+      await createEntry.mutateAsync({ data: { body: text, entryDate: date } });
       setText("");
       await refresh();
     } finally {
@@ -101,7 +107,7 @@ export default function Entries() {
     setSaving(true);
     try {
       for (const { date: d, text: t } of batchParsed) {
-        await createEntry.mutateAsync({ data: { date: d, text: t } });
+        await createEntry.mutateAsync({ data: { body: t, entryDate: d } });
       }
       setBatch("");
       await refresh();
@@ -284,7 +290,7 @@ export default function Entries() {
             </h2>
             {items.map((entry, i) => {
               const isOpen = expanded.has(entry.id);
-              const firstLine = entry.text.trim().split("\n")[0];
+              const firstLine = entry.body.trim().split("\n")[0];
               return (
                 <motion.div
                   key={entry.id}
@@ -298,7 +304,7 @@ export default function Entries() {
                     className="w-full text-left flex flex-col gap-1.5"
                   >
                     <span className="text-[11px] font-sans text-faint-ink tracking-wide">
-                      {entry.date}
+                      {entry.entryDate ?? "Undated"}
                     </span>
                     {!isOpen && (
                       <p className="font-body text-base text-soft-ink leading-snug truncate">
@@ -316,7 +322,7 @@ export default function Entries() {
                         className="overflow-hidden"
                       >
                         <p className="font-body text-base text-ink leading-relaxed whitespace-pre-wrap mt-1">
-                          {entry.text}
+                          {entry.body}
                         </p>
                       </motion.div>
                     )}

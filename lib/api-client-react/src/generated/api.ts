@@ -23,10 +23,12 @@ import type {
   AuthUser,
   Entry,
   EntryInput,
+  EntryUpdate,
   ErrorResponse,
   ExtractInput,
   ExtractResult,
   HealthStatus,
+  ListEntriesParams,
   LoginInput,
   RegisterInput,
   ScoreInput,
@@ -265,20 +267,27 @@ export const useScoreCandidates = <TError = ErrorType<ErrorResponse>,
       return useMutation(getScoreCandidatesMutationOptions(options));
     }
 
-export const getListEntriesUrl = () => {
+export const getListEntriesUrl = (params?: ListEntriesParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/still/entries`
+  return stringifiedParams.length > 0 ? `/api/entries?${stringifiedParams}` : `/api/entries`
 }
 
 /**
- * @summary List all stored journal entries
+ * @summary List the current user's journal entries
  */
-export const listEntries = async ( options?: RequestInit): Promise<Entry[]> => {
+export const listEntries = async (params?: ListEntriesParams, options?: RequestInit): Promise<Entry[]> => {
 
-  return customFetch<Entry[]>(getListEntriesUrl(),
+  return customFetch<Entry[]>(getListEntriesUrl(params),
   {
     ...options,
     method: 'GET'
@@ -291,23 +300,23 @@ export const listEntries = async ( options?: RequestInit): Promise<Entry[]> => {
 
 
 
-export const getListEntriesQueryKey = () => {
+export const getListEntriesQueryKey = (params?: ListEntriesParams,) => {
     return [
-    `/api/still/entries`
+    `/api/entries`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getListEntriesQueryOptions = <TData = Awaited<ReturnType<typeof listEntries>>, TError = ErrorType<ErrorResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listEntries>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getListEntriesQueryOptions = <TData = Awaited<ReturnType<typeof listEntries>>, TError = ErrorType<ErrorResponse>>(params?: ListEntriesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listEntries>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListEntriesQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getListEntriesQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listEntries>>> = ({ signal }) => listEntries({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listEntries>>> = ({ signal }) => listEntries(params, { signal, ...requestOptions });
 
 
 
@@ -321,15 +330,15 @@ export type ListEntriesQueryError = ErrorType<ErrorResponse>
 
 
 /**
- * @summary List all stored journal entries
+ * @summary List the current user's journal entries
  */
 
 export function useListEntries<TData = Awaited<ReturnType<typeof listEntries>>, TError = ErrorType<ErrorResponse>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listEntries>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ params?: ListEntriesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listEntries>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getListEntriesQueryOptions(options)
+  const queryOptions = getListEntriesQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -347,11 +356,11 @@ export const getCreateEntryUrl = () => {
 
 
 
-  return `/api/still/entries`
+  return `/api/entries`
 }
 
 /**
- * @summary Store a single journal entry verbatim
+ * @summary Create a journal entry
  */
 export const createEntry = async (entryInput: EntryInput, options?: RequestInit): Promise<Entry> => {
 
@@ -400,7 +409,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CreateEntryMutationError = ErrorType<ErrorResponse>
 
     /**
- * @summary Store a single journal entry verbatim
+ * @summary Create a journal entry
  */
 export const useCreateEntry = <TError = ErrorType<ErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createEntry>>, TError,{data: BodyType<EntryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -413,18 +422,18 @@ export const useCreateEntry = <TError = ErrorType<ErrorResponse>,
       return useMutation(getCreateEntryMutationOptions(options));
     }
 
-export const getGetEntryUrl = (id: number,) => {
+export const getGetEntryUrl = (id: string,) => {
 
 
 
 
-  return `/api/still/entries/${id}`
+  return `/api/entries/${id}`
 }
 
 /**
- * @summary Fetch a single stored entry's full text by id
+ * @summary Fetch a single entry by id
  */
-export const getEntry = async (id: number, options?: RequestInit): Promise<Entry> => {
+export const getEntry = async (id: string, options?: RequestInit): Promise<Entry> => {
 
   return customFetch<Entry>(getGetEntryUrl(id),
   {
@@ -439,14 +448,14 @@ export const getEntry = async (id: number, options?: RequestInit): Promise<Entry
 
 
 
-export const getGetEntryQueryKey = (id: number,) => {
+export const getGetEntryQueryKey = (id: string,) => {
     return [
-    `/api/still/entries/${id}`
+    `/api/entries/${id}`
     ] as const;
     }
 
 
-export const getGetEntryQueryOptions = <TData = Awaited<ReturnType<typeof getEntry>>, TError = ErrorType<ErrorResponse>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEntry>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetEntryQueryOptions = <TData = Awaited<ReturnType<typeof getEntry>>, TError = ErrorType<ErrorResponse>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEntry>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -469,11 +478,11 @@ export type GetEntryQueryError = ErrorType<ErrorResponse>
 
 
 /**
- * @summary Fetch a single stored entry's full text by id
+ * @summary Fetch a single entry by id
  */
 
 export function useGetEntry<TData = Awaited<ReturnType<typeof getEntry>>, TError = ErrorType<ErrorResponse>>(
- id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEntry>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEntry>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
@@ -489,6 +498,148 @@ export function useGetEntry<TData = Awaited<ReturnType<typeof getEntry>>, TError
 
 
 
+
+export const getUpdateEntryUrl = (id: string,) => {
+
+
+
+
+  return `/api/entries/${id}`
+}
+
+/**
+ * @summary Update an entry
+ */
+export const updateEntry = async (id: string,
+    entryUpdate: EntryUpdate, options?: RequestInit): Promise<Entry> => {
+
+  return customFetch<Entry>(getUpdateEntryUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      entryUpdate,)
+  }
+);}
+
+
+
+
+export const getUpdateEntryMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateEntry>>, TError,{id: string;data: BodyType<EntryUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateEntry>>, TError,{id: string;data: BodyType<EntryUpdate>}, TContext> => {
+
+const mutationKey = ['updateEntry'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateEntry>>, {id: string;data: BodyType<EntryUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateEntry(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateEntryMutationResult = NonNullable<Awaited<ReturnType<typeof updateEntry>>>
+    export type UpdateEntryMutationBody = BodyType<EntryUpdate>
+    export type UpdateEntryMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Update an entry
+ */
+export const useUpdateEntry = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateEntry>>, TError,{id: string;data: BodyType<EntryUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateEntry>>,
+        TError,
+        {id: string;data: BodyType<EntryUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateEntryMutationOptions(options));
+    }
+
+export const getDeleteEntryUrl = (id: string,) => {
+
+
+
+
+  return `/api/entries/${id}`
+}
+
+/**
+ * @summary Delete an entry (soft delete)
+ */
+export const deleteEntry = async (id: string, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteEntryUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteEntryMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteEntry>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteEntry>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteEntry'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteEntry>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteEntry(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteEntryMutationResult = NonNullable<Awaited<ReturnType<typeof deleteEntry>>>
+
+    export type DeleteEntryMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Delete an entry (soft delete)
+ */
+export const useDeleteEntry = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteEntry>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteEntry>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeleteEntryMutationOptions(options));
+    }
 
 export const getRegisterUrl = () => {
 

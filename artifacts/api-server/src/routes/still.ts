@@ -2,15 +2,8 @@ import { createHash } from "node:crypto";
 import { Router } from "express";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
-import { and, desc, eq } from "drizzle-orm";
-import { db, entriesTable, stillResultsTable } from "@workspace/db";
-import { requireAuth } from "../lib/auth";
-import {
-  CreateEntryBody,
-  GetEntryParams,
-  GetEntryResponse,
-  ListEntriesResponse,
-} from "@workspace/api-zod";
+import { eq } from "drizzle-orm";
+import { db, stillResultsTable } from "@workspace/db";
 
 const router = Router();
 
@@ -1190,72 +1183,7 @@ router.post("/still/score", async (req, res) => {
   }
 });
 
-// --- Entry storage routes ---
-
-router.get("/still/entries", requireAuth, async (req, res): Promise<void> => {
-  try {
-    const rows = await db
-      .select()
-      .from(entriesTable)
-      .where(eq(entriesTable.userId, req.userId!))
-      .orderBy(desc(entriesTable.date), desc(entriesTable.createdAt));
-    res.json(ListEntriesResponse.parse(rows));
-  } catch (err) {
-    req.log.error({ err }, "List entries route error");
-    res.status(500).json({ error: "Failed to list entries" });
-  }
-});
-
-router.post("/still/entries", requireAuth, async (req, res): Promise<void> => {
-  const parsed = CreateEntryBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "Invalid input: date and text are required" });
-    return;
-  }
-
-  try {
-    // Store text exactly as received — no trimming or normalization.
-    const [row] = await db
-      .insert(entriesTable)
-      .values({
-        userId: req.userId!,
-        date: parsed.data.date,
-        text: parsed.data.text,
-      })
-      .returning();
-    res.status(201).json(GetEntryResponse.parse(row));
-  } catch (err) {
-    req.log.error({ err }, "Create entry route error");
-    res.status(500).json({ error: "Failed to create entry" });
-  }
-});
-
-router.get("/still/entries/:id", requireAuth, async (req, res): Promise<void> => {
-  const params = GetEntryParams.safeParse(req.params);
-  if (!params.success) {
-    res.status(400).json({ error: "Invalid entry id" });
-    return;
-  }
-
-  try {
-    const [row] = await db
-      .select()
-      .from(entriesTable)
-      .where(
-        and(
-          eq(entriesTable.id, params.data.id),
-          eq(entriesTable.userId, req.userId!),
-        ),
-      );
-    if (!row) {
-      res.status(404).json({ error: "Entry not found" });
-      return;
-    }
-    res.json(GetEntryResponse.parse(row));
-  } catch (err) {
-    req.log.error({ err }, "Get entry route error");
-    res.status(500).json({ error: "Failed to fetch entry" });
-  }
-});
+// Entry storage moved to routes/entries.ts (/entries namespace). This file is
+// now purely the two-pass engine (extract + score) and its result cache.
 
 export default router;

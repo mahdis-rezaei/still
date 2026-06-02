@@ -26,12 +26,39 @@ times. The rule:
 
 | Phase | Scope | State |
 |---|---|---|
-| 1 | Auth (Google + email/password) + user-scoped storage | **code complete, needs Replit setup + verify** |
-| 2 | Write / store / list / read full entry (DB-backed) | not started |
+| 1 | Auth (Google + email/password) + user-scoped storage | **done, verified live in Replit** |
+| 2 | Write / store / list / read full entry (DB-backed) | **schema + /entries backend done; UI next** |
 | 3 | Filter year/month → run engine | not started |
 | 4 | Cadence + "on this day" + favorites + email + Google Doc import | not started |
 
 ---
+
+## Phase 2 — schema + entries backend (in progress)
+
+Implements the MVP schema from `docs/PRD/mvp-v1.md` (decisions #1–#5 locked).
+
+- **DB (`lib/db/src/schema/`):** moved to **UUID** primary keys; `entries` →
+  `journal_entries` with `title, body, entry_date (nullable), source, favorite,
+  resurfacing_preference, updated_at, deleted_at, metadata`; users gain
+  `timezone, onboarding_completed, updated_at, deleted_at`. New tables:
+  `journal_imports`, `parsed_import_entries`, `returned_memories`, `reflections`,
+  `notification_preferences`. (Routes for the new tables come in later steps.)
+- **Server:** entry CRUD removed from `still.ts` (now pure engine) and moved to
+  `routes/entries.ts` at the clean `/entries` namespace — GET (year/month/
+  favorite/source/search filters, undated sorts last), POST, GET/:id, PATCH,
+  DELETE (soft). Auth refactored to string (UUID) ids.
+- **Contract:** `/entries` endpoints + richer `Entry`/`EntryInput`/`EntryUpdate`;
+  `AuthUser.id` is now a string. Regenerated client + zod.
+- **Next:** Today (writing) screen, Library, full entry view, then imports /
+  memories(/run) / reflections / notifications / privacy routers + UI.
+
+### ⚠️ This migration is DESTRUCTIVE (prototype reset)
+Switching serial→UUID and renaming `entries`→`journal_entries` cannot be done
+in place by `drizzle-kit push` without dropping the old tables. Since this is a
+prototype with throwaway data, the intended path on the next Replit sync is:
+**drop the old `users`, `sessions`, `entries` tables, then push the new schema
+fresh.** Any existing test accounts/entries will be cleared — expected. (The
+`still_results` cache table is unaffected.)
 
 ## Phase 1 — what was built
 

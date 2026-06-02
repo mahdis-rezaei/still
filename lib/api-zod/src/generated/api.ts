@@ -93,41 +93,99 @@ export const ScoreCandidatesResponse = zod.object({
 
 
 /**
- * @summary List all stored journal entries
+ * @summary List the current user's journal entries
  */
+export const ListEntriesQueryParams = zod.object({
+  "year": zod.coerce.number().optional(),
+  "month": zod.coerce.number().optional(),
+  "favorite": zod.coerce.boolean().optional(),
+  "source": zod.coerce.string().optional(),
+  "search": zod.coerce.string().optional()
+})
+
 export const ListEntriesResponseItem = zod.object({
-  "id": zod.number(),
-  "date": zod.string(),
-  "text": zod.string(),
-  "createdAt": zod.coerce.date()
+  "id": zod.string(),
+  "title": zod.string().nullish(),
+  "body": zod.string(),
+  "entryDate": zod.string().nullish(),
+  "source": zod.enum(['manual', 'pasted_import', 'file_import', 'google_doc', 'sample']),
+  "favorite": zod.boolean(),
+  "resurfacingPreference": zod.enum(['normal', 'more_often', 'never']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
 })
 export const ListEntriesResponse = zod.array(ListEntriesResponseItem)
 
 
 /**
- * @summary Store a single journal entry verbatim
+ * @summary Create a journal entry
  */
 
 
 
 export const CreateEntryBody = zod.object({
-  "date": zod.string().min(1),
-  "text": zod.string()
+  "title": zod.string().optional(),
+  "body": zod.string().min(1),
+  "entryDate": zod.string().optional()
 })
 
 
 /**
- * @summary Fetch a single stored entry's full text by id
+ * @summary Fetch a single entry by id
  */
 export const GetEntryParams = zod.object({
-  "id": zod.coerce.number()
+  "id": zod.coerce.string()
 })
 
 export const GetEntryResponse = zod.object({
-  "id": zod.number(),
-  "date": zod.string(),
-  "text": zod.string(),
-  "createdAt": zod.coerce.date()
+  "id": zod.string(),
+  "title": zod.string().nullish(),
+  "body": zod.string(),
+  "entryDate": zod.string().nullish(),
+  "source": zod.enum(['manual', 'pasted_import', 'file_import', 'google_doc', 'sample']),
+  "favorite": zod.boolean(),
+  "resurfacingPreference": zod.enum(['normal', 'more_often', 'never']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update an entry
+ */
+export const UpdateEntryParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+
+
+export const UpdateEntryBody = zod.object({
+  "title": zod.string().nullish(),
+  "body": zod.string().min(1).optional(),
+  "entryDate": zod.string().nullish(),
+  "favorite": zod.boolean().optional(),
+  "resurfacingPreference": zod.enum(['normal', 'more_often', 'never']).optional()
+})
+
+export const UpdateEntryResponse = zod.object({
+  "id": zod.string(),
+  "title": zod.string().nullish(),
+  "body": zod.string(),
+  "entryDate": zod.string().nullish(),
+  "source": zod.enum(['manual', 'pasted_import', 'file_import', 'google_doc', 'sample']),
+  "favorite": zod.boolean(),
+  "resurfacingPreference": zod.enum(['normal', 'more_often', 'never']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete an entry (soft delete)
+ */
+export const DeleteEntryParams = zod.object({
+  "id": zod.coerce.string()
 })
 
 
@@ -161,7 +219,7 @@ export const LoginBody = zod.object({
 })
 
 export const LoginResponse = zod.object({
-  "id": zod.number(),
+  "id": zod.string(),
   "email": zod.string(),
   "name": zod.string().nullish(),
   "avatarUrl": zod.string().nullish()
@@ -172,7 +230,7 @@ export const LoginResponse = zod.object({
  * @summary Get the currently authenticated user
  */
 export const GetCurrentUserResponse = zod.object({
-  "id": zod.number(),
+  "id": zod.string(),
   "email": zod.string(),
   "name": zod.string().nullish(),
   "avatarUrl": zod.string().nullish()

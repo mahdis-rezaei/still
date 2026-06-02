@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, uuid, timestamp } from "drizzle-orm/pg-core";
 import { usersTable } from "./users";
 
 // Server-side sessions. `id` stores a SHA-256 hash of the opaque token that
@@ -6,7 +6,7 @@ import { usersTable } from "./users";
 // credential. Expired rows are ignored on lookup and pruned on logout.
 export const sessionsTable = pgTable("sessions", {
   id: text("id").primaryKey(),
-  userId: integer("user_id")
+  userId: uuid("user_id")
     .notNull()
     .references(() => usersTable.id, { onDelete: "cascade" }),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),

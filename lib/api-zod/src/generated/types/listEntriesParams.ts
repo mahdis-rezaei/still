@@ -6,9 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface EntryInput {
-  title?: string;
-  /** @minLength 1 */
-  body: string;
-  entryDate?: string;
-}
+export type ListEntriesParams = {
+year?: number;
+month?: number;
+favorite?: boolean;
+source?: string;
+search?: string;
+};
