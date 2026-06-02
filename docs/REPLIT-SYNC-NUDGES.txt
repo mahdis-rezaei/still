@@ -1,0 +1,47 @@
+Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
+(head ea3b0c4), same method as before (native GitHub pull / Contents API). This
+adds Nudges: notification settings + email reminders (a writing nudge and an
+engine-powered "a page came back" memory nudge), sent by a cron endpoint.
+
+This sync requires a DB migration, a new secret, and a scheduled trigger.
+
+1. SYNC the code to origin (head ea3b0c4). Do not edit app code.
+
+2. pnpm install (no-op; no new deps).
+
+3. DB MIGRATION — the notification_preferences table was reshaped (now
+   writing_frequency / memory_frequency + last-sent timestamps; old columns
+   dropped). It currently holds no data, so this is safe. Run:
+   pnpm --filter @workspace/db exec drizzle-kit push
+   (Apply the changes to notification_preferences.)
+
+4. NEW SECRET — add CRON_SECRET (any long random string; e.g. openssl rand -hex 32)
+   to Secrets. The cron endpoint rejects calls without a matching
+   x-cron-secret header.
+
+5. RE-PUBLISH the deployment so the live app has the new endpoints + the
+   /settings/notifications page.
+
+6. SCHEDULED TRIGGER — set up a DAILY job that calls the cron endpoint. Use
+   Replit's Scheduled Deployments (or any cron service). The job should run, once
+   a day, the equivalent of:
+     curl -X POST https://yadegarjournal.com/api/cron/run-nudges \
+       -H "x-cron-secret: $CRON_SECRET"
+   Daily is enough — weekly/monthly cadence is computed from each user's
+   last-sent timestamp, so a daily tick just sends to whoever is due.
+
+7. VERIFY and report:
+   - In the app: Settings -> Reminders (/settings/notifications). Set "A page
+     brought back" to Weekly and save (make sure the account has a few dated
+     entries first).
+   - Manually fire the cron once to test:
+       curl -X POST https://yadegarjournal.com/api/cron/run-nudges \
+         -H "x-cron-secret: <your CRON_SECRET>"
+     It returns a JSON summary {considered, writingSent, memorySent,
+     memorySilent, errors}. If a page surfaces you'll get a "A page came back"
+     email; if nothing honest surfaces it stays silent (that's correct).
+   - Set both back to Off afterward if you don't want ongoing emails.
+
+Report what you ran and any errors. Do not change application code or prompts.
+Note: memory nudges run the engine (an LLM call) per due user — the daily cron +
+weekly/monthly cadence + last-sent timestamps keep that bounded.
