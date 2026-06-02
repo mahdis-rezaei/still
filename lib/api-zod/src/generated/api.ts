@@ -375,6 +375,29 @@ export const DeleteReflectionParams = zod.object({
 
 
 /**
+ * @summary Get the current user's nudge preferences
+ */
+export const GetNotificationsResponse = zod.object({
+  "writingFrequency": zod.enum(['off', 'weekly', 'monthly']),
+  "memoryFrequency": zod.enum(['off', 'weekly', 'monthly'])
+})
+
+
+/**
+ * @summary Update the current user's nudge preferences
+ */
+export const UpdateNotificationsBody = zod.object({
+  "writingFrequency": zod.enum(['off', 'weekly', 'monthly']).optional(),
+  "memoryFrequency": zod.enum(['off', 'weekly', 'monthly']).optional()
+})
+
+export const UpdateNotificationsResponse = zod.object({
+  "writingFrequency": zod.enum(['off', 'weekly', 'monthly']),
+  "memoryFrequency": zod.enum(['off', 'weekly', 'monthly'])
+})
+
+
+/**
  * @summary Run the engine over eligible entries and surface one thing (or stay quiet)
  */
 export const RunMemoryBody = zod.object({

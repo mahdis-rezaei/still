@@ -72,6 +72,44 @@ export function verificationEmail(link: string): {
   };
 }
 
+export function writingNudgeEmail(link: string): {
+  subject: string;
+  html: string;
+  text: string;
+} {
+  return {
+    subject: "A page is waiting · Yadegar",
+    html: wrap(
+      "What wants to be written today?",
+      `<p>No streak to keep, nothing to catch up on. Just a quiet moment, if you have one — one honest line is enough.</p>${button(link, "Write today")}`,
+    ),
+    text: `What wants to be written today? Write today: ${link}\n`,
+  };
+}
+
+export function memoryNudgeEmail(opts: {
+  observation?: string | null;
+  quote?: string | null;
+  quoteDate?: string | null;
+  link: string;
+}): { subject: string; html: string; text: string } {
+  const when = opts.quoteDate ? ` from ${opts.quoteDate}` : "";
+  const quoteHtml = opts.quote
+    ? `<p style="font-family:Georgia,serif;font-style:italic;font-size:20px;color:#3A2F25;margin:0 0 12px">&ldquo;${opts.quote}&rdquo;</p>`
+    : "";
+  const obsHtml = opts.observation
+    ? `<p style="color:#6F675C">${opts.observation}</p>`
+    : "";
+  return {
+    subject: "A page came back · Yadegar",
+    html: wrap(
+      `A page${when} came back.`,
+      `${quoteHtml}${obsHtml}${button(opts.link, "Read the page")}`,
+    ),
+    text: `A page${when} came back.\n\n${opts.quote ? `"${opts.quote}"\n\n` : ""}Read it: ${opts.link}\n`,
+  };
+}
+
 export function passwordResetEmail(link: string): {
   subject: string;
   html: string;

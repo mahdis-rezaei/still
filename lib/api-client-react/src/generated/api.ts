@@ -37,6 +37,8 @@ import type {
   MemoryRunInput,
   MemoryRunResult,
   MemoryUpdate,
+  NotificationPreferences,
+  NotificationUpdate,
   ParsedEntry,
   ParsedEntryUpdate,
   PrivacyExport,
@@ -1310,6 +1312,154 @@ export const useDeleteReflection = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getDeleteReflectionMutationOptions(options));
+    }
+
+export const getGetNotificationsUrl = () => {
+
+
+
+
+  return `/api/notifications`
+}
+
+/**
+ * @summary Get the current user's nudge preferences
+ */
+export const getNotifications = async ( options?: RequestInit): Promise<NotificationPreferences> => {
+
+  return customFetch<NotificationPreferences>(getGetNotificationsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetNotificationsQueryKey = () => {
+    return [
+    `/api/notifications`
+    ] as const;
+    }
+
+
+export const getGetNotificationsQueryOptions = <TData = Awaited<ReturnType<typeof getNotifications>>, TError = ErrorType<ErrorResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getNotifications>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetNotificationsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getNotifications>>> = ({ signal }) => getNotifications({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNotifications>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetNotificationsQueryResult = NonNullable<Awaited<ReturnType<typeof getNotifications>>>
+export type GetNotificationsQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Get the current user's nudge preferences
+ */
+
+export function useGetNotifications<TData = Awaited<ReturnType<typeof getNotifications>>, TError = ErrorType<ErrorResponse>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getNotifications>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetNotificationsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdateNotificationsUrl = () => {
+
+
+
+
+  return `/api/notifications`
+}
+
+/**
+ * @summary Update the current user's nudge preferences
+ */
+export const updateNotifications = async (notificationUpdate: NotificationUpdate, options?: RequestInit): Promise<NotificationPreferences> => {
+
+  return customFetch<NotificationPreferences>(getUpdateNotificationsUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      notificationUpdate,)
+  }
+);}
+
+
+
+
+export const getUpdateNotificationsMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateNotifications>>, TError,{data: BodyType<NotificationUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateNotifications>>, TError,{data: BodyType<NotificationUpdate>}, TContext> => {
+
+const mutationKey = ['updateNotifications'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateNotifications>>, {data: BodyType<NotificationUpdate>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateNotifications(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateNotificationsMutationResult = NonNullable<Awaited<ReturnType<typeof updateNotifications>>>
+    export type UpdateNotificationsMutationBody = BodyType<NotificationUpdate>
+    export type UpdateNotificationsMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Update the current user's nudge preferences
+ */
+export const useUpdateNotifications = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateNotifications>>, TError,{data: BodyType<NotificationUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateNotifications>>,
+        TError,
+        {data: BodyType<NotificationUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateNotificationsMutationOptions(options));
     }
 
 export const getRunMemoryUrl = () => {

@@ -6,6 +6,8 @@ import reflectionsRouter from "./reflections";
 import entriesRouter from "./entries";
 import memoriesRouter from "./memories";
 import importsRouter from "./imports";
+import notificationsRouter from "./notifications";
+import cronRouter from "./cron";
 import stillRouter from "./still";
 import { rateLimit, ipKey, isLoopback } from "../lib/rate-limit";
 
@@ -32,6 +34,8 @@ router.use(reflectionsRouter);
 router.use(entriesRouter);
 router.use(memoriesRouter);
 router.use(importsRouter);
+router.use(notificationsRouter);
+router.use(cronRouter);
 router.use("/still", engineGuard);
 router.use(stillRouter);
 

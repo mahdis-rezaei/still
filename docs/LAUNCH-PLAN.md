@@ -11,10 +11,15 @@ reflect loop, privacy export/delete, and the legal pages. Every "harden first"
 item is complete.
 
 ### Remaining (optional / post-launch; none blocking)
-- **Nudges + notification settings** — the "on this day" / cadence reminders
-  (writing + memory nudge; weekly/monthly/off). `notification_preferences` table
-  exists; the scheduler + Settings UI are not built. (On Mahdis's original
-  wishlist — the "Facebook-memory" idea — so it's the natural next build.)
+- [x] **Nudges + notification settings** — DONE. `/settings/notifications` lets
+  the user set a per-nudge cadence (writing / memory · off/weekly/monthly; both
+  off by default). A cron endpoint `POST /cron/run-nudges` (auth: `x-cron-secret`
+  == `CRON_SECRET`) sends due nudges: a writing reminder, and a memory nudge that
+  runs the engine (so all safety gates apply — crisis/nothing send nothing). The
+  engine-run logic was factored into `lib/memory-engine.ts` (shared with
+  `/memories/run`). **Needs:** a DB push (notification_preferences reshaped), a
+  `CRON_SECRET` secret, and a daily Scheduled Deployment hitting the cron
+  endpoint.
 - **Filter year/month → run** UI (the backend `/memories/run` already accepts it).
 - **Google Doc import** (paste + .txt/.md are done).
 - **Option B `secondaryThread`** surfaced in the Returns/Today UI.

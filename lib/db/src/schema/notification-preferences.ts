@@ -1,9 +1,10 @@
-import { pgTable, uuid, text, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp } from "drizzle-orm/pg-core";
 import { usersTable } from "./users";
 
 export type NudgeFrequency = "off" | "weekly" | "monthly";
 
-// One row per user. Nudges are off by default for real users; never guilt-based.
+// One row per user. Both nudges default to OFF (privacy-respecting for real
+// users; never guilt-based). lastSent timestamps bound how often the cron sends.
 export const notificationPreferencesTable = pgTable(
   "notification_preferences",
   {
@@ -12,18 +13,22 @@ export const notificationPreferencesTable = pgTable(
       .notNull()
       .unique()
       .references(() => usersTable.id, { onDelete: "cascade" }),
-    writingNudgesEnabled: boolean("writing_nudges_enabled")
+    // A gentle reminder to write ("what wants to be written today?").
+    writingFrequency: text("writing_frequency")
+      .$type<NudgeFrequency>()
       .notNull()
-      .default(false),
-    memoryNudgesEnabled: boolean("memory_nudges_enabled")
+      .default("off"),
+    // A page Yadegar brings back, by email ("a page worth returning to").
+    memoryFrequency: text("memory_frequency")
+      .$type<NudgeFrequency>()
       .notNull()
-      .default(false),
-    frequency: text("frequency").$type<NudgeFrequency>().notNull().default(
-      "weekly",
-    ),
-    preferredDay: text("preferred_day"),
-    preferredTime: text("preferred_time"),
-    emailEnabled: boolean("email_enabled").notNull().default(false),
+      .default("off"),
+    lastWritingNudgeAt: timestamp("last_writing_nudge_at", {
+      withTimezone: true,
+    }),
+    lastMemoryNudgeAt: timestamp("last_memory_nudge_at", {
+      withTimezone: true,
+    }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

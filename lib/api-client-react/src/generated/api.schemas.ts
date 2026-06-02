@@ -229,6 +229,52 @@ export interface ImportConfirmResult {
   importedCount: number;
 }
 
+export type NotificationPreferencesWritingFrequency = typeof NotificationPreferencesWritingFrequency[keyof typeof NotificationPreferencesWritingFrequency];
+
+
+export const NotificationPreferencesWritingFrequency = {
+  off: 'off',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export type NotificationPreferencesMemoryFrequency = typeof NotificationPreferencesMemoryFrequency[keyof typeof NotificationPreferencesMemoryFrequency];
+
+
+export const NotificationPreferencesMemoryFrequency = {
+  off: 'off',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export interface NotificationPreferences {
+  writingFrequency: NotificationPreferencesWritingFrequency;
+  memoryFrequency: NotificationPreferencesMemoryFrequency;
+}
+
+export type NotificationUpdateWritingFrequency = typeof NotificationUpdateWritingFrequency[keyof typeof NotificationUpdateWritingFrequency];
+
+
+export const NotificationUpdateWritingFrequency = {
+  off: 'off',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export type NotificationUpdateMemoryFrequency = typeof NotificationUpdateMemoryFrequency[keyof typeof NotificationUpdateMemoryFrequency];
+
+
+export const NotificationUpdateMemoryFrequency = {
+  off: 'off',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export interface NotificationUpdate {
+  writingFrequency?: NotificationUpdateWritingFrequency;
+  memoryFrequency?: NotificationUpdateMemoryFrequency;
+}
+
 export interface MemoryRunInput {
   year?: number;
   month?: number;

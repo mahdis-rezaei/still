@@ -26,6 +26,22 @@ export default function Settings() {
 
         <section className="mb-10">
           <p className="font-sans text-xs uppercase tracking-[0.18em] text-faint-ink mb-3">
+            Nudges
+          </p>
+          <Link
+            href="/settings/notifications"
+            className="block border border-border rounded-xl bg-surface/60 p-5 hover:border-accent-sepia transition-colors"
+          >
+            <p className="font-body text-lg text-ink">Reminders</p>
+            <p className="font-body text-soft-ink text-sm mt-1">
+              A gentle nudge to write, or a page brought back — your cadence, off
+              by default.
+            </p>
+          </Link>
+        </section>
+
+        <section className="mb-10">
+          <p className="font-sans text-xs uppercase tracking-[0.18em] text-faint-ink mb-3">
             Your data
           </p>
           <Link

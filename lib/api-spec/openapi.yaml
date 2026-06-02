@@ -20,6 +20,8 @@ tags:
     description: Importing historical journals
   - name: reflections
     description: Reflections written across time
+  - name: notifications
+    description: Nudge preferences
   - name: privacy
     description: Data export and account deletion
   - name: auth
@@ -494,6 +496,47 @@ paths:
           description: Deleted
         "404":
           description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /notifications:
+    get:
+      operationId: getNotifications
+      tags: [notifications]
+      summary: Get the current user's nudge preferences
+      responses:
+        "200":
+          description: The preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationPreferences"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateNotifications
+      tags: [notifications]
+      summary: Update the current user's nudge preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationUpdate"
+      responses:
+        "200":
+          description: The updated preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationPreferences"
+        "400":
+          description: Bad request
           content:
             application/json:
               schema:
@@ -1110,6 +1153,27 @@ components:
           type: integer
       required:
         - importedCount
+    NotificationPreferences:
+      type: object
+      properties:
+        writingFrequency:
+          type: string
+          enum: [off, weekly, monthly]
+        memoryFrequency:
+          type: string
+          enum: [off, weekly, monthly]
+      required:
+        - writingFrequency
+        - memoryFrequency
+    NotificationUpdate:
+      type: object
+      properties:
+        writingFrequency:
+          type: string
+          enum: [off, weekly, monthly]
+        memoryFrequency:
+          type: string
+          enum: [off, weekly, monthly]
     ReturnedMemory:
       type: object
       properties:
