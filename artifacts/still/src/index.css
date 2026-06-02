@@ -38,3 +38,39 @@
   z-index: 50;
   opacity: 0.3;
 }
+
+/* A soft, warm ambient field — slow-breathing color washes behind the page.
+   Calm by design: low opacity, heavy blur, a very slow drift. */
+.ambient-field {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  background-color: var(--color-background);
+}
+
+.ambient-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  will-change: transform, opacity;
+  animation: ambient-drift 22s ease-in-out infinite;
+}
+
+@keyframes ambient-drift {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translate(2%, -2%) scale(1.08);
+    opacity: 0.75;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-blob {
+    animation: none;
+  }
+}

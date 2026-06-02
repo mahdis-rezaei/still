@@ -1,14 +1,15 @@
 import { useState, type FormEvent } from "react";
 import { useLocation, useSearch } from "wouter";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
+import { AmbientField, SiteNav } from "@/components/site-chrome";
 
-type Mode = "signin" | "register";
+type View = "hero" | "signin" | "register";
 
 function errorFromQuery(search: string): string | null {
   const code = new URLSearchParams(search).get("error");
   if (code === "google_unconfigured")
-    return "Google sign-in isn't configured yet. Use email and password.";
+    return "Google sign-in isn't set up yet — use your email below.";
   if (code === "google_failed")
     return "Google sign-in didn't complete. Please try again.";
   return null;
@@ -19,12 +20,20 @@ export default function Login() {
   const search = useSearch();
   const { login, register, loginWithGoogle } = useAuth();
 
-  const [mode, setMode] = useState<Mode>("signin");
+  const initialError = errorFromQuery(search);
+  const [view, setView] = useState<View>(initialError ? "signin" : "hero");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(errorFromQuery(search));
+  const [error, setError] = useState<string | null>(initialError);
   const [submitting, setSubmitting] = useState(false);
+
+  const isForm = view === "signin" || view === "register";
+
+  const goto = (next: View) => {
+    setError(null);
+    setView(next);
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -34,14 +43,14 @@ export default function Login() {
       setError("Please enter your email and password.");
       return;
     }
-    if (mode === "register" && password.length < 8) {
+    if (view === "register" && password.length < 8) {
       setError("Choose a password with at least 8 characters.");
       return;
     }
 
     setSubmitting(true);
     try {
-      if (mode === "signin") {
+      if (view === "signin") {
         await login(email.trim(), password);
       } else {
         await register(email.trim(), password, name.trim() || undefined);
@@ -50,7 +59,7 @@ export default function Login() {
     } catch (err) {
       setError(
         err instanceof Error
-          ? messageFor(err.message, mode)
+          ? messageFor(err.message, view)
           : "Something went wrong. Please try again.",
       );
     } finally {
@@ -59,119 +68,189 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6">
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-[420px]"
-      >
-        <h1 className="font-display text-5xl text-deep-brown text-center mb-2">
-          Still
-        </h1>
-        <p className="text-soft-ink text-center mb-8">
-          {mode === "signin"
-            ? "Welcome back to your past selves."
-            : "Begin a quiet record of what endures."}
-        </p>
+    <div className="min-h-[100dvh] flex flex-col">
+      <AmbientField />
+      <SiteNav />
 
-        <div className="bg-surface border border-border rounded-2xl p-7 shadow-sm">
-          <button
-            type="button"
-            onClick={loginWithGoogle}
-            className="w-full flex items-center justify-center gap-3 rounded-lg border border-border bg-background hover:bg-background/60 transition-colors py-2.5 text-ink font-medium"
-            data-testid="button-google"
-          >
-            <GoogleMark />
-            Continue with Google
-          </button>
-
-          <div className="flex items-center gap-3 my-5">
-            <div className="h-px flex-1 bg-border" />
-            <span className="text-faint-ink text-xs uppercase tracking-wide">
-              or
-            </span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {mode === "register" && (
-              <Field label="Name (optional)">
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  autoComplete="name"
-                  className={inputClass}
-                  data-testid="input-name"
-                />
-              </Field>
-            )}
-            <Field label="Email">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
-                className={inputClass}
-                data-testid="input-email"
-              />
-            </Field>
-            <Field label="Password">
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete={
-                  mode === "signin" ? "current-password" : "new-password"
-                }
-                className={inputClass}
-                data-testid="input-password"
-              />
-            </Field>
-
-            {error && (
-              <p className="text-sm text-red-700" data-testid="text-error">
-                {error}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full rounded-lg bg-deep-brown text-background py-2.5 font-medium hover:bg-ink transition-colors disabled:opacity-60"
-              data-testid="button-submit"
+      <main className="flex-1 flex flex-col items-center justify-center px-6 pb-16">
+        <AnimatePresence mode="wait">
+          {view === "hero" ? (
+            <motion.div
+              key="hero"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="text-center max-w-[640px]"
             >
-              {submitting
-                ? "One moment…"
-                : mode === "signin"
-                  ? "Sign in"
-                  : "Create account"}
-            </button>
-          </form>
-        </div>
+              <h1 className="font-display text-7xl md:text-8xl text-deep-brown leading-none mb-6">
+                Still
+              </h1>
+              <p className="font-body italic text-lg md:text-xl text-accent-sepia mb-7">
+                still — quiet enough to hear what stayed
+              </p>
+              <p className="font-body text-lg md:text-xl text-soft-ink leading-relaxed mb-12 max-w-[34rem] mx-auto">
+                A companion to a lifelong journaling practice. It reads across
+                your years and returns one thing worth remembering today —
+                gently, and always in your own words.
+              </p>
 
-        <p className="text-center text-soft-ink mt-6 text-sm">
-          {mode === "signin" ? "New to Still?" : "Already have an account?"}{" "}
-          <button
-            type="button"
-            onClick={() => {
-              setMode(mode === "signin" ? "register" : "signin");
-              setError(null);
-            }}
-            className="text-accent-sepia underline underline-offset-2"
-            data-testid="button-toggle-mode"
-          >
-            {mode === "signin" ? "Create one" : "Sign in"}
-          </button>
-        </p>
-      </motion.div>
+              <div className="flex items-center justify-center gap-3">
+                <button
+                  onClick={() => goto("signin")}
+                  className="rounded-full bg-deep-brown text-background px-8 py-3 font-sans text-sm hover:bg-ink transition-colors"
+                  data-testid="button-hero-signin"
+                >
+                  Sign in
+                </button>
+                <button
+                  onClick={() => goto("register")}
+                  className="rounded-full border border-border bg-surface/70 text-ink px-8 py-3 font-sans text-sm hover:border-accent-sepia transition-colors"
+                  data-testid="button-hero-register"
+                >
+                  Create account
+                </button>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="form"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.45, ease: "easeOut" }}
+              className="w-full max-w-[400px]"
+            >
+              <h2 className="font-display text-3xl text-deep-brown text-center mb-1.5">
+                {view === "signin" ? "Welcome back" : "Begin"}
+              </h2>
+              <p className="font-body text-soft-ink text-center mb-7">
+                {view === "signin"
+                  ? "Return to your past selves."
+                  : "Start a quiet record of what endures."}
+              </p>
+
+              <div className="bg-surface/80 backdrop-blur-sm border border-border rounded-2xl p-7 shadow-sm">
+                <button
+                  type="button"
+                  onClick={loginWithGoogle}
+                  className="w-full flex items-center justify-center gap-3 rounded-full border border-border bg-background hover:border-accent-sepia transition-colors py-2.5 text-ink font-sans text-sm"
+                  data-testid="button-google"
+                >
+                  <GoogleMark />
+                  Continue with Google
+                </button>
+
+                <div className="flex items-center gap-3 my-5">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-faint-ink text-[0.65rem] uppercase tracking-[0.18em] font-sans">
+                    or
+                  </span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {view === "register" && (
+                    <Field label="Name (optional)">
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        autoComplete="name"
+                        className={inputClass}
+                        data-testid="input-name"
+                      />
+                    </Field>
+                  )}
+                  <Field label="Email">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      autoComplete="email"
+                      className={inputClass}
+                      data-testid="input-email"
+                    />
+                  </Field>
+                  <Field label="Password">
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      autoComplete={
+                        view === "signin" ? "current-password" : "new-password"
+                      }
+                      className={inputClass}
+                      data-testid="input-password"
+                    />
+                  </Field>
+
+                  {error && (
+                    <p
+                      className="font-sans text-sm text-red-700"
+                      data-testid="text-error"
+                    >
+                      {error}
+                    </p>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="w-full rounded-full bg-deep-brown text-background py-2.5 font-sans text-sm hover:bg-ink transition-colors disabled:opacity-60"
+                    data-testid="button-submit"
+                  >
+                    {submitting
+                      ? "One moment…"
+                      : view === "signin"
+                        ? "Sign in"
+                        : "Create account"}
+                  </button>
+                </form>
+              </div>
+
+              <p className="text-center text-soft-ink mt-6 font-body">
+                {view === "signin"
+                  ? "New to Still?"
+                  : "Already have an account?"}{" "}
+                <button
+                  type="button"
+                  onClick={() =>
+                    goto(view === "signin" ? "register" : "signin")
+                  }
+                  className="text-accent-sepia underline underline-offset-2"
+                  data-testid="button-toggle-mode"
+                >
+                  {view === "signin" ? "Create one" : "Sign in"}
+                </button>
+              </p>
+
+              <div className="text-center mt-3">
+                <button
+                  type="button"
+                  onClick={() => goto("hero")}
+                  className="font-sans text-xs text-faint-ink hover:text-soft-ink transition-colors"
+                  data-testid="button-back"
+                >
+                  ← back
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
+
+      {!isForm && (
+        <footer className="text-center pb-8 font-sans text-xs text-faint-ink">
+          Offer the meaning, never push the moment.
+        </footer>
+      )}
     </div>
   );
 }
 
 const inputClass =
-  "w-full rounded-lg border border-border bg-background px-3 py-2.5 text-ink outline-none focus:border-accent-sepia transition-colors";
+  "w-full rounded-lg border border-border bg-background px-3 py-2.5 text-ink font-body outline-none focus:border-accent-sepia transition-colors";
 
 function Field({
   label,
@@ -182,17 +261,20 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="block text-sm text-soft-ink mb-1.5">{label}</span>
+      <span className="block font-sans text-xs text-soft-ink mb-1.5 tracking-wide">
+        {label}
+      </span>
       {children}
     </label>
   );
 }
 
-function messageFor(raw: string, mode: Mode): string {
+function messageFor(raw: string, view: View): string {
   if (raw.includes("401")) return "Incorrect email or password.";
-  if (raw.includes("409")) return "That email is already registered. Sign in instead.";
+  if (raw.includes("409"))
+    return "That email is already registered. Sign in instead.";
   if (raw.includes("400"))
-    return mode === "register"
+    return view === "register"
       ? "Enter a valid email and an 8+ character password."
       : "Enter your email and password.";
   return "Something went wrong. Please try again.";

@@ -12,6 +12,7 @@ import Processing from "@/pages/processing";
 import Result from "@/pages/result";
 import History from "@/pages/history";
 import Login from "@/pages/login";
+import Why from "@/pages/why";
 
 import { StillProvider } from "@/lib/store";
 import { AuthProvider, useAuth } from "@/lib/auth";
@@ -72,6 +73,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={LoginRoute} />
+      <Route path="/why" component={Why} />
       <Route component={ProtectedApp} />
     </Switch>
   );
