@@ -27,7 +27,7 @@ times. The rule:
 | Phase | Scope | State |
 |---|---|---|
 | 1 | Auth (Google + email/password) + user-scoped storage | **done, verified live in Replit** |
-| 2 | Write / store / list / read full entry (DB-backed) | **schema + /entries backend done; UI next** |
+| 2 | Write / store / list / read full entry (DB-backed) + import + memory engine | **done, verified live in Replit** |
 | 3 | Filter year/month → run engine | not started |
 | 4 | Cadence + "on this day" + favorites + email + Google Doc import | not started |
 
