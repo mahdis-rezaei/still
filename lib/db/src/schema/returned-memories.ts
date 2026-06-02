@@ -9,6 +9,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { usersTable } from "./users";
 import { journalEntriesTable } from "./journal-entries";
+import { encryptedText } from "./encrypted";
 
 // A memory the engine surfaced. Persisted only for real lenses — never
 // `crisis` (→ a support response, not a memory) or `nothing` (→ honest
@@ -32,9 +33,9 @@ export const returnedMemoriesTable = pgTable("returned_memories", {
     { onDelete: "set null" },
   ),
   engineRunId: uuid("engine_run_id"),
-  label: text("label"),
-  observation: text("observation"),
-  quote: text("quote"),
+  label: encryptedText("label"),
+  observation: encryptedText("observation"),
+  quote: encryptedText("quote"),
   quoteDate: date("quote_date"),
   lens: text("lens").$type<MemoryLens>(),
   fullEngineResponse: jsonb("full_engine_response"),

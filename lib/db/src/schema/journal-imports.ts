@@ -6,6 +6,7 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 import { usersTable } from "./users";
+import { encryptedText } from "./encrypted";
 
 export type ImportSource = "paste" | "txt" | "markdown" | "google_doc";
 export type ImportStatus =
@@ -27,7 +28,7 @@ export const journalImportsTable = pgTable("journal_imports", {
   googleDocId: text("google_doc_id"),
   googleDocTitle: text("google_doc_title"),
   status: text("status").$type<ImportStatus>().notNull(),
-  rawText: text("raw_text"),
+  rawText: encryptedText("raw_text"),
   parsedCount: integer("parsed_count").notNull().default(0),
   importedCount: integer("imported_count").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true })

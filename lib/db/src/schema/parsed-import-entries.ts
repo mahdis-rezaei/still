@@ -9,6 +9,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { usersTable } from "./users";
 import { journalImportsTable } from "./journal-imports";
+import { encryptedText } from "./encrypted";
 
 export type DateConfidence = "high" | "medium" | "low" | "unknown";
 
@@ -24,8 +25,8 @@ export const parsedImportEntriesTable = pgTable("parsed_import_entries", {
     .references(() => usersTable.id, { onDelete: "cascade" }),
   detectedDate: date("detected_date"),
   dateConfidence: text("date_confidence").$type<DateConfidence>().notNull(),
-  body: text("body").notNull(),
-  title: text("title"),
+  body: encryptedText("body").notNull(),
+  title: encryptedText("title"),
   include: boolean("include").notNull().default(true),
   orderIndex: integer("order_index"),
   createdAt: timestamp("created_at", { withTimezone: true })

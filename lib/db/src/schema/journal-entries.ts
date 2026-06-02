@@ -8,6 +8,7 @@ import {
   jsonb,
 } from "drizzle-orm/pg-core";
 import { usersTable } from "./users";
+import { encryptedText } from "./encrypted";
 
 export type EntrySource =
   | "manual"
@@ -27,8 +28,8 @@ export const journalEntriesTable = pgTable("journal_entries", {
   userId: uuid("user_id")
     .notNull()
     .references(() => usersTable.id, { onDelete: "cascade" }),
-  title: text("title"),
-  body: text("body").notNull(),
+  title: encryptedText("title"),
+  body: encryptedText("body").notNull(),
   entryDate: date("entry_date"),
   source: text("source").$type<EntrySource>().notNull().default("manual"),
   sourceDocumentId: uuid("source_document_id"),

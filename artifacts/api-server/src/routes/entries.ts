@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { and, desc, eq, ilike, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { db, journalEntriesTable } from "@workspace/db";
 import { CreateEntryBody, UpdateEntryBody } from "@workspace/api-zod";
 import { requireAuth } from "../lib/auth";
@@ -11,10 +11,12 @@ const router = Router();
 // including the internal, cookieless /still/* engine calls.
 router.use("/entries", requireAuth);
 
-// GET /entries — the Library. Filters: year, month, favorite, source, search.
+// GET /entries — the Library. Filters: year, month, favorite, source.
+// (No server-side text search: body/title are encrypted at rest, so they can't
+// be matched with SQL ILIKE. The Library searches client-side over the list.)
 router.get("/entries", async (req, res): Promise<void> => {
   try {
-    const { year, month, favorite, source, search } = req.query as Record<
+    const { year, month, favorite, source } = req.query as Record<
       string,
       string | undefined
     >;
@@ -39,12 +41,6 @@ router.get("/entries", async (req, res): Promise<void> => {
     }
     if (source) {
       filters.push(eq(journalEntriesTable.source, source as never));
-    }
-    if (search && search.trim()) {
-      const term = `%${search.trim()}%`;
-      filters.push(
-        sql`(${journalEntriesTable.body} ilike ${term} or coalesce(${journalEntriesTable.title}, '') ilike ${term})`,
-      );
     }
 
     const rows = await db

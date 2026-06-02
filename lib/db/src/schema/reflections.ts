@@ -1,6 +1,7 @@
-import { pgTable, uuid, text, date, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, uuid, date, timestamp } from "drizzle-orm/pg-core";
 import { usersTable } from "./users";
 import { journalEntriesTable } from "./journal-entries";
+import { encryptedText } from "./encrypted";
 
 // A reflection written about an old entry — "letters across time." The original
 // journal entry is never modified; a reflection is a separate linked object.
@@ -12,7 +13,7 @@ export const reflectionsTable = pgTable("reflections", {
   journalEntryId: uuid("journal_entry_id")
     .notNull()
     .references(() => journalEntriesTable.id, { onDelete: "cascade" }),
-  body: text("body").notNull(),
+  body: encryptedText("body").notNull(),
   reflectionDate: date("reflection_date").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

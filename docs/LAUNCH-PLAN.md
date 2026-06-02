@@ -42,7 +42,18 @@ real domain).
 **Phase C — trust & safety before real journals** (the gate):
 - [x] Privacy Policy + Terms pages (`/privacy-policy`, `/terms`) — DRAFT, need
       human/legal review + real contact address before public launch.
-- [ ] Encryption at rest for journal text (app-level, server key `ENCRYPTION_KEY`).
+- [x] **Encryption at rest** for journal text (app-level, AES-256-GCM). Done via
+      a transparent Drizzle `encryptedText` custom column type (`lib/db/src/crypto.ts`
+      + `schema/encrypted.ts`) on: entry body/title, reflection body, import
+      raw_text, parsed-entry body/title, returned-memory label/observation/quote.
+      Reads/writes are transparent; the engine still sees plaintext in memory.
+      Legacy-plaintext tolerant (rows without the `enc:v1:` prefix pass through),
+      so the rollout needs no data wipe. **Requires a new secret
+      `ENCRYPTION_KEY`** (32 bytes / 64 hex) in every environment that reads or
+      writes — generate with `openssl rand -hex 32`. Server-side text search was
+      removed (can't ILIKE ciphertext); Library search is client-side.
+      NOTE: `returned_memories.full_engine_response` (jsonb debug trace) is left
+      unencrypted for now — a fast-follow.
 - [ ] Auth completeness: password reset + email verification (needs email).
 - [ ] Rate limiting / per-user quotas (Anthropic cost protection).
 - [ ] Error monitoring + uptime.
