@@ -3,6 +3,7 @@ import { Link, useLocation, useSearch } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { AmbientField, SiteNav } from "@/components/site-chrome";
+import { Landing } from "@/components/landing";
 
 type View = "hero" | "signin" | "register";
 
@@ -67,54 +68,24 @@ export default function Login() {
     }
   };
 
+  if (view === "hero") {
+    return (
+      <Landing
+        onCreate={() => goto("register")}
+        onSignIn={() => goto("signin")}
+      />
+    );
+  }
+
   return (
     <div className="min-h-[100dvh] flex flex-col">
       <AmbientField />
       <SiteNav />
 
-      <main className="flex-1 flex flex-col items-center justify-center px-6 pb-16">
+      <main className="flex-1 flex flex-col items-center justify-center px-6 py-16">
         <AnimatePresence mode="wait">
-          {view === "hero" ? (
-            <motion.div
-              key="hero"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-              className="text-center max-w-[640px]"
-            >
-              <h1 className="font-display text-7xl md:text-8xl text-deep-brown leading-none mb-6">
-                Yadegar
-              </h1>
-              <p className="font-body italic text-lg md:text-xl text-accent-sepia mb-7">
-                yadegar — Persian: a keepsake, the thing that remains
-              </p>
-              <p className="font-body text-lg md:text-xl text-soft-ink leading-relaxed mb-12 max-w-[34rem] mx-auto">
-                A companion to a lifelong journaling practice. It reads across
-                your years and brings back one page worth returning to today —
-                gently, and always in your own words.
-              </p>
-
-              <div className="flex items-center justify-center gap-3">
-                <button
-                  onClick={() => goto("signin")}
-                  className="rounded-full bg-deep-brown text-background px-8 py-3 font-sans text-sm hover:bg-ink transition-colors"
-                  data-testid="button-hero-signin"
-                >
-                  Sign in
-                </button>
-                <button
-                  onClick={() => goto("register")}
-                  className="rounded-full border border-border bg-surface/70 text-ink px-8 py-3 font-sans text-sm hover:border-accent-sepia transition-colors"
-                  data-testid="button-hero-register"
-                >
-                  Create account
-                </button>
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="form"
+          <motion.div
+            key="form"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
@@ -246,8 +217,7 @@ export default function Login() {
                   ← back
                 </button>
               </div>
-            </motion.div>
-          )}
+          </motion.div>
         </AnimatePresence>
       </main>
 
