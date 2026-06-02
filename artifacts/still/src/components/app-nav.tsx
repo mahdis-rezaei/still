@@ -35,6 +35,7 @@ export function AppNav() {
         <div className="flex items-center gap-6">
           {link("/today", "Today")}
           {link("/library", "Library")}
+          {link("/returns", "Returns")}
         </div>
       </div>
       <div className="flex items-center gap-4">

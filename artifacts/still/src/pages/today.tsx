@@ -4,9 +4,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   useCreateEntry,
   useUpdateEntry,
+  useRunMemory,
   getListEntriesQueryKey,
+  type MemoryRunResult,
 } from "@workspace/api-client-react";
 import { AppNav } from "@/components/app-nav";
+import { MemoryCard } from "@/components/memory-card";
 
 const PROMPTS = [
   "What wants to be written today?",
@@ -42,6 +45,19 @@ export default function Today() {
   const [prompt] = useState(
     () => PROMPTS[Math.floor(Math.random() * PROMPTS.length)],
   );
+
+  const runMemory = useRunMemory();
+  const [run, setRun] = useState<MemoryRunResult | null>(null);
+
+  async function bringPageBack() {
+    setRun(null);
+    try {
+      const result = await runMemory.mutateAsync({ data: {} });
+      setRun(result);
+    } catch {
+      setRun({ surfaced: false, reason: "error" });
+    }
+  }
 
   // Refs so the debounced saver never reads stale state.
   const entryIdRef = useRef<string | null>(null);
@@ -124,6 +140,51 @@ export default function Today() {
             {status === "saving" ? "saving…" : status === "kept" ? "kept" : ""}
           </span>
         </div>
+
+        {/* Bring a page back — the engine, surfaced gently and on request. */}
+        <section className="mb-10">
+          {runMemory.isPending ? (
+            <p className="font-body text-soft-ink animate-pulse">
+              Still is reading across your pages…
+            </p>
+          ) : run && run.surfaced && run.memory ? (
+            <div className="space-y-3">
+              <MemoryCard memory={run.memory} />
+              <button
+                onClick={() => setRun(null)}
+                className="font-sans text-xs text-faint-ink hover:text-soft-ink transition-colors"
+              >
+                close
+              </button>
+            </div>
+          ) : run && !run.surfaced ? (
+            <div className="border border-border/70 rounded-2xl bg-surface/40 p-6">
+              <p className="font-body text-soft-ink leading-relaxed">
+                {run.reason === "crisis"
+                  ? run.supportMessage
+                  : run.reason === "not_enough"
+                    ? "Write or bring in a few pages first, and Still will have something to return."
+                    : run.reason === "error"
+                      ? "Something interrupted the reading. Try again in a moment."
+                      : "Nothing honest surfaced this time. That is okay — Still is better quiet than false."}
+              </p>
+              <button
+                onClick={bringPageBack}
+                className="mt-4 font-sans text-sm text-accent-sepia hover:text-deep-brown transition-colors"
+              >
+                Try again
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={bringPageBack}
+              className="font-sans text-sm text-soft-ink hover:text-ink border border-border hover:border-accent-sepia rounded-full px-5 py-2.5 transition-colors"
+              data-testid="button-bring-page-back"
+            >
+              Bring a page back
+            </button>
+          )}
+        </section>
 
         <textarea
           value={body}

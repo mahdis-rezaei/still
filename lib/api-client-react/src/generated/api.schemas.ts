@@ -98,6 +98,49 @@ export interface EntryUpdate {
   resurfacingPreference?: EntryUpdateResurfacingPreference;
 }
 
+export interface ReturnedMemory {
+  id: string;
+  /** @nullable */
+  label?: string | null;
+  /** @nullable */
+  observation?: string | null;
+  /** @nullable */
+  quote?: string | null;
+  /** @nullable */
+  quoteDate?: string | null;
+  /** @nullable */
+  lens?: string | null;
+  /** @nullable */
+  journalEntryId?: string | null;
+  dismissed: boolean;
+  favorite: boolean;
+  createdAt: string;
+  /** @nullable */
+  openedAt?: string | null;
+}
+
+export interface MemoryRunInput {
+  year?: number;
+  month?: number;
+  entryIds?: string[];
+  fresh?: boolean;
+}
+
+export interface MemoryRunResult {
+  surfaced: boolean;
+  /** @nullable */
+  reason?: string | null;
+  /** @nullable */
+  supportMessage?: string | null;
+  memory?: ReturnedMemory;
+}
+
+export interface MemoryUpdate {
+  favorite?: boolean;
+  dismissed?: boolean;
+  opened?: boolean;
+}
+
 export type QuoteSourceType = typeof QuoteSourceType[keyof typeof QuoteSourceType];
 
 

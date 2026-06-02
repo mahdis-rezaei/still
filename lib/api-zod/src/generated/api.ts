@@ -190,6 +190,105 @@ export const DeleteEntryParams = zod.object({
 
 
 /**
+ * @summary Run the engine over eligible entries and surface one thing (or stay quiet)
+ */
+export const RunMemoryBody = zod.object({
+  "year": zod.number().optional(),
+  "month": zod.number().optional(),
+  "entryIds": zod.array(zod.string()).optional(),
+  "fresh": zod.boolean().optional()
+})
+
+export const RunMemoryResponse = zod.object({
+  "surfaced": zod.boolean(),
+  "reason": zod.string().nullish(),
+  "supportMessage": zod.string().nullish(),
+  "memory": zod.object({
+  "id": zod.string(),
+  "label": zod.string().nullish(),
+  "observation": zod.string().nullish(),
+  "quote": zod.string().nullish(),
+  "quoteDate": zod.string().nullish(),
+  "lens": zod.string().nullish(),
+  "journalEntryId": zod.string().nullish(),
+  "dismissed": zod.boolean(),
+  "favorite": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "openedAt": zod.string().nullish()
+}).optional()
+})
+
+
+/**
+ * @summary List the user's returned memories
+ */
+export const ListMemoriesResponseItem = zod.object({
+  "id": zod.string(),
+  "label": zod.string().nullish(),
+  "observation": zod.string().nullish(),
+  "quote": zod.string().nullish(),
+  "quoteDate": zod.string().nullish(),
+  "lens": zod.string().nullish(),
+  "journalEntryId": zod.string().nullish(),
+  "dismissed": zod.boolean(),
+  "favorite": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "openedAt": zod.string().nullish()
+})
+export const ListMemoriesResponse = zod.array(ListMemoriesResponseItem)
+
+
+/**
+ * @summary Fetch a returned memory
+ */
+export const GetMemoryParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetMemoryResponse = zod.object({
+  "id": zod.string(),
+  "label": zod.string().nullish(),
+  "observation": zod.string().nullish(),
+  "quote": zod.string().nullish(),
+  "quoteDate": zod.string().nullish(),
+  "lens": zod.string().nullish(),
+  "journalEntryId": zod.string().nullish(),
+  "dismissed": zod.boolean(),
+  "favorite": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "openedAt": zod.string().nullish()
+})
+
+
+/**
+ * @summary Favorite, dismiss, or mark a memory opened
+ */
+export const UpdateMemoryParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const UpdateMemoryBody = zod.object({
+  "favorite": zod.boolean().optional(),
+  "dismissed": zod.boolean().optional(),
+  "opened": zod.boolean().optional()
+})
+
+export const UpdateMemoryResponse = zod.object({
+  "id": zod.string(),
+  "label": zod.string().nullish(),
+  "observation": zod.string().nullish(),
+  "quote": zod.string().nullish(),
+  "quoteDate": zod.string().nullish(),
+  "lens": zod.string().nullish(),
+  "journalEntryId": zod.string().nullish(),
+  "dismissed": zod.boolean(),
+  "favorite": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "openedAt": zod.string().nullish()
+})
+
+
+/**
  * @summary Create an account with email and password
  */
 export const registerBodyEmailMin = 3;
