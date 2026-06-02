@@ -20,3 +20,4 @@
 export * from "./users";
 export * from "./sessions";
 export * from "./entries";
+export * from "./still-results";
