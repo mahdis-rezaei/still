@@ -474,6 +474,51 @@ export const UpdateMemoryResponse = zod.object({
 
 
 /**
+ * @summary Export all of the current user's data
+ */
+export const ExportDataResponse = zod.object({
+  "exportedAt": zod.coerce.date(),
+  "account": zod.object({
+  "email": zod.string(),
+  "name": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+}),
+  "entries": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string().nullish(),
+  "body": zod.string(),
+  "entryDate": zod.string().nullish(),
+  "source": zod.enum(['manual', 'pasted_import', 'file_import', 'google_doc', 'sample']),
+  "favorite": zod.boolean(),
+  "resurfacingPreference": zod.enum(['normal', 'more_often', 'never']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})),
+  "reflections": zod.array(zod.object({
+  "id": zod.string(),
+  "journalEntryId": zod.string(),
+  "body": zod.string(),
+  "reflectionDate": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})),
+  "memories": zod.array(zod.object({
+  "id": zod.string(),
+  "label": zod.string().nullish(),
+  "observation": zod.string().nullish(),
+  "quote": zod.string().nullish(),
+  "quoteDate": zod.string().nullish(),
+  "lens": zod.string().nullish(),
+  "journalEntryId": zod.string().nullish(),
+  "dismissed": zod.boolean(),
+  "favorite": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "openedAt": zod.string().nullish()
+}))
+})
+
+
+/**
  * @summary Create an account with email and password
  */
 export const registerBodyEmailMin = 3;

@@ -20,6 +20,8 @@ tags:
     description: Importing historical journals
   - name: reflections
     description: Reflections written across time
+  - name: privacy
+    description: Data export and account deletion
   - name: auth
     description: Authentication and accounts
 paths:
@@ -593,6 +595,38 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /privacy/export:
+    get:
+      operationId: exportData
+      tags: [privacy]
+      summary: Export all of the current user's data
+      responses:
+        "200":
+          description: Everything the user has written and been returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PrivacyExport"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /privacy/account:
+    delete:
+      operationId: deleteAccount
+      tags: [privacy]
+      summary: Permanently delete the account and all associated data
+      responses:
+        "204":
+          description: Account and all data deleted
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /auth/register:
     post:
       operationId: register
@@ -796,6 +830,43 @@ components:
         resurfacingPreference:
           type: string
           enum: [normal, more_often, never]
+    PrivacyExport:
+      type: object
+      properties:
+        exportedAt:
+          type: string
+          format: date-time
+        account:
+          type: object
+          properties:
+            email:
+              type: string
+            name:
+              type: ["string", "null"]
+            createdAt:
+              type: string
+              format: date-time
+          required:
+            - email
+            - createdAt
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/Entry"
+        reflections:
+          type: array
+          items:
+            $ref: "#/components/schemas/Reflection"
+        memories:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReturnedMemory"
+      required:
+        - exportedAt
+        - account
+        - entries
+        - reflections
+        - memories
     Reflection:
       type: object
       properties:

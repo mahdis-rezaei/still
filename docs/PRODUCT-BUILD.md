@@ -74,8 +74,14 @@ Implements the MVP schema from `docs/PRD/mvp-v1.md` (decisions #1–#5 locked).
   original entry never modified. UI: "Reflect on this page" composer + existing
   reflections rendered beneath the entry as letters across time (date label,
   left rule). `lib/db` reflections table already existed.
-- **Next:** privacy (export/delete + honest AI disclosure), notification
-  settings + nudges, onboarding. Engine V2 is captured in
+- **Privacy (done):** `routes/privacy.ts` — `GET /privacy/export` (all entries,
+  reflections, memories + account, as JSON) and `DELETE /privacy/account`
+  (**permanent** — deletes the user row; the onDelete:cascade FKs wipe every
+  child table and free the email). UI: `/settings` (account, link to privacy,
+  sign out) and `/settings/privacy` ("Your pages belong to you," the honest **AI
+  disclosure** [decision #2], prototype-honesty note, Export, two-step Delete).
+  Settings added to the nav.
+- **Next:** notification settings + nudges, onboarding. Engine V2 is captured in
   `docs/PRD/memory-engine-v2-vision.md` (future — not implemented).
 
 ### ⚠️ This migration is DESTRUCTIVE (prototype reset)

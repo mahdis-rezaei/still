@@ -32,6 +32,8 @@ export * from './memoryUpdate';
 export * from './parsedEntry';
 export * from './parsedEntryDateConfidence';
 export * from './parsedEntryUpdate';
+export * from './privacyExport';
+export * from './privacyExportAccount';
 export * from './quote';
 export * from './quoteSourceType';
 export * from './reflection';

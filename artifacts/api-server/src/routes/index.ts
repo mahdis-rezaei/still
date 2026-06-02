@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
 import authRouter from "./auth";
+import privacyRouter from "./privacy";
 import reflectionsRouter from "./reflections";
 import entriesRouter from "./entries";
 import memoriesRouter from "./memories";
@@ -11,6 +12,7 @@ const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(authRouter);
+router.use(privacyRouter);
 // Reflections before entries so /entries/:id/reflections matches here first
 // (single auth) rather than falling through the entries router.
 router.use(reflectionsRouter);

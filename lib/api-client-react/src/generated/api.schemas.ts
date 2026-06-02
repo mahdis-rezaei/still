@@ -98,6 +98,13 @@ export interface EntryUpdate {
   resurfacingPreference?: EntryUpdateResurfacingPreference;
 }
 
+export type PrivacyExportAccount = {
+  email: string;
+  /** @nullable */
+  name?: string | null;
+  createdAt: string;
+};
+
 export interface Reflection {
   id: string;
   journalEntryId: string;
@@ -106,6 +113,35 @@ export interface Reflection {
   reflectionDate?: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ReturnedMemory {
+  id: string;
+  /** @nullable */
+  label?: string | null;
+  /** @nullable */
+  observation?: string | null;
+  /** @nullable */
+  quote?: string | null;
+  /** @nullable */
+  quoteDate?: string | null;
+  /** @nullable */
+  lens?: string | null;
+  /** @nullable */
+  journalEntryId?: string | null;
+  dismissed: boolean;
+  favorite: boolean;
+  createdAt: string;
+  /** @nullable */
+  openedAt?: string | null;
+}
+
+export interface PrivacyExport {
+  exportedAt: string;
+  account: PrivacyExportAccount;
+  entries: Entry[];
+  reflections: Reflection[];
+  memories: ReturnedMemory[];
 }
 
 export interface ReflectionInput {
@@ -172,27 +208,6 @@ export interface ParsedEntryUpdate {
 
 export interface ImportConfirmResult {
   importedCount: number;
-}
-
-export interface ReturnedMemory {
-  id: string;
-  /** @nullable */
-  label?: string | null;
-  /** @nullable */
-  observation?: string | null;
-  /** @nullable */
-  quote?: string | null;
-  /** @nullable */
-  quoteDate?: string | null;
-  /** @nullable */
-  lens?: string | null;
-  /** @nullable */
-  journalEntryId?: string | null;
-  dismissed: boolean;
-  favorite: boolean;
-  createdAt: string;
-  /** @nullable */
-  openedAt?: string | null;
 }
 
 export interface MemoryRunInput {

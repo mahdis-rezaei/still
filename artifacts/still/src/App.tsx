@@ -24,6 +24,8 @@ import Library from "@/pages/library";
 import EntryDetail from "@/pages/entry-detail";
 import Returns from "@/pages/returns";
 import Import from "@/pages/import";
+import Settings from "@/pages/settings";
+import Privacy from "@/pages/privacy";
 
 import { StillProvider } from "@/lib/store";
 import { AuthProvider, useAuth } from "@/lib/auth";
@@ -63,6 +65,8 @@ function ProtectedApp() {
       <Route path="/library/:entryId" component={EntryDetail} />
       <Route path="/returns" component={Returns} />
       <Route path="/import" component={Import} />
+      <Route path="/settings" component={Settings} />
+      <Route path="/settings/privacy" component={Privacy} />
       {/* Legacy prototype flow (engine read-across) — not in the primary nav. */}
       <Route path="/home" component={Home} />
       <Route path="/paste" component={Paste} />
