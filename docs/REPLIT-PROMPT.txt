@@ -1,0 +1,19 @@
+We just added authentication and user-scoped storage to the Still app on the branch claude/ecstatic-wright-y4npO. Please bring this Replit workspace in sync with that branch and make the new auth work. Specifically:
+
+1. Sync the code: pull the latest from the GitHub branch claude/ecstatic-wright-y4npO into this workspace (fast-forward or reset to match origin). The changed areas are: lib/db/src/schema (new users.ts, sessions.ts, and entries.ts gains a userId column), artifacts/api-server/src (new lib/auth.ts, routes/auth.ts, updated app.ts and routes), lib/api-spec plus the generated lib/api-zod and lib/api-client-react, and artifacts/still/src (new lib/auth.tsx, pages/login.tsx, updated App.tsx and home.tsx).
+
+2. Install deps: run pnpm install (no new packages were added, but refresh the lockfile state).
+
+3. Migrate the database: run pnpm --filter @workspace/db exec drizzle-kit push. This adds the users and sessions tables and a nullable user_id column on entries. Existing entries rows will have user_id = null, which is fine.
+
+4. Set these environment variables / Secrets on the api-server:
+   - APP_URL = this app's public URL with no trailing slash (for example https://your-repl.replit.app)
+   - NODE_ENV = production
+   (DATABASE_URL, ANTHROPIC_API_KEY, and PORT should already be set.)
+   If GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are present in Secrets, leave them; if not, email/password login still works without them.
+
+5. Rebuild and restart both the api-server and the still frontend, then confirm the server boots with no errors.
+
+6. Tell me the exact public URL of the app and the exact callback URL (APP_URL + /api/auth/google/callback) so I can register it in Google Cloud Console.
+
+Do NOT change any application code or the prompts — only sync, install, migrate, set env vars, and restart. Report back what you ran and any errors.
