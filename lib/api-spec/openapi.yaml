@@ -695,6 +695,24 @@ paths:
       responses:
         "204":
           description: Signed out
+  /auth/complete-onboarding:
+    post:
+      operationId: completeOnboarding
+      tags: [auth]
+      summary: Mark the current user's onboarding as complete
+      responses:
+        "200":
+          description: The updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /auth/me:
     get:
       operationId: getCurrentUser
@@ -740,9 +758,12 @@ components:
           type: ["string", "null"]
         avatarUrl:
           type: ["string", "null"]
+        onboardingCompleted:
+          type: boolean
       required:
         - id
         - email
+        - onboardingCompleted
     RegisterInput:
       type: object
       properties:

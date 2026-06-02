@@ -1965,6 +1965,76 @@ export const useLogout = <TError = ErrorType<unknown>,
       return useMutation(getLogoutMutationOptions(options));
     }
 
+export const getCompleteOnboardingUrl = () => {
+
+
+
+
+  return `/api/auth/complete-onboarding`
+}
+
+/**
+ * @summary Mark the current user's onboarding as complete
+ */
+export const completeOnboarding = async ( options?: RequestInit): Promise<AuthUser> => {
+
+  return customFetch<AuthUser>(getCompleteOnboardingUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getCompleteOnboardingMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeOnboarding>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof completeOnboarding>>, TError,void, TContext> => {
+
+const mutationKey = ['completeOnboarding'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof completeOnboarding>>, void> = () => {
+
+
+          return  completeOnboarding(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CompleteOnboardingMutationResult = NonNullable<Awaited<ReturnType<typeof completeOnboarding>>>
+
+    export type CompleteOnboardingMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Mark the current user's onboarding as complete
+ */
+export const useCompleteOnboarding = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeOnboarding>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof completeOnboarding>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getCompleteOnboardingMutationOptions(options));
+    }
+
 export const getGetCurrentUserUrl = () => {
 
 

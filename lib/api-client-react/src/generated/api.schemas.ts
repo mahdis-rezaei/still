@@ -20,6 +20,7 @@ export interface AuthUser {
   name?: string | null;
   /** @nullable */
   avatarUrl?: string | null;
+  onboardingCompleted: boolean;
 }
 
 export interface RegisterInput {

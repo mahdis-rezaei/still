@@ -36,7 +36,13 @@ function appUrl(): string {
 
 // The public shape of a user — never leak passwordHash or googleId.
 function toAuthUser(u: User) {
-  return { id: u.id, email: u.email, name: u.name, avatarUrl: u.avatarUrl };
+  return {
+    id: u.id,
+    email: u.email,
+    name: u.name,
+    avatarUrl: u.avatarUrl,
+    onboardingCompleted: u.onboardingCompleted,
+  };
 }
 
 async function startSession(res: import("express").Response, userId: string) {
@@ -125,6 +131,24 @@ router.post("/auth/logout", async (req, res): Promise<void> => {
 router.get("/auth/me", requireAuth, (req, res): void => {
   res.json(toAuthUser(req.user!));
 });
+
+router.post(
+  "/auth/complete-onboarding",
+  requireAuth,
+  async (req, res): Promise<void> => {
+    try {
+      const [user] = await db
+        .update(usersTable)
+        .set({ onboardingCompleted: true, updatedAt: new Date() })
+        .where(eq(usersTable.id, req.userId!))
+        .returning();
+      res.json(toAuthUser(user));
+    } catch (err) {
+      req.log.error({ err }, "Complete onboarding error");
+      res.status(500).json({ error: "Failed to complete onboarding" });
+    }
+  },
+);
 
 // ── Google OAuth ─────────────────────────────────────────────────────────────
 

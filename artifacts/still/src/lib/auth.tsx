@@ -5,6 +5,7 @@ import {
   useLogin,
   useRegister,
   useLogout,
+  useCompleteOnboarding,
   getGetCurrentUserQueryKey,
   type AuthUser,
 } from "@workspace/api-client-react";
@@ -21,6 +22,7 @@ interface AuthState {
   ) => Promise<void>;
   logout: () => Promise<void>;
   loginWithGoogle: () => void;
+  completeOnboarding: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
@@ -41,6 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginMut = useLogin();
   const registerMut = useRegister();
   const logoutMut = useLogout();
+  const onboardingMut = useCompleteOnboarding();
 
   const cacheUser = (user: AuthUser) => {
     queryClient.setQueryData(getGetCurrentUserQueryKey(), user);
@@ -69,6 +72,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.location.href = "/api/auth/google";
   };
 
+  const completeOnboarding = async () => {
+    const user = await onboardingMut.mutateAsync();
+    cacheUser(user);
+  };
+
   const value: AuthState = {
     user: meQuery.data ?? null,
     isLoading: meQuery.isLoading,
@@ -76,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     register,
     logout,
     loginWithGoogle,
+    completeOnboarding,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -28,6 +28,7 @@ import Returns from "@/pages/returns";
 import Import from "@/pages/import";
 import Settings from "@/pages/settings";
 import Privacy from "@/pages/privacy";
+import Onboarding from "@/pages/onboarding";
 
 import { StillProvider } from "@/lib/store";
 import { AuthProvider, useAuth } from "@/lib/auth";
@@ -52,6 +53,15 @@ function ProtectedApp() {
     if (!isLoading && !user && location !== "/login") {
       setLocation("/login");
     }
+    // First run: send authenticated-but-not-onboarded users to onboarding.
+    if (
+      !isLoading &&
+      user &&
+      !user.onboardingCompleted &&
+      location !== "/onboarding"
+    ) {
+      setLocation("/onboarding");
+    }
   }, [isLoading, user, location, setLocation]);
 
   if (isLoading) return <LoadingScreen />;
@@ -59,6 +69,7 @@ function ProtectedApp() {
 
   return (
     <Switch>
+      <Route path="/onboarding" component={Onboarding} />
       <Route path="/">
         <Redirect to="/today" />
       </Route>

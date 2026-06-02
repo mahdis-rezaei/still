@@ -551,7 +551,20 @@ export const LoginResponse = zod.object({
   "id": zod.string(),
   "email": zod.string(),
   "name": zod.string().nullish(),
-  "avatarUrl": zod.string().nullish()
+  "avatarUrl": zod.string().nullish(),
+  "onboardingCompleted": zod.boolean()
+})
+
+
+/**
+ * @summary Mark the current user's onboarding as complete
+ */
+export const CompleteOnboardingResponse = zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "name": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "onboardingCompleted": zod.boolean()
 })
 
 
@@ -562,7 +575,8 @@ export const GetCurrentUserResponse = zod.object({
   "id": zod.string(),
   "email": zod.string(),
   "name": zod.string().nullish(),
-  "avatarUrl": zod.string().nullish()
+  "avatarUrl": zod.string().nullish(),
+  "onboardingCompleted": zod.boolean()
 })
 
 

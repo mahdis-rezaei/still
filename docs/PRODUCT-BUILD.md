@@ -81,7 +81,12 @@ Implements the MVP schema from `docs/PRD/mvp-v1.md` (decisions #1–#5 locked).
   sign out) and `/settings/privacy` ("Your pages belong to you," the honest **AI
   disclosure** [decision #2], prototype-honesty note, Export, two-step Delete).
   Settings added to the nav.
-- **Next:** notification settings + nudges, onboarding. Engine V2 is captured in
+- **Onboarding (done):** `/onboarding` ("What brings you to Yadegar?" →
+  have-journals→Import / occasional→Today / fresh→Today). Gated by
+  `users.onboardingCompleted` (now on AuthUser); `POST /auth/complete-onboarding`
+  sets it; the auth guard routes not-yet-onboarded users there once.
+- **Next:** notification settings + nudges + password reset / email verification
+  — all need an email provider (Resend). Engine V2 captured in
   `docs/PRD/memory-engine-v2-vision.md` (future — not implemented).
 
 ### ⚠️ This migration is DESTRUCTIVE (prototype reset)

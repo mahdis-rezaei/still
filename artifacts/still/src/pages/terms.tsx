@@ -4,7 +4,7 @@ import { AmbientField, SiteNav } from "@/components/site-chrome";
 // real contact address and governing law.
 
 const LAST_UPDATED = "June 2, 2026";
-const CONTACT = "hello@yadegarjournal.com"; // TODO: replace with a real support address
+const CONTACT = "hello@yadegarjournal.com";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
