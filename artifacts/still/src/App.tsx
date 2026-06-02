@@ -1,5 +1,11 @@
 import { useEffect } from "react";
-import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
+import {
+  Switch,
+  Route,
+  Redirect,
+  Router as WouterRouter,
+  useLocation,
+} from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +19,9 @@ import Result from "@/pages/result";
 import History from "@/pages/history";
 import Login from "@/pages/login";
 import Why from "@/pages/why";
+import Today from "@/pages/today";
+import Library from "@/pages/library";
+import EntryDetail from "@/pages/entry-detail";
 
 import { StillProvider } from "@/lib/store";
 import { AuthProvider, useAuth } from "@/lib/auth";
@@ -44,7 +53,14 @@ function ProtectedApp() {
 
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/">
+        <Redirect to="/today" />
+      </Route>
+      <Route path="/today" component={Today} />
+      <Route path="/library" component={Library} />
+      <Route path="/library/:entryId" component={EntryDetail} />
+      {/* Legacy prototype flow (engine read-across) — not in the primary nav. */}
+      <Route path="/home" component={Home} />
       <Route path="/paste" component={Paste} />
       <Route path="/entries" component={Entries} />
       <Route path="/processing" component={Processing} />

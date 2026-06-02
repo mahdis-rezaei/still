@@ -49,8 +49,15 @@ Implements the MVP schema from `docs/PRD/mvp-v1.md` (decisions #1–#5 locked).
   DELETE (soft). Auth refactored to string (UUID) ids.
 - **Contract:** `/entries` endpoints + richer `Entry`/`EntryInput`/`EntryUpdate`;
   `AuthUser.id` is now a string. Regenerated client + zod.
-- **Next:** Today (writing) screen, Library, full entry view, then imports /
-  memories(/run) / reflections / notifications / privacy routers + UI.
+- **UI (done):** shared `AppNav`; **Today** (`/today`) — date, rotating prompt,
+  distraction-free editor with debounced auto-save (create-then-patch one entry;
+  saving…/kept); **Library** (`/library`) — search + favorites filter, entries
+  grouped by year (undated last), favorite stars, cards open the entry; **Full
+  entry view** (`/library/:id`) — reading layout, favorite, resurfacing
+  preference, inline edit, soft delete. `/` redirects to `/today`; the legacy
+  engine-demo flow moved to `/home` (off the primary nav).
+- **Next:** imports / memories(/run) / reflections / notifications / privacy
+  routers + UI; wire the memory engine through the backend (`/memories/run`).
 
 ### ⚠️ This migration is DESTRUCTIVE (prototype reset)
 Switching serial→UUID and renaming `entries`→`journal_entries` cannot be done
