@@ -1,0 +1,47 @@
+ONE-TIME TASK: push the real engine back to GitHub so GitHub becomes the complete source of truth.
+
+Context: the real two-pass engine lives only in this Replit workspace right now —
+the file artifacts/api-server/src/routes/still.ts (~82KB), which includes the
+inline §3.1 crisis check and the PASS1 / PASS2 system prompts at
+PROMPT_VERSION 2026-06-02.9, and already has the auth per-user scoping merged in.
+GitHub currently has a smaller placeholder version of this file. We want GitHub
+to hold the real engine, without losing any of the frontend work already on
+GitHub (the landing redesign and the scroll-reveal "Why Still" page).
+
+Please do exactly this, carefully:
+
+1. git fetch origin
+
+2. Back up your real engine file:
+   cp artifacts/api-server/src/routes/still.ts /tmp/still.engine.ts
+
+3. Reset your local branch to exactly match GitHub (this pulls the latest
+   frontend and the auth files):
+   git checkout -B claude/ecstatic-wright-y4npO origin/claude/ecstatic-wright-y4npO
+
+4. Restore the real engine over the placeholder:
+   cp /tmp/still.engine.ts artifacts/api-server/src/routes/still.ts
+
+5. Run `git status`. The ONLY file that should show as modified is
+   artifacts/api-server/src/routes/still.ts.
+   - If your engine also depends on OTHER new files under
+     artifacts/api-server/src that don't exist on GitHub, include those too.
+   - But do NOT modify or revert any of these — GitHub's versions are correct
+     and must stay: artifacts/api-server/src/lib/auth.ts,
+     artifacts/api-server/src/routes/auth.ts, artifacts/api-server/src/app.ts,
+     artifacts/api-server/src/routes/index.ts,
+     artifacts/still/src/pages/home.tsx, lib/api-spec/openapi.yaml,
+     lib/db/src/schema/*. If any of those show as changed, run
+     `git checkout -- <file>` to restore GitHub's version.
+
+6. Confirm the engine still imports requireAuth from ../lib/auth and scopes the
+   /still/entries routes by req.userId. Run pnpm install and the full typecheck;
+   fix only if it is broken.
+
+7. Commit just the engine and push:
+   git add artifacts/api-server/src/routes/still.ts
+   git commit -m "Add the real two-pass engine (still.ts + prompts) to GitHub"
+   git push origin claude/ecstatic-wright-y4npO
+
+Then tell me it is pushed and paste the commit hash. Do not touch environment
+variables or the database.

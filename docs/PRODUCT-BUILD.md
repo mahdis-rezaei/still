@@ -4,6 +4,24 @@ Tracks the build of the user-facing product (PRD steps 3–6 + §8) on top of th
 verified engine. Phased, foundation-first. The app + Postgres + OAuth run in
 **Replit**; code is authored here and synced there to run.
 
+## Workflow — GitHub is the source of truth (decided)
+
+One-way flow: **author here → push → Replit syncs and runs.** Replit's
+"auto-merge" does NOT push back to GitHub, so any edit made only in Replit is
+one re-sync away from being silently overwritten — we hit that hazard three
+times. The rule:
+
+- All code/UI changes are made in GitHub (with Claude Code). Replit is only
+  used to **sync, run, and migrate** — not to edit.
+- Standard sync prompt: `docs/REPLIT-PROMPT.txt` (a clean
+  `git reset --hard origin/<branch>` — safe once the engine is on GitHub).
+- The engine (`artifacts/api-server/src/routes/still.ts`, ~82KB incl. prompts
+  at PROMPT_VERSION 2026-06-02.9) historically lived only in Replit. One-time
+  fix to make GitHub complete: `docs/REPLIT-PUSH-ENGINE-ONCE.txt`. After that
+  runs, GitHub holds everything and the preserve-the-engine dance is over.
+- If the engine/prompts ever must change in Replit, push it back to the branch
+  immediately — never leave a change living only in Replit.
+
 ## Phase status
 
 | Phase | Scope | State |

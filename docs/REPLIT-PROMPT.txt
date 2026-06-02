@@ -1,24 +1,27 @@
-Please re-sync this Replit workspace with the latest of the GitHub branch claude/ecstatic-wright-y4npO. There are new commits since your last sync. IMPORTANT: as before, preserve your local engine — do NOT overwrite artifacts/api-server/src/routes/still.ts (the ~82KB two-pass engine) or the prompts (PROMPT_VERSION 2026-06-02.9). The new commits do not change the engine, only the frontend and the auth route, so this should be a clean update.
+STANDARD SYNC PROMPT — use this whenever I tell you GitHub has new changes.
 
-Pull these changes from the branch:
+(Use this AFTER the one-time engine push in REPLIT-PUSH-ENGINE-ONCE.txt has been
+done. Before that, the engine isn't on GitHub yet and a hard reset would lose
+it.)
 
-1. A landing-page redesign (frontend only):
-   - new file artifacts/still/src/components/site-chrome.tsx
-   - new file artifacts/still/src/pages/why.tsx
-   - updated artifacts/still/src/pages/login.tsx (now a hero + inline auth form)
-   - updated artifacts/still/src/App.tsx (adds a public /why route)
-   - updated artifacts/still/src/index.css (adds an ambient gradient field)
+GitHub is the single source of truth. This Replit workspace is where the app
+RUNS — please do not edit application code or prompts here. To bring in the
+latest from the branch claude/ecstatic-wright-y4npO:
 
-2. A security fix to artifacts/api-server/src/routes/auth.ts: the register
-   handler now returns 409 for ANY existing email (it no longer links a
-   password or opens a session on an existing account). This matches the fix
-   you already made live — confirm your auth.ts register logic matches the
-   branch (409 on existing email, no Set-Cookie, no password linking).
+1. git fetch origin
+2. git reset --hard origin/claude/ecstatic-wright-y4npO
+   (GitHub now holds everything, including the real engine, so a clean reset is
+   safe and is the whole point — it guarantees Replit matches GitHub exactly.)
+3. pnpm install
+4. If the API contract (lib/api-spec/openapi.yaml) changed, regenerate the
+   client: pnpm --filter @workspace/api-spec run codegen
+5. If I told you there is a database schema change, migrate:
+   pnpm --filter @workspace/db exec drizzle-kit push
+6. Rebuild and restart both services (api-server and the still frontend) and
+   confirm they boot with no errors.
+7. Report what you ran and any errors.
 
-After syncing: run pnpm install, regenerate the API client if needed
-(pnpm --filter @workspace/api-spec run codegen), run the full typecheck, then
-rebuild and restart both services. No new DB migration is required.
-
-Then confirm: the landing page shows the new "Still" hero and the "Why Still"
-link works, and the register security behavior is still correct (new email
--> 201, existing email -> 409 with no cookie). Report what you ran and any errors.
+Do not change application code or prompts. If an engine or prompt change is ever
+needed, it will come through GitHub. If you ever must change the engine here,
+immediately commit and push it to the branch so GitHub stays complete — never
+leave a change living only in Replit.
