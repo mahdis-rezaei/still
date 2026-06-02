@@ -98,6 +98,62 @@ export interface EntryUpdate {
   resurfacingPreference?: EntryUpdateResurfacingPreference;
 }
 
+export type ParsedEntryDateConfidence = typeof ParsedEntryDateConfidence[keyof typeof ParsedEntryDateConfidence];
+
+
+export const ParsedEntryDateConfidence = {
+  high: 'high',
+  medium: 'medium',
+  low: 'low',
+  unknown: 'unknown',
+} as const;
+
+export interface ParsedEntry {
+  id: string;
+  /** @nullable */
+  detectedDate?: string | null;
+  dateConfidence: ParsedEntryDateConfidence;
+  body: string;
+  /** @nullable */
+  title?: string | null;
+  include: boolean;
+  /** @nullable */
+  orderIndex?: number | null;
+}
+
+export interface ImportReview {
+  id: string;
+  source: string;
+  status: string;
+  parsedCount: number;
+  importedCount: number;
+  entries: ParsedEntry[];
+}
+
+export interface ImportPasteInput {
+  /** @minLength 1 */
+  rawText: string;
+}
+
+export interface ImportFileInput {
+  filename: string;
+  /** @minLength 1 */
+  rawText: string;
+}
+
+export interface ParsedEntryUpdate {
+  /** @nullable */
+  detectedDate?: string | null;
+  body?: string;
+  /** @nullable */
+  title?: string | null;
+  include?: boolean;
+}
+
+export interface ImportConfirmResult {
+  importedCount: number;
+}
+
 export interface ReturnedMemory {
   id: string;
   /** @nullable */

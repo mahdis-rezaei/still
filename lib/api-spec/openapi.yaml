@@ -16,6 +16,8 @@ tags:
     description: Journal entries
   - name: memories
     description: Returned memories
+  - name: imports
+    description: Importing historical journals
   - name: auth
     description: Authentication and accounts
 paths:
@@ -245,6 +247,137 @@ paths:
       responses:
         "204":
           description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /imports/paste:
+    post:
+      operationId: importPaste
+      tags: [imports]
+      summary: Parse pasted journal text into reviewable entries
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImportPasteInput"
+      responses:
+        "200":
+          description: The import session with parsed entries to review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportReview"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /imports/file:
+    post:
+      operationId: importFile
+      tags: [imports]
+      summary: Parse an uploaded .txt/.md file's text into reviewable entries
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImportFileInput"
+      responses:
+        "200":
+          description: The import session with parsed entries to review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportReview"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /imports/{id}/review:
+    get:
+      operationId: getImportReview
+      tags: [imports]
+      summary: Get an import session and its parsed entries
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The import review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportReview"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /imports/{id}/parsed/{parsedEntryId}:
+    patch:
+      operationId: updateParsedEntry
+      tags: [imports]
+      summary: Edit a parsed entry before import (date, body, title, include)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: parsedEntryId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ParsedEntryUpdate"
+      responses:
+        "200":
+          description: The updated parsed entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParsedEntry"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /imports/{id}/confirm:
+    post:
+      operationId: confirmImport
+      tags: [imports]
+      summary: Create journal entries from the included parsed entries
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Import confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportConfirmResult"
         "404":
           description: Not found
           content:
@@ -551,6 +684,90 @@ components:
         resurfacingPreference:
           type: string
           enum: [normal, more_often, never]
+    ParsedEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        detectedDate:
+          type: ["string", "null"]
+        dateConfidence:
+          type: string
+          enum: [high, medium, low, unknown]
+        body:
+          type: string
+        title:
+          type: ["string", "null"]
+        include:
+          type: boolean
+        orderIndex:
+          type: ["integer", "null"]
+      required:
+        - id
+        - dateConfidence
+        - body
+        - include
+    ImportReview:
+      type: object
+      properties:
+        id:
+          type: string
+        source:
+          type: string
+        status:
+          type: string
+        parsedCount:
+          type: integer
+        importedCount:
+          type: integer
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/ParsedEntry"
+      required:
+        - id
+        - source
+        - status
+        - parsedCount
+        - importedCount
+        - entries
+    ImportPasteInput:
+      type: object
+      properties:
+        rawText:
+          type: string
+          minLength: 1
+      required:
+        - rawText
+    ImportFileInput:
+      type: object
+      properties:
+        filename:
+          type: string
+        rawText:
+          type: string
+          minLength: 1
+      required:
+        - filename
+        - rawText
+    ParsedEntryUpdate:
+      type: object
+      properties:
+        detectedDate:
+          type: ["string", "null"]
+        body:
+          type: string
+        title:
+          type: ["string", "null"]
+        include:
+          type: boolean
+    ImportConfirmResult:
+      type: object
+      properties:
+        importedCount:
+          type: integer
+      required:
+        - importedCount
     ReturnedMemory:
       type: object
       properties:

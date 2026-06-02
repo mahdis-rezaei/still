@@ -190,6 +190,126 @@ export const DeleteEntryParams = zod.object({
 
 
 /**
+ * @summary Parse pasted journal text into reviewable entries
+ */
+
+
+
+export const ImportPasteBody = zod.object({
+  "rawText": zod.string().min(1)
+})
+
+export const ImportPasteResponse = zod.object({
+  "id": zod.string(),
+  "source": zod.string(),
+  "status": zod.string(),
+  "parsedCount": zod.number(),
+  "importedCount": zod.number(),
+  "entries": zod.array(zod.object({
+  "id": zod.string(),
+  "detectedDate": zod.string().nullish(),
+  "dateConfidence": zod.enum(['high', 'medium', 'low', 'unknown']),
+  "body": zod.string(),
+  "title": zod.string().nullish(),
+  "include": zod.boolean(),
+  "orderIndex": zod.number().nullish()
+}))
+})
+
+
+/**
+ * @summary Parse an uploaded .txt/.md file's text into reviewable entries
+ */
+
+
+
+export const ImportFileBody = zod.object({
+  "filename": zod.string(),
+  "rawText": zod.string().min(1)
+})
+
+export const ImportFileResponse = zod.object({
+  "id": zod.string(),
+  "source": zod.string(),
+  "status": zod.string(),
+  "parsedCount": zod.number(),
+  "importedCount": zod.number(),
+  "entries": zod.array(zod.object({
+  "id": zod.string(),
+  "detectedDate": zod.string().nullish(),
+  "dateConfidence": zod.enum(['high', 'medium', 'low', 'unknown']),
+  "body": zod.string(),
+  "title": zod.string().nullish(),
+  "include": zod.boolean(),
+  "orderIndex": zod.number().nullish()
+}))
+})
+
+
+/**
+ * @summary Get an import session and its parsed entries
+ */
+export const GetImportReviewParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetImportReviewResponse = zod.object({
+  "id": zod.string(),
+  "source": zod.string(),
+  "status": zod.string(),
+  "parsedCount": zod.number(),
+  "importedCount": zod.number(),
+  "entries": zod.array(zod.object({
+  "id": zod.string(),
+  "detectedDate": zod.string().nullish(),
+  "dateConfidence": zod.enum(['high', 'medium', 'low', 'unknown']),
+  "body": zod.string(),
+  "title": zod.string().nullish(),
+  "include": zod.boolean(),
+  "orderIndex": zod.number().nullish()
+}))
+})
+
+
+/**
+ * @summary Edit a parsed entry before import (date, body, title, include)
+ */
+export const UpdateParsedEntryParams = zod.object({
+  "id": zod.coerce.string(),
+  "parsedEntryId": zod.coerce.string()
+})
+
+export const UpdateParsedEntryBody = zod.object({
+  "detectedDate": zod.string().nullish(),
+  "body": zod.string().optional(),
+  "title": zod.string().nullish(),
+  "include": zod.boolean().optional()
+})
+
+export const UpdateParsedEntryResponse = zod.object({
+  "id": zod.string(),
+  "detectedDate": zod.string().nullish(),
+  "dateConfidence": zod.enum(['high', 'medium', 'low', 'unknown']),
+  "body": zod.string(),
+  "title": zod.string().nullish(),
+  "include": zod.boolean(),
+  "orderIndex": zod.number().nullish()
+})
+
+
+/**
+ * @summary Create journal entries from the included parsed entries
+ */
+export const ConfirmImportParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ConfirmImportResponse = zod.object({
+  "importedCount": zod.number()
+})
+
+
+/**
  * @summary Run the engine over eligible entries and surface one thing (or stay quiet)
  */
 export const RunMemoryBody = zod.object({

@@ -79,11 +79,19 @@ export default function Library() {
       <main className="flex-1 w-full max-w-[720px] mx-auto px-6 py-12 md:py-16">
         <div className="flex items-baseline justify-between mb-8">
           <h1 className="font-display text-4xl text-deep-brown">Library</h1>
-          {all.length > 0 && (
-            <span className="font-sans text-xs text-faint-ink">
-              {all.length} {all.length === 1 ? "page" : "pages"} kept
-            </span>
-          )}
+          <div className="flex items-baseline gap-4">
+            {all.length > 0 && (
+              <span className="font-sans text-xs text-faint-ink">
+                {all.length} {all.length === 1 ? "page" : "pages"} kept
+              </span>
+            )}
+            <Link
+              href="/import"
+              className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"
+            >
+              Bring old journals →
+            </Link>
+          </div>
         </div>
 
         {isLoading ? (
@@ -106,7 +114,7 @@ export default function Library() {
                 Write today
               </Link>
               <Link
-                href="/entries"
+                href="/import"
                 className="rounded-full border border-border bg-surface px-6 py-2.5 font-sans text-sm text-ink hover:border-accent-sepia transition-colors"
               >
                 Bring old journals

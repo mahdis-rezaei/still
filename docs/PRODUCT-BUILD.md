@@ -56,8 +56,21 @@ Implements the MVP schema from `docs/PRD/mvp-v1.md` (decisions #1–#5 locked).
   entry view** (`/library/:id`) — reading layout, favorite, resurfacing
   preference, inline edit, soft delete. `/` redirects to `/today`; the legacy
   engine-demo flow moved to `/home` (off the primary nav).
-- **Next:** imports / memories(/run) / reflections / notifications / privacy
-  routers + UI; wire the memory engine through the backend (`/memories/run`).
+- **Memory engine (done):** `routes/memories.ts` — `POST /memories/run` gathers
+  eligible entries (not deleted, not resurfacing=never, dated), assembles the
+  engine input, and calls the two-pass engine as an **internal service**
+  (extract→score). Persists only real lenses; crisis→support, nothing→honest
+  silence, none→not_enough. `GET /memories`, `GET/:id`, `PATCH/:id`. UI:
+  `MemoryCard`, Today "Bring a page back", **Returns** page (favorite/dismiss).
+  The frontend never calls the engine directly.
+- **Import (done):** `routes/imports.ts` + `lib/parse-import.ts` (date-aware
+  splitter: `[YYYY-MM-DD]`, ISO, `MM/DD/YYYY`, `Month D, YYYY`; no dates → one
+  undated entry). Flow: `POST /imports/paste|file` → review → `PATCH
+  /imports/:id/parsed/:pid` (date/include) → `POST /imports/:id/confirm`. UI:
+  `/import` (paste or .txt/.md upload → review with editable dates + include →
+  keep). Confirmed entries get source `pasted_import`/`file_import`.
+- **Next:** reflections, notification settings + nudges, privacy
+  (export/delete), onboarding; then the destructive sync + migration to Replit.
 
 ### ⚠️ This migration is DESTRUCTIVE (prototype reset)
 Switching serial→UUID and renaming `entries`→`journal_entries` cannot be done

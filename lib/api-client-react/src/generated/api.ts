@@ -28,11 +28,17 @@ import type {
   ExtractInput,
   ExtractResult,
   HealthStatus,
+  ImportConfirmResult,
+  ImportFileInput,
+  ImportPasteInput,
+  ImportReview,
   ListEntriesParams,
   LoginInput,
   MemoryRunInput,
   MemoryRunResult,
   MemoryUpdate,
+  ParsedEntry,
+  ParsedEntryUpdate,
   RegisterInput,
   ReturnedMemory,
   ScoreInput,
@@ -643,6 +649,369 @@ export const useDeleteEntry = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getDeleteEntryMutationOptions(options));
+    }
+
+export const getImportPasteUrl = () => {
+
+
+
+
+  return `/api/imports/paste`
+}
+
+/**
+ * @summary Parse pasted journal text into reviewable entries
+ */
+export const importPaste = async (importPasteInput: ImportPasteInput, options?: RequestInit): Promise<ImportReview> => {
+
+  return customFetch<ImportReview>(getImportPasteUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      importPasteInput,)
+  }
+);}
+
+
+
+
+export const getImportPasteMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importPaste>>, TError,{data: BodyType<ImportPasteInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof importPaste>>, TError,{data: BodyType<ImportPasteInput>}, TContext> => {
+
+const mutationKey = ['importPaste'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof importPaste>>, {data: BodyType<ImportPasteInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  importPaste(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ImportPasteMutationResult = NonNullable<Awaited<ReturnType<typeof importPaste>>>
+    export type ImportPasteMutationBody = BodyType<ImportPasteInput>
+    export type ImportPasteMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Parse pasted journal text into reviewable entries
+ */
+export const useImportPaste = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importPaste>>, TError,{data: BodyType<ImportPasteInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof importPaste>>,
+        TError,
+        {data: BodyType<ImportPasteInput>},
+        TContext
+      > => {
+      return useMutation(getImportPasteMutationOptions(options));
+    }
+
+export const getImportFileUrl = () => {
+
+
+
+
+  return `/api/imports/file`
+}
+
+/**
+ * @summary Parse an uploaded .txt/.md file's text into reviewable entries
+ */
+export const importFile = async (importFileInput: ImportFileInput, options?: RequestInit): Promise<ImportReview> => {
+
+  return customFetch<ImportReview>(getImportFileUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      importFileInput,)
+  }
+);}
+
+
+
+
+export const getImportFileMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importFile>>, TError,{data: BodyType<ImportFileInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof importFile>>, TError,{data: BodyType<ImportFileInput>}, TContext> => {
+
+const mutationKey = ['importFile'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof importFile>>, {data: BodyType<ImportFileInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  importFile(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ImportFileMutationResult = NonNullable<Awaited<ReturnType<typeof importFile>>>
+    export type ImportFileMutationBody = BodyType<ImportFileInput>
+    export type ImportFileMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Parse an uploaded .txt/.md file's text into reviewable entries
+ */
+export const useImportFile = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importFile>>, TError,{data: BodyType<ImportFileInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof importFile>>,
+        TError,
+        {data: BodyType<ImportFileInput>},
+        TContext
+      > => {
+      return useMutation(getImportFileMutationOptions(options));
+    }
+
+export const getGetImportReviewUrl = (id: string,) => {
+
+
+
+
+  return `/api/imports/${id}/review`
+}
+
+/**
+ * @summary Get an import session and its parsed entries
+ */
+export const getImportReview = async (id: string, options?: RequestInit): Promise<ImportReview> => {
+
+  return customFetch<ImportReview>(getGetImportReviewUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetImportReviewQueryKey = (id: string,) => {
+    return [
+    `/api/imports/${id}/review`
+    ] as const;
+    }
+
+
+export const getGetImportReviewQueryOptions = <TData = Awaited<ReturnType<typeof getImportReview>>, TError = ErrorType<ErrorResponse>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getImportReview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetImportReviewQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getImportReview>>> = ({ signal }) => getImportReview(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getImportReview>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetImportReviewQueryResult = NonNullable<Awaited<ReturnType<typeof getImportReview>>>
+export type GetImportReviewQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Get an import session and its parsed entries
+ */
+
+export function useGetImportReview<TData = Awaited<ReturnType<typeof getImportReview>>, TError = ErrorType<ErrorResponse>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getImportReview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetImportReviewQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdateParsedEntryUrl = (id: string,
+    parsedEntryId: string,) => {
+
+
+
+
+  return `/api/imports/${id}/parsed/${parsedEntryId}`
+}
+
+/**
+ * @summary Edit a parsed entry before import (date, body, title, include)
+ */
+export const updateParsedEntry = async (id: string,
+    parsedEntryId: string,
+    parsedEntryUpdate: ParsedEntryUpdate, options?: RequestInit): Promise<ParsedEntry> => {
+
+  return customFetch<ParsedEntry>(getUpdateParsedEntryUrl(id,parsedEntryId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      parsedEntryUpdate,)
+  }
+);}
+
+
+
+
+export const getUpdateParsedEntryMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateParsedEntry>>, TError,{id: string;parsedEntryId: string;data: BodyType<ParsedEntryUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateParsedEntry>>, TError,{id: string;parsedEntryId: string;data: BodyType<ParsedEntryUpdate>}, TContext> => {
+
+const mutationKey = ['updateParsedEntry'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateParsedEntry>>, {id: string;parsedEntryId: string;data: BodyType<ParsedEntryUpdate>}> = (props) => {
+          const {id,parsedEntryId,data} = props ?? {};
+
+          return  updateParsedEntry(id,parsedEntryId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateParsedEntryMutationResult = NonNullable<Awaited<ReturnType<typeof updateParsedEntry>>>
+    export type UpdateParsedEntryMutationBody = BodyType<ParsedEntryUpdate>
+    export type UpdateParsedEntryMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Edit a parsed entry before import (date, body, title, include)
+ */
+export const useUpdateParsedEntry = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateParsedEntry>>, TError,{id: string;parsedEntryId: string;data: BodyType<ParsedEntryUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateParsedEntry>>,
+        TError,
+        {id: string;parsedEntryId: string;data: BodyType<ParsedEntryUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateParsedEntryMutationOptions(options));
+    }
+
+export const getConfirmImportUrl = (id: string,) => {
+
+
+
+
+  return `/api/imports/${id}/confirm`
+}
+
+/**
+ * @summary Create journal entries from the included parsed entries
+ */
+export const confirmImport = async (id: string, options?: RequestInit): Promise<ImportConfirmResult> => {
+
+  return customFetch<ImportConfirmResult>(getConfirmImportUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getConfirmImportMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmImport>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof confirmImport>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['confirmImport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof confirmImport>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  confirmImport(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConfirmImportMutationResult = NonNullable<Awaited<ReturnType<typeof confirmImport>>>
+
+    export type ConfirmImportMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Create journal entries from the included parsed entries
+ */
+export const useConfirmImport = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmImport>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof confirmImport>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getConfirmImportMutationOptions(options));
     }
 
 export const getRunMemoryUrl = () => {
