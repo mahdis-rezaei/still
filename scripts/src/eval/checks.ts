@@ -82,6 +82,24 @@ function selectionChecks(fx: Fixture, res: EngineResult): Check[] {
     });
   }
 
+  // §3.1: an active-crisis entry must get a warm support response, never an
+  // analysis. Pass iff it's a crisis/support response AND surfaces no insight.
+  if (fx.expectCrisis) {
+    const r = res.result;
+    const isCrisis = r.register === "crisis" || Boolean(r.supportMessage);
+    const noAnalysis = r.quotes.length === 0 && !r.secondaryThread;
+    checks.push({
+      name: "active crisis → support response, not analysis (§3.1)",
+      pass: isCrisis && noAnalysis,
+      detail: !isCrisis
+        ? `expected a crisis/support response, got register=${r.register}`
+        : !noAnalysis
+          ? `crisis flagged but it still surfaced ${r.quotes.length} quote(s)/a thread — must not analyze`
+          : "warm support response, no surfaced insight",
+    });
+    return checks;
+  }
+
   if (fx.expect === "nothing") {
     const isNothing =
       res.result.register === "nothing" && !res.result.observation;

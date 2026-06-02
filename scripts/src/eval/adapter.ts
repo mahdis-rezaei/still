@@ -94,6 +94,7 @@ function normalizeResponse(raw: unknown): EngineResult {
         date: q.date ?? "",
         text: q.text ?? q.fragment ?? "",
       })),
+      supportMessage: result.supportMessage ?? result.support_message ?? null,
       wonAt: result.wonAt ?? result.won_at,
       why: result.why,
       secondaryThread: mapSecondaryThread(

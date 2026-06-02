@@ -38,11 +38,13 @@ export interface EngineResult {
   mode?: string;
   candidates: Candidate[];
   result: {
-    /** A lens name when something surfaced, or "nothing". */
+    /** A lens name when something surfaced, "nothing", or "crisis" (§3.1). */
     register: string;
     label: string | null;
     observation: string | null;
     quotes: Quote[];
+    /** §3.1 crisis response: warm support text, shown instead of any insight. */
+    supportMessage?: string | null;
     wonAt?: string;
     why?: string;
     /**
@@ -86,6 +88,12 @@ export interface Fixture {
    * beneath the (single-entry) primary, spanning ≥2 distinct years.
    */
   expectSecondaryThread?: boolean;
+  /**
+   * §3.1: an active, present-tense crisis entry must NOT be analyzed — the
+   * engine returns a warm support response (register "crisis" / supportMessage)
+   * and surfaces no thread/observation/quote.
+   */
+  expectCrisis?: boolean;
   /**
    * §3 hard-floor lines (body/appearance/eating). These must NEVER appear in
    * any candidate fragment OR the surfaced result — not gated-but-present,
