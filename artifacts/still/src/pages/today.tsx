@@ -145,7 +145,7 @@ export default function Today() {
         <section className="mb-10">
           {runMemory.isPending ? (
             <p className="font-body text-soft-ink animate-pulse">
-              Still is reading across your pages…
+              Yadegar is reading across your pages…
             </p>
           ) : run && run.surfaced && run.memory ? (
             <div className="space-y-3">
@@ -163,10 +163,10 @@ export default function Today() {
                 {run.reason === "crisis"
                   ? run.supportMessage
                   : run.reason === "not_enough"
-                    ? "Write or bring in a few pages first, and Still will have something to return."
+                    ? "Write or bring in a few pages first, and Yadegar will have something to return."
                     : run.reason === "error"
                       ? "Something interrupted the reading. Try again in a moment."
-                      : "Nothing honest surfaced this time. That is okay — Still is better quiet than false."}
+                      : "Nothing honest surfaced this time. That is okay — Yadegar is better quiet than false."}
               </p>
               <button
                 onClick={bringPageBack}

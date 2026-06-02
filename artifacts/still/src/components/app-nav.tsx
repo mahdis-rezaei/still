@@ -30,7 +30,7 @@ export function AppNav() {
           href="/today"
           className="font-display text-xl text-deep-brown tracking-tight"
         >
-          Still
+          Yadegar
         </Link>
         <div className="flex items-center gap-6">
           {link("/today", "Today")}

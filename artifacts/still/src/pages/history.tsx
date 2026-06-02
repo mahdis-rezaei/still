@@ -125,7 +125,7 @@ export default function History() {
 
       {history.length === 0 ? (
         <p className="font-body text-base text-soft-ink italic">
-          Nothing here yet. Past threads will appear once you run Still.
+          Nothing here yet. Past threads will appear once you run Yadegar.
         </p>
       ) : (
         <div className="flex flex-col">

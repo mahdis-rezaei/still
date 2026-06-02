@@ -39,9 +39,9 @@ function buildRecallLine(
   }
   const base = MODE_RECALL[mode ?? ""] ?? "something";
   if (mode === "thread" && label) {
-    return `Still found ${base} — "${truncateLabel(label)}" — ${dateStr}.`;
+    return `Yadegar found ${base} — "${truncateLabel(label)}" — ${dateStr}.`;
   }
-  return `Still found ${base} — ${dateStr}.`;
+  return `Yadegar found ${base} — ${dateStr}.`;
 }
 
 export default function Home() {
@@ -55,13 +55,13 @@ export default function Home() {
   return (
     <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6 text-center max-w-[680px] mx-auto">
       <h1 className="font-display text-5xl md:text-7xl text-deep-brown mb-6">
-        Still
+        Yadegar
       </h1>
       <p className="text-xl md:text-2xl text-ink mb-6">
         A companion for your past selves.
       </p>
       <p className="text-lg text-soft-ink leading-relaxed mb-12 max-w-md mx-auto">
-        Paste old journal entries. Still finds one thing worth returning to today — a forgotten page, something that kept returning, how far you've come — and stays quiet when nothing honest surfaces.
+        Paste old journal entries. Yadegar finds one thing worth returning to today — a forgotten page, something that kept returning, how far you've come — and stays quiet when nothing honest surfaces.
       </p>
 
       {hasSaved ? (

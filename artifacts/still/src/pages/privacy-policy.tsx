@@ -1,6 +1,6 @@
 import { AmbientField, SiteNav } from "@/components/site-chrome";
 
-// DRAFT legal copy in Still's voice — honest and plain. Have a human/lawyer
+// DRAFT legal copy in Yadegar's voice — honest and plain. Have a human/lawyer
 // review before a public launch, and replace the contact address + governing
 // law with real values. Last updated date is shown to readers.
 
@@ -38,7 +38,7 @@ export default function PrivacyPolicy() {
 
         <Section title="Who this is">
           <p>
-            Still is a personal journaling companion. This policy explains what
+            Yadegar is a personal journaling companion. This policy explains what
             we store, how we use it, and the control you have over it.
           </p>
         </Section>
@@ -47,14 +47,14 @@ export default function PrivacyPolicy() {
           <p>
             Your account details (email, and a name if you provide one) and the
             content you create or import — journal entries, reflections, and the
-            memories Still returns to you. Passwords are stored only as a salted
+            memories Yadegar returns to you. Passwords are stored only as a salted
             hash; we never see your password.
           </p>
         </Section>
 
         <Section title="How we use it">
           <p>
-            We use your content only to provide Still: to store your pages, and
+            We use your content only to provide Yadegar: to store your pages, and
             to surface one worth returning to. To do that, your writing is sent
             to an AI model (Anthropic's Claude) that helps choose what to bring
             back.
@@ -69,7 +69,7 @@ export default function PrivacyPolicy() {
         <Section title="What we never do">
           <p>
             No advertising, no selling your data, no profiling for third parties,
-            no social features that expose your writing. Still has no feeds, no
+            no social features that expose your writing. Yadegar has no feeds, no
             followers, and no public profiles.
           </p>
         </Section>
@@ -81,7 +81,7 @@ export default function PrivacyPolicy() {
             Access is restricted to what's needed to run the service.
           </p>
           <p>
-            No system is perfectly secure. While Still is in early access, please
+            No system is perfectly secure. While Yadegar is in early access, please
             use sample entries rather than your most sensitive pages until the
             full security architecture is complete.
           </p>
@@ -97,14 +97,14 @@ export default function PrivacyPolicy() {
 
         <Section title="Children">
           <p>
-            Still is not intended for anyone under 16. We don't knowingly collect
+            Yadegar is not intended for anyone under 16. We don't knowingly collect
             data from children.
           </p>
         </Section>
 
         <Section title="A note on hard moments">
           <p>
-            Still is a reflective companion, not a medical, mental-health, or
+            Yadegar is a reflective companion, not a medical, mental-health, or
             crisis service. If you are in danger or thinking about harming
             yourself, please contact a local crisis line or someone you trust.
           </p>

@@ -40,7 +40,7 @@ export default function Returns() {
       <main className="flex-1 w-full max-w-[680px] mx-auto px-6 py-12 md:py-16">
         <h1 className="font-display text-4xl text-deep-brown mb-2">Returns</h1>
         <p className="font-body text-soft-ink mb-10">
-          Pages Still has brought back. They stay here for you to revisit.
+          Pages Yadegar has brought back. They stay here for you to revisit.
         </p>
 
         {isLoading ? (
@@ -51,7 +51,7 @@ export default function Returns() {
               Nothing has returned yet.
             </p>
             <p className="font-body text-soft-ink mb-7">
-              Write or bring in pages, and Still will return something when there
+              Write or bring in pages, and Yadegar will return something when there
               is something honest to return.
             </p>
             <Link

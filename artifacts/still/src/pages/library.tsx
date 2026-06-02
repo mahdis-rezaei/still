@@ -104,7 +104,7 @@ export default function Library() {
               Your pages will live here.
             </p>
             <p className="font-body text-soft-ink mb-7">
-              Write today or bring old journals into Still.
+              Write today or bring old journals into Yadegar.
             </p>
             <div className="flex items-center justify-center gap-3">
               <Link

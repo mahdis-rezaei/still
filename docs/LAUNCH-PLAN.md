@@ -8,9 +8,17 @@ Goal: publish Still as a real, trustworthy product on a real domain.
 - **Privacy: pragmatic at-rest + policy.** Encryption at rest with server-managed
   keys + access controls + a real privacy policy/ToS. (Not zero-knowledge — the
   engine must read text to work; that tension is documented below.)
-- **Name: keep "Still."** Domain shortlist (pick + register at Cloudflare):
-  **still.ink** (top pick), stilljournal.com, usestill.com, bestill.app,
-  still.page. Verify availability at a registrar.
+- **Name: DECIDED → Yadegar.** Domain purchased: **yadegarjournal.com**.
+  (Persian: a keepsake / what remains — ties to the founder's story.) "Still" was
+  dropped due to category crowding in journaling apps. Tagline direction:
+  *"yadegar — Persian: a keepsake, the thing that remains"* + *"letters between
+  you and who you were" / "the pages that find you again."*
+- **Brand vs. code:** user-facing copy now says **Yadegar**. Internal code
+  identifiers are intentionally left as "still" (no user impact, avoids risky
+  churn): the `@workspace/still` package + `artifacts/still` dir, the `useStill`
+  store / `StillProvider`, the engine's `/still/extract` + `/still/score`
+  routes, the `still_results` cache table, and the GitHub repo name. APP_URL at
+  deploy = the yadegarjournal.com domain.
 
 ## The encryption tension (important)
 Still's engine must read the user's words (it sends them to Anthropic to choose

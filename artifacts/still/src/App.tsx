@@ -38,7 +38,7 @@ const queryClient = new QueryClient();
 function LoadingScreen() {
   return (
     <div className="min-h-[100dvh] flex items-center justify-center">
-      <span className="text-faint-ink animate-pulse">Still…</span>
+      <span className="text-faint-ink animate-pulse">Yadegar…</span>
     </div>
   );
 }

@@ -11,7 +11,7 @@ type Block =
   | { kind: "line"; text: string }
   | { kind: "quote"; text: string }
   | { kind: "whisper"; lines: string[] }
-  | { kind: "still" }; // "And perhaps that is why I called it Still."
+  | { kind: "reveal" }; // the name reveal — "...I called this Yadegar."
 
 const NOTE: Block[] = [
   { kind: "line", text: "When I was a child, every year I got a new journal." },
@@ -186,7 +186,7 @@ const NOTE: Block[] = [
   },
   {
     kind: "line",
-    text: "I think that feeling is what led me to build Still.",
+    text: "I think that feeling is what led me to build Yadegar.",
   },
   { kind: "line", text: "Not a tool that tells you what your life means." },
   { kind: "line", text: "Not a tool that turns your memories into lessons." },
@@ -203,7 +203,7 @@ const NOTE: Block[] = [
     kind: "line",
     text: "Something waiting quietly for years to be seen again.",
   },
-  { kind: "still" },
+  { kind: "reveal" },
   { kind: "line", text: "Because so much changes." },
   { kind: "line", text: "Countries change." },
   { kind: "line", text: "Jobs change." },
@@ -259,7 +259,7 @@ export default function Why() {
             A note from the maker
           </p>
           <h1 className="font-display text-5xl md:text-6xl text-deep-brown leading-tight mb-14">
-            why I built Still
+            why I built Yadegar
           </h1>
 
           <article className="space-y-5">
@@ -352,13 +352,18 @@ function NoteBlock({
     );
   }
 
-  if (block.kind === "still") {
+  if (block.kind === "reveal") {
     return (
       <Reveal reduce={reduce}>
-        <p className="font-body text-lg md:text-xl text-soft-ink leading-relaxed">
-          And perhaps that is why I called it{" "}
-          <em className="italic text-deep-brown">Still</em>.
-        </p>
+        <div className="space-y-2">
+          <p className="font-body text-lg md:text-xl text-soft-ink leading-relaxed">
+            And perhaps that is why I called this{" "}
+            <em className="italic text-deep-brown">Yadegar</em>.
+          </p>
+          <p className="font-body text-lg md:text-xl text-soft-ink leading-relaxed">
+            In Persian, it means a keepsake — the thing that remains.
+          </p>
+        </div>
       </Reveal>
     );
   }

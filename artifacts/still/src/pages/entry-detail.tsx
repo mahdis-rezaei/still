@@ -19,7 +19,7 @@ const RESURFACING: {
   value: EntryUpdateResurfacingPreference;
   label: string;
 }[] = [
-  { value: "normal", label: "Let Still return this" },
+  { value: "normal", label: "Let Yadegar return this" },
   { value: "more_often", label: "Return this more often" },
   { value: "never", label: "Never return this automatically" },
 ];
@@ -259,7 +259,7 @@ export default function EntryDetail() {
               <div className="mt-14 pt-8 border-t border-border/60 space-y-8">
                 <div>
                   <p className="font-sans text-xs uppercase tracking-[0.18em] text-faint-ink mb-3">
-                    When Still may return this
+                    When Yadegar may return this
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {RESURFACING.map((opt) => (

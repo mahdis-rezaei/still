@@ -61,11 +61,11 @@ export default function Privacy() {
 
         <div className="space-y-5 font-body text-lg text-soft-ink leading-relaxed">
           <p>
-            Still keeps your journals so you can write, return, and reflect across
+            Yadegar keeps your journals so you can write, return, and reflect across
             time. They are private to your account.
           </p>
           <p>
-            To find what's worth returning to, Still reads your words with an AI
+            To find what's worth returning to, Yadegar reads your words with an AI
             model — privately, only to choose a page to bring back. Your writing is
             never used to train it, never shown to anyone else, and never sold.
           </p>

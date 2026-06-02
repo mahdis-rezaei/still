@@ -198,7 +198,7 @@ export default function Import() {
         ) : (
           <>
             <h1 className="font-display text-4xl text-deep-brown mb-2">
-              Bring old pages into Still
+              Bring old pages into Yadegar
             </h1>
             <p className="font-body text-soft-ink mb-8">
               Paste a journal archive or upload a .txt or .md file. You can review
@@ -209,7 +209,7 @@ export default function Import() {
               value={raw}
               onChange={(e) => setRaw(e.target.value)}
               placeholder={
-                "Paste your journal here. Dates like [2018-03-29], 2018-03-29, or March 29, 2018 help Still split the pages."
+                "Paste your journal here. Dates like [2018-03-29], 2018-03-29, or March 29, 2018 help Yadegar split the pages."
               }
               className="w-full min-h-[320px] bg-surface border border-border rounded-xl p-5 text-base text-ink font-body leading-relaxed placeholder:text-faint-ink focus:outline-none focus:border-accent-sepia resize-none"
               data-testid="input-import-text"

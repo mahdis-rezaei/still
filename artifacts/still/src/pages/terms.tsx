@@ -35,16 +35,16 @@ export default function Terms() {
           will be finalized before a public launch.
         </div>
 
-        <Section title="Using Still">
+        <Section title="Using Yadegar">
           <p>
             By creating an account you agree to these terms. If you don't agree,
-            please don't use Still.
+            please don't use Yadegar.
           </p>
         </Section>
 
-        <Section title="What Still is — and isn't">
+        <Section title="What Yadegar is — and isn't">
           <p>
-            Still is a reflective journaling companion. It is{" "}
+            Yadegar is a reflective journaling companion. It is{" "}
             <strong>not</strong> a medical, mental-health, therapy, or crisis
             service, and nothing it surfaces is professional advice.
           </p>
@@ -52,7 +52,7 @@ export default function Terms() {
 
         <Section title="Early access">
           <p>
-            Still is provided "as is," without warranties, while in active
+            Yadegar is provided "as is," without warranties, while in active
             development. Features may change, and while we work hard to protect
             your writing, please keep your own copies of anything irreplaceable.
           </p>
@@ -67,14 +67,14 @@ export default function Terms() {
 
         <Section title="Acceptable use">
           <p>
-            Use Still for your own journaling. Don't attempt to break, abuse, or
+            Use Yadegar for your own journaling. Don't attempt to break, abuse, or
             overload the service, or use it to harm others.
           </p>
         </Section>
 
         <Section title="Your words are yours">
           <p>
-            You own everything you write. You grant Still only the limited
+            You own everything you write. You grant Yadegar only the limited
             permission needed to store and process your content to provide the
             service (including the AI processing described in our Privacy Policy).
             We claim no ownership of your writing.
@@ -90,7 +90,7 @@ export default function Terms() {
 
         <Section title="Liability">
           <p>
-            To the extent allowed by law, Still is not liable for indirect or
+            To the extent allowed by law, Yadegar is not liable for indirect or
             incidental damages arising from use of an early-access product.
           </p>
         </Section>

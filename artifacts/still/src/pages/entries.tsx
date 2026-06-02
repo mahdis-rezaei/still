@@ -135,7 +135,7 @@ export default function Entries() {
       </div>
 
       <p className="text-lg text-soft-ink mb-8 leading-relaxed">
-        Keep your pages here. They stay between visits. Write one, or paste a batch — Still reads across all of them when you're ready.
+        Keep your pages here. They stay between visits. Write one, or paste a batch — Yadegar reads across all of them when you're ready.
       </p>
 
       {/* Mode toggle */}
@@ -226,7 +226,7 @@ export default function Entries() {
         <span className="text-xs font-sans text-faint-ink">
           {list.length === 0
             ? "Add a page or two first."
-            : `Still will read across all ${list.length} ${list.length === 1 ? "page" : "pages"}.`}
+            : `Yadegar will read across all ${list.length} ${list.length === 1 ? "page" : "pages"}.`}
         </span>
       </div>
 

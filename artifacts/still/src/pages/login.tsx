@@ -84,14 +84,14 @@ export default function Login() {
               className="text-center max-w-[640px]"
             >
               <h1 className="font-display text-7xl md:text-8xl text-deep-brown leading-none mb-6">
-                Still
+                Yadegar
               </h1>
               <p className="font-body italic text-lg md:text-xl text-accent-sepia mb-7">
-                still — quiet enough to hear what stayed
+                yadegar — Persian: a keepsake, the thing that remains
               </p>
               <p className="font-body text-lg md:text-xl text-soft-ink leading-relaxed mb-12 max-w-[34rem] mx-auto">
                 A companion to a lifelong journaling practice. It reads across
-                your years and returns one thing worth remembering today —
+                your years and brings back one page worth returning to today —
                 gently, and always in your own words.
               </p>
 
@@ -211,7 +211,7 @@ export default function Login() {
 
               <p className="text-center text-soft-ink mt-6 font-body">
                 {view === "signin"
-                  ? "New to Still?"
+                  ? "New to Yadegar?"
                   : "Already have an account?"}{" "}
                 <button
                   type="button"

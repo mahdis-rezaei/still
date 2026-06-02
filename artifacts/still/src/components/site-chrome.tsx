@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 
 // A soft, warm field of color washes behind the page — three blurred blobs in
-// Still's palette (sepia, blush, a faint sage), drifting almost imperceptibly.
+// Yadegar's palette (sepia, blush, a faint sage), drifting almost imperceptibly.
 export function AmbientField() {
   return (
     <div className="ambient-field" aria-hidden="true">
@@ -45,7 +45,7 @@ export function AmbientField() {
   );
 }
 
-// A quiet top bar: the wordmark on the left, a single "Why Still" link on the
+// A quiet top bar: the wordmark on the left, a single "Why Yadegar" link on the
 // right. Used on the public landing and the maker's note.
 export function SiteNav({ showWhy = true }: { showWhy?: boolean }) {
   return (
@@ -55,7 +55,7 @@ export function SiteNav({ showWhy = true }: { showWhy?: boolean }) {
         className="font-display text-xl text-deep-brown tracking-tight"
         data-testid="link-wordmark"
       >
-        Still
+        Yadegar
       </Link>
       {showWhy && (
         <Link
@@ -63,7 +63,7 @@ export function SiteNav({ showWhy = true }: { showWhy?: boolean }) {
           className="font-sans text-xs uppercase tracking-[0.18em] text-soft-ink hover:text-ink transition-colors"
           data-testid="link-why"
         >
-          Why Still
+          Why Yadegar
         </Link>
       )}
     </nav>
