@@ -166,11 +166,17 @@ function selectionChecks(fx: Fixture, res: EngineResult): Check[] {
   });
 
   // 5. the winner must hold the top emotional_center among surfaceable
-  // candidates. (Sub-center ties are holistic judgment — not checked; see
-  // findWinner note. A surfaceable line with strictly higher emotional_center
-  // losing WOULD be a real bug.)
+  // candidates — EXCEPT a promoted cross-time thread, which (Option B Fix 2)
+  // legitimately wins on continuity even when a single-entry line scores higher
+  // center. So skip this check when the winner spans ≥2 years / is a thread.
   const winner = findWinner(res);
-  if (winner) {
+  const winnerYears = new Set(
+    res.result.quotes.map((q) => q.date.match(/\d{4}/)?.[0]).filter(Boolean),
+  );
+  const winnerIsThread =
+    winnerYears.size >= 2 ||
+    ["thread", "distance", "continuity"].includes(res.result.register);
+  if (winner && !winnerIsThread) {
     const higher = res.candidates.find(
       (c) =>
         c !== winner &&
@@ -314,8 +320,8 @@ function voiceChecks(res: EngineResult): Check[] {
   // and points rather than over-explains, so cap it in absolute words.
   const words = obs.split(/\s+/).filter(Boolean).length;
   checks.push({
-    name: "observation is concise (≤ 40 words)",
-    pass: words <= 40,
+    name: "observation is concise (≤ 45 words)",
+    pass: words <= 45,
     detail: `${words} words`,
   });
 

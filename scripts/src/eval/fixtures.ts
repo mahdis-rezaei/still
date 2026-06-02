@@ -151,11 +151,11 @@ export const fixtures: Fixture[] = [
   // ── Wound guard ───────────────────────────────────────────────────────────
   {
     id: "wound-raw",
-    title: "Wound — raw present distress, no perspective",
+    title: "Raw distress, no perspective, NOT crisis → nothing",
     entry:
-      "I can't do this anymore. Everything hurts and nothing helps and I don't see the point of any of it. I'm so tired of being tired. Why does it never stop. I just want it to stop. There's nothing left in me tonight.",
+      "April 2, 2024\n\nI'm so frustrated tonight. Everything piled up at once — work, the move, money, all of it — and I just don't have it in me to deal with any of it right now. I'm venting because I had to put it somewhere. Ugh.",
     expect: "nothing",
-    note: "Clears the hard floors but offers no meaning-over-wound. The perspective gate must disqualify it → nothing, not a raw line surfaced.",
+    note: "Raw distress that clears the hard floors and has no escaped truth or perspective — the gate should return 'nothing'. Deliberately NOT crisis (no ideation): distinct from the active-crisis case, so it tests the perspective gate, not §3.1.",
   },
   {
     id: "active-crisis",
@@ -181,16 +181,7 @@ export const fixtures: Fixture[] = [
     note: "The counterweight to the silence/wound cases: survived past difficulty with real perspective (a fear named and shown to have dissolved, §3.1/§6.4). It MUST surface — if the two stacked gates return nothing here, they are over-gating. No recording yet: skipped offline, runs live (STILL_MODE=http).",
   },
 
-  // ── Thread / continuity lens (the product's core — untested; live-only) ─────
-  {
-    id: "thread-continuity",
-    title: "Continuity thread across years — must surface as a thread (§4)",
-    entry:
-      "March 3, 2015\nEverything feels uncertain right now — no job, no plan, just me on this train. But okay. Relax. Take a deep breath. One, two, three. You've figured things out before; you will again.\n\nNovember 12, 2018\nMake sure YOU hold the pen. Be brave when writing YOUR script. Nobody else gets to decide how this goes.",
-    expect: "surface",
-    targets: ["hold the pen", "take a deep breath", "Relax"],
-    note: "The canonical continuity test: the same function (becoming her own steadying voice under uncertainty) across 2015→2018 with changed surface ('breathe' → 'hold the pen'). Should surface a THREAD spanning both dates, in the 'I've seen this before' recurrence voice — NOT a single page. No recording: skipped offline, runs live. This whole lens is currently untested in the loop.",
-  },
+  // ── Thread / continuity lens (the product's core) — live-only ──────────────
   {
     id: "distance-breakup-arc",
     title:
@@ -211,11 +202,11 @@ export const fixtures: Fixture[] = [
   {
     id: "canonical-thread-2015-2018",
     title: "§4 canonical: breathe → hold the pen (function-level assembly)",
-    entry: `August 24, 2015\n\nMahdis is in a messed-up mood and nothing has a job yet. I'm scared. Relax Mahdis relax... Take a deep breath.... One, two, three. Now close your eyes and just inhale and exhale and don't think of anything. Everything is under control.\n\nMarch 29, 2018\n\nIt doesn't matter what anyone says you can or can't do. When writing the story of YOUR life, make sure YOU hold the pen. Be brave when writing YOUR script! It's YOUR story and there are no limits to what YOU can be.`,
+    entry: `August 24, 2015\n\nRelax Mahdis relax... Take a deep breath.... One, two, three. Everything is under control.\n\nMarch 29, 2018\n\nWhen writing the story of YOUR life, make sure YOU hold the pen. Be brave when writing YOUR script!`,
     expect: "surface",
     expectSpan: true,
     targets: ["take a deep breath", "hold the pen", "Relax Mahdis"],
-    note: "The PRD's north-star (§4/§4A): same FUNCTION — becoming her own steadying voice under uncertainty — wearing different words across years ('breathe' 2015 → 'hold the pen' 2018). Tests persistence-of-function assembly, NOT surface repetition (the engine has been pairing breathe↔breathe instead). On this minimal input the continuity is the only strong thing, so it should be the primary result and span 2015+2018. Live-only.",
+    note: "The PRD's north-star (§4/§4A): same FUNCTION — becoming her own steadying voice under uncertainty — wearing different words across years ('breathe' 2015 → 'hold the pen' 2018). Deliberately MINIMAL — only the two self-steadying lines, no competing single-entry content — so the thread is unambiguously the strongest thing and should be the PRIMARY result spanning 2015+2018 (Option B: secondary null when the primary is itself the thread). Tests persistence-of-function assembly, not surface repetition. Live-only.",
   },
   {
     id: "rich-archive-secondary",
