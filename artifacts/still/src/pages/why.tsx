@@ -2,210 +2,229 @@ import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { AmbientField, SiteNav } from "@/components/site-chrome";
 
-// The maker's note — Mahdis's own words. Treated as content, set with care:
-// flowing paragraphs, the short refrains grouped as quiet litanies, and the
-// Sohrab Sepehri line as a pull-quote.
+// The maker's note — Mahdis's own words, in her own line-by-line cadence.
+// Set as a prose-poem: each line its own quiet beat. Two moments are given
+// special tenderness — the Sohrab Sepehri line (a pull-quote) and the
+// whispered inner voices (set apart, italic).
 
 type Block =
-  | { kind: "p"; text: string }
-  | { kind: "lines"; items: string[] }
-  | { kind: "quote"; text: string };
+  | { kind: "line"; text: string }
+  | { kind: "quote"; text: string }
+  | { kind: "whisper"; lines: string[] }
+  | { kind: "still" }; // "And perhaps that is why I called it Still."
 
 const NOTE: Block[] = [
-  { kind: "p", text: "When I was a child, every year I got a new journal." },
+  { kind: "line", text: "When I was a child, every year I got a new journal." },
+  { kind: "line", text: "Some were simple notebooks." },
+  { kind: "line", text: "Some had little locks on them." },
+  { kind: "line", text: "I loved those ones." },
   {
-    kind: "p",
-    text: "Some were simple notebooks. Some had little locks on them. I loved those ones. They made me feel like I had a tiny world that belonged only to me.",
+    kind: "line",
+    text: "I remember holding the tiny key in my hand and feeling like I had a secret world that belonged only to me.",
   },
-  { kind: "p", text: "I wrote about everything." },
+  { kind: "line", text: "Inside those pages lived everything." },
+  { kind: "line", text: "School." },
+  { kind: "line", text: "Friends." },
+  { kind: "line", text: "Crushes." },
+  { kind: "line", text: "Big dreams." },
+  { kind: "line", text: "Very dramatic heartbreaks." },
   {
-    kind: "lines",
-    items: [
-      "School.",
-      "Things I was learning.",
-      "People I loved.",
-      "Questions I couldn't answer.",
-      "Big dreams.",
-      "Small heartbreaks.",
-      "Things I was excited about.",
-      "Things I was scared to say out loud.",
-    ],
+    kind: "line",
+    text: "Questions about life that I was certain nobody else had ever asked before.",
   },
-  { kind: "p", text: "Over time, journaling became my companion." },
+  { kind: "line", text: "I wrote when I was excited." },
+  { kind: "line", text: "I wrote when I was confused." },
+  { kind: "line", text: "I wrote when I was lonely." },
   {
-    kind: "p",
-    text: "It followed me through childhood, through adolescence, through first loves and first heartbreaks, through countries, languages, friendships, careers, and all the different versions of myself I became along the way.",
-  },
-  { kind: "p", text: "And there were many versions." },
-  {
-    kind: "lines",
-    items: [
-      "A ten-year-old with big dreams.",
-      "A teenager trying to understand herself.",
-      "A young woman leaving home.",
-      "Someone learning to live in new places.",
-      "Someone trying to build a life.",
-      "Someone trying to find home.",
-      "Someone learning, over and over again, how to begin again.",
-    ],
-  },
-  { kind: "p", text: "Some of those journals are gone now." },
-  {
-    kind: "p",
-    text: "My childhood notebooks were lost in moves. Some were thrown away by mistake. Later, when I moved again, other diaries disappeared too.",
+    kind: "line",
+    text: "I wrote when I had nowhere else to put what I was feeling.",
   },
   {
-    kind: "p",
-    text: "Nobody meant harm. Life was moving. Boxes were being packed. There was not enough space for everything.",
+    kind: "line",
+    text: "I didn't know it then, but I was building a conversation with myself.",
+  },
+  { kind: "line", text: "One that would last decades." },
+  {
+    kind: "line",
+    text: "Over the years, the journals followed me everywhere.",
+  },
+  { kind: "line", text: "Across countries." },
+  { kind: "line", text: "Across languages." },
+  { kind: "line", text: "Across versions of myself." },
+  { kind: "line", text: "A little girl in Iran." },
+  { kind: "line", text: "A teenager trying to understand the world." },
+  { kind: "line", text: "A young woman leaving home." },
+  { kind: "line", text: "An immigrant trying to build a life." },
+  { kind: "line", text: "Someone falling in love." },
+  { kind: "line", text: "Someone getting her heart broken." },
+  {
+    kind: "line",
+    text: "Someone sitting on a train, writing because there was too much happening inside her chest.",
   },
   {
-    kind: "p",
-    text: "But sometimes I think about those journals and feel a quiet ache.",
+    kind: "line",
+    text: "Someone awake at three in the morning asking questions she couldn't answer.",
   },
-  { kind: "p", text: "Not because they were perfectly written." },
+  { kind: "line", text: "And through all of it, I kept writing." },
+  { kind: "line", text: "Some of those journals are gone now." },
+  { kind: "line", text: "Lost during moves." },
+  { kind: "line", text: "Thrown away by mistake." },
   {
-    kind: "p",
-    text: "They were probably messy, dramatic, emotional, hopeful, confused, full of terrible handwriting and strong opinions.",
+    kind: "line",
+    text: "Left behind somewhere between one version of my life and the next.",
   },
-  { kind: "p", text: "But they held people I can no longer fully reach." },
+  { kind: "line", text: "Nobody meant harm." },
+  { kind: "line", text: "Life was happening." },
+  { kind: "line", text: "Boxes were being packed." },
+  { kind: "line", text: "There was never enough room for everything." },
   {
-    kind: "p",
-    text: "A lot of my childhood has been forgotten simply because life kept moving forward.",
+    kind: "line",
+    text: "But sometimes I think about those notebooks and feel a quiet ache.",
   },
+  { kind: "line", text: "Not because I think they were brilliant." },
   {
-    kind: "p",
-    text: "I have changed so much that sometimes it is hard to remember what those earlier versions of me were thinking, feeling, hoping for, or afraid of.",
+    kind: "line",
+    text: "Most of them were probably messy and dramatic and full of terrible handwriting.",
   },
-  { kind: "p", text: "And I wish I could visit them again." },
+  { kind: "line", text: "But they held people I can no longer fully reach." },
+  { kind: "line", text: "A twelve-year-old me." },
+  { kind: "line", text: "A seventeen-year-old me." },
+  { kind: "line", text: "A twenty-one-year-old me." },
   {
-    kind: "p",
-    text: "I have lived in many places since then. Iran. New Delhi. Malaysia. Rome. London. New York. Los Angeles.",
+    kind: "line",
+    text: "Entire worlds that existed for a little while and then disappeared into time.",
   },
-  { kind: "p", text: "Each place gave me a different version of myself." },
-  { kind: "p", text: "Each place left something behind." },
+  { kind: "line", text: "I wish I could sit beside them sometimes." },
+  { kind: "line", text: "Just for an afternoon." },
+  { kind: "line", text: "Not to change anything." },
+  { kind: "line", text: "Just to listen." },
+  { kind: "line", text: "I have lived in many places since then." },
+  { kind: "line", text: "Iran." },
+  { kind: "line", text: "New Delhi." },
+  { kind: "line", text: "Malaysia." },
+  { kind: "line", text: "Rome." },
+  { kind: "line", text: "London." },
+  { kind: "line", text: "New York." },
+  { kind: "line", text: "Los Angeles." },
+  { kind: "line", text: "Each place changed me." },
+  { kind: "line", text: "Each place left something behind." },
   {
-    kind: "p",
-    text: "And after enough years, enough moves, enough becoming, you realize how easy it is to lose touch with your own story.",
-  },
-  { kind: "p", text: "So I kept writing." },
-  {
-    kind: "lines",
-    items: [
-      "In journals.",
-      "In notebooks.",
-      "In iPhone Notes.",
-      "In Google Docs.",
-      "In emails to myself.",
-      "In the margins of books.",
-    ],
-  },
-  {
-    kind: "lines",
-    items: [
-      "Sometimes at a desk.",
-      "Sometimes on a train.",
-      "Sometimes at three in the morning when something inside me needed somewhere to go.",
-    ],
-  },
-  { kind: "p", text: "Every Christmas, I still buy myself a new journal." },
-  {
-    kind: "p",
-    text: "Over the years, I started buying them for my siblings and close friends too.",
+    kind: "line",
+    text: "And after enough years, enough moves, enough becoming, I started noticing something.",
   },
   {
-    kind: "p",
+    kind: "line",
+    text: "It is surprisingly easy to lose touch with your own story.",
+  },
+  { kind: "line", text: "So I kept writing." },
+  { kind: "line", text: "In journals." },
+  { kind: "line", text: "In notebooks." },
+  { kind: "line", text: "In iPhone Notes." },
+  { kind: "line", text: "In Google Docs." },
+  { kind: "line", text: "In emails to myself." },
+  { kind: "line", text: "In the margins of books." },
+  { kind: "line", text: "Sometimes at a desk." },
+  { kind: "line", text: "Sometimes on a plane." },
+  {
+    kind: "line",
+    text: "Sometimes in a bathtub before sunrise, holding a cup of coffee and trying to understand why my heart felt heavy.",
+  },
+  {
+    kind: "line",
+    text: "Every Christmas, I still buy myself a new journal.",
+  },
+  {
+    kind: "line",
+    text: "Over the years I started buying them for my siblings and close friends too.",
+  },
+  {
+    kind: "line",
     text: "A journal has always felt like one of the most loving gifts you can give someone.",
   },
-  { kind: "p", text: "Not because it gives answers." },
-  { kind: "p", text: "Because it gives a place for questions to live." },
+  { kind: "line", text: "Not because it gives answers." },
+  { kind: "line", text: "Because it says:" },
   {
-    kind: "p",
+    kind: "whisper",
+    lines: ["Here.", "This is a place where all of you gets to exist."],
+  },
+  {
+    kind: "line",
     text: "Years ago, I kept returning to a poem by Sohrab Sepehri.",
   },
-  { kind: "p", text: "I copied parts of it into my journals again and again." },
-  { kind: "p", text: "One line stayed with me:" },
-  { kind: "quote", text: "We must wash our eyes and see differently." },
-  { kind: "p", text: "At the time, I thought it was a poem about the world." },
-  { kind: "p", text: "Now I wonder if it is also a poem about memory." },
   {
-    kind: "p",
+    kind: "line",
+    text: "I copied parts of it into my journals again and again.",
+  },
+  { kind: "line", text: "One line stayed with me:" },
+  { kind: "quote", text: "We must wash our eyes and see differently." },
+  {
+    kind: "line",
+    text: "At the time, I thought it was a poem about the world.",
+  },
+  { kind: "line", text: "Now I wonder if it is also a poem about memory." },
+  {
+    kind: "line",
     text: "Because something strange happens when you return to an old journal.",
   },
-  { kind: "p", text: "The page has not changed." },
-  { kind: "p", text: "The words have not changed." },
-  { kind: "p", text: "But you have." },
+  { kind: "line", text: "The page has not changed." },
+  { kind: "line", text: "The words have not changed." },
+  { kind: "line", text: "But you have." },
+  { kind: "line", text: "You find a sentence you forgot you wrote." },
+  { kind: "line", text: "You meet a younger version of yourself." },
+  { kind: "line", text: "You notice a fear that no longer owns you." },
+  { kind: "line", text: "A dream that somehow survived." },
+  { kind: "line", text: "A question that followed you across years." },
+  { kind: "line", text: "Sometimes your heart breaks a little." },
+  { kind: "line", text: "Sometimes you laugh." },
   {
-    kind: "p",
-    text: "You read a sentence you wrote ten years ago and notice something you couldn't see back then.",
+    kind: "line",
+    text: "Sometimes you want to reach through time and hug the person who wrote those words.",
   },
   {
-    kind: "lines",
-    items: [
-      "A fear that no longer owns you.",
-      "A dream that somehow survived.",
-      "A younger version of yourself trying so hard to be brave.",
-      "A page where you were lost, and still speaking to yourself with kindness.",
-    ],
-  },
-  { kind: "p", text: "Sometimes rereading an old journal hurts." },
-  { kind: "p", text: "Sometimes it steadies you." },
-  { kind: "p", text: "Sometimes it reminds you how far you have come." },
-  {
-    kind: "p",
-    text: "And sometimes it simply reminds you that you were there.",
+    kind: "line",
+    text: "And sometimes you realize she was doing much better than she thought.",
   },
   {
-    kind: "lines",
-    items: [
-      "That what you felt was real.",
-      "That what you hoped for mattered.",
-      "That the person who wrote those words still belongs to you.",
-    ],
+    kind: "line",
+    text: "I think that feeling is what led me to build Still.",
   },
-  { kind: "p", text: "That feeling is what led me to build Still." },
-  { kind: "p", text: "Most journaling tools remember what happened." },
+  { kind: "line", text: "Not a tool that tells you what your life means." },
+  { kind: "line", text: "Not a tool that turns your memories into lessons." },
+  { kind: "line", text: "Just a companion." },
   {
-    kind: "p",
-    text: "I wanted something that could help me remember what endured.",
+    kind: "line",
+    text: "Something that can sit beside years of journals and gently place a page back in front of you.",
   },
-  { kind: "p", text: "Not by turning my life into lessons." },
-  { kind: "p", text: "Not by summarizing who I am." },
+  { kind: "line", text: "A line." },
+  { kind: "line", text: "A memory." },
+  { kind: "line", text: "A question." },
+  { kind: "line", text: "A version of yourself." },
   {
-    kind: "p",
-    text: "But by helping me reconnect with the pages I had already written.",
+    kind: "line",
+    text: "Something waiting quietly for years to be seen again.",
+  },
+  { kind: "still" },
+  { kind: "line", text: "Because so much changes." },
+  { kind: "line", text: "Countries change." },
+  { kind: "line", text: "Jobs change." },
+  { kind: "line", text: "Relationships change." },
+  { kind: "line", text: "Dreams change." },
+  { kind: "line", text: "We change." },
+  {
+    kind: "line",
+    text: "And yet, when I return to my journals, I almost always find something that is still there.",
+  },
+  { kind: "line", text: "A hope." },
+  { kind: "line", text: "A fear." },
+  { kind: "line", text: "A question." },
+  { kind: "line", text: "A way of speaking to myself." },
+  { kind: "line", text: "A voice saying:" },
+  {
+    kind: "whisper",
+    lines: ["Hi my dear one.", "Come sit next to me.", "I'm here."],
   },
   {
-    kind: "lines",
-    items: [
-      "The questions.",
-      "The memories.",
-      "The dreams.",
-      "The fears.",
-      "The promises.",
-      "The younger versions of myself still waiting inside those notebooks and notes.",
-    ],
-  },
-  { kind: "p", text: "Still is a companion for lifelong journaling." },
-  {
-    kind: "p",
-    text: "It looks across years of writing and gently brings something back.",
-  },
-  {
-    kind: "lines",
-    items: [
-      "A line.",
-      "A memory.",
-      "A question.",
-      "A feeling.",
-      "A version of you.",
-      "Something that may have been waiting quietly for years.",
-    ],
-  },
-  { kind: "p", text: "Because some journals are lost forever." },
-  { kind: "p", text: "Some versions of ourselves grow quiet." },
-  { kind: "p", text: "But the pages we still have can continue speaking." },
-  {
-    kind: "p",
+    kind: "line",
     text: "And sometimes all it takes is one old sentence to remember who you were, how you felt, and how far you have come.",
   },
 ];
@@ -218,7 +237,7 @@ export default function Why() {
       <AmbientField />
       <SiteNav showWhy={false} />
 
-      <main className="flex-1 w-full max-w-[640px] mx-auto px-6 py-16 md:py-24">
+      <main className="flex-1 w-full max-w-[620px] mx-auto px-6 py-16 md:py-24">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -231,7 +250,7 @@ export default function Why() {
             why I built Still
           </h1>
 
-          <article className="space-y-6">
+          <article className="space-y-4">
             {NOTE.map((block, i) => (
               <NoteBlock key={i} block={block} first={i === 0} />
             ))}
@@ -259,7 +278,7 @@ export default function Why() {
 function NoteBlock({ block, first }: { block: Block; first: boolean }) {
   if (block.kind === "quote") {
     return (
-      <blockquote className="my-10 text-center">
+      <blockquote className="my-12 text-center">
         <p className="font-display italic text-2xl md:text-3xl text-deep-brown leading-snug">
           “{block.text}”
         </p>
@@ -267,13 +286,13 @@ function NoteBlock({ block, first }: { block: Block; first: boolean }) {
     );
   }
 
-  if (block.kind === "lines") {
+  if (block.kind === "whisper") {
     return (
-      <div className="border-l border-accent-sepia/30 pl-5 space-y-2 my-1">
-        {block.items.map((line, i) => (
+      <div className="my-10 text-center space-y-1.5">
+        {block.lines.map((line, i) => (
           <p
             key={i}
-            className="font-body text-lg md:text-xl text-soft-ink leading-snug"
+            className="font-body italic text-xl md:text-2xl text-deep-brown leading-snug"
           >
             {line}
           </p>
@@ -282,7 +301,16 @@ function NoteBlock({ block, first }: { block: Block; first: boolean }) {
     );
   }
 
-  // Paragraph — the opening one sits a shade darker to draw the reader in.
+  if (block.kind === "still") {
+    return (
+      <p className="font-body text-lg md:text-xl text-soft-ink leading-relaxed">
+        And perhaps that is why I called it{" "}
+        <em className="italic text-deep-brown">Still</em>.
+      </p>
+    );
+  }
+
+  // A line — the opening one sits a shade darker to draw the reader in.
   return (
     <p
       className={
