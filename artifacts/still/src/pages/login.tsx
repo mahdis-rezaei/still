@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { useLocation, useSearch } from "wouter";
+import { Link, useLocation, useSearch } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { AmbientField, SiteNav } from "@/components/site-chrome";
@@ -241,8 +241,17 @@ export default function Login() {
       </main>
 
       {!isForm && (
-        <footer className="text-center pb-8 font-sans text-xs text-faint-ink">
-          Offer the meaning, never push the moment.
+        <footer className="text-center pb-8 font-sans text-xs text-faint-ink space-y-2">
+          <p>Offer the meaning, never push the moment.</p>
+          <p className="space-x-3">
+            <Link href="/privacy-policy" className="hover:text-soft-ink transition-colors">
+              Privacy
+            </Link>
+            <span aria-hidden>·</span>
+            <Link href="/terms" className="hover:text-soft-ink transition-colors">
+              Terms
+            </Link>
+          </p>
         </footer>
       )}
     </div>

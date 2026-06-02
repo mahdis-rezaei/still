@@ -84,6 +84,24 @@ export default function Privacy() {
           </p>
         </div>
 
+        <p className="mt-6 font-sans text-sm text-soft-ink">
+          Read our{" "}
+          <Link
+            href="/privacy-policy"
+            className="text-accent-sepia hover:text-deep-brown underline underline-offset-2"
+          >
+            Privacy Policy
+          </Link>{" "}
+          and{" "}
+          <Link
+            href="/terms"
+            className="text-accent-sepia hover:text-deep-brown underline underline-offset-2"
+          >
+            Terms
+          </Link>
+          .
+        </p>
+
         <div className="mt-12 space-y-8">
           <div>
             <button

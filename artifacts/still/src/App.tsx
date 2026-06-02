@@ -19,6 +19,8 @@ import Result from "@/pages/result";
 import History from "@/pages/history";
 import Login from "@/pages/login";
 import Why from "@/pages/why";
+import PrivacyPolicy from "@/pages/privacy-policy";
+import Terms from "@/pages/terms";
 import Today from "@/pages/today";
 import Library from "@/pages/library";
 import EntryDetail from "@/pages/entry-detail";
@@ -98,6 +100,8 @@ function Router() {
     <Switch>
       <Route path="/login" component={LoginRoute} />
       <Route path="/why" component={Why} />
+      <Route path="/privacy-policy" component={PrivacyPolicy} />
+      <Route path="/terms" component={Terms} />
       <Route component={ProtectedApp} />
     </Switch>
   );
