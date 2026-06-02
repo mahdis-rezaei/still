@@ -1,0 +1,19 @@
+Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
+(head 4aa9138), same method as before (native GitHub pull / Contents API).
+FRONTEND-ONLY. No database migration, no new dependency.
+
+Only one file changed: artifacts/still/src/pages/why.tsx (the "Why Yadegar"
+maker's-note page — re-set into stanzas/movements with divider rules and calmer
+per-stanza motion; the words are unchanged).
+
+Steps:
+1. Sync so the workspace matches origin (head 4aa9138). Do not edit app code.
+2. pnpm install (no-op).
+3. Rebuild the frontend and RE-PUBLISH the deployment.
+4. Verify on https://yadegarjournal.com/why : the note now reads in grouped
+   movements separated by small dividers (not one endless line-by-line ribbon),
+   with the Sepehri line as a centered pull-quote and the two whispered voices
+   set apart; a thin reading-progress line tracks scroll; it ends with
+   "— Mahdis" and a "Begin →" button.
+
+Report anything that errored. Do not change application code or prompts.
