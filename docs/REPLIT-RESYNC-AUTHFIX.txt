@@ -1,0 +1,16 @@
+Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO (head dbdfac0), using the same method as before (native GitHub pull / Contents API — the git CLI is restricted in this sandbox).
+
+Only three server files changed since your last sync — a one-line auth-scoping fix in each:
+- artifacts/api-server/src/routes/entries.ts
+- artifacts/api-server/src/routes/memories.ts
+- artifacts/api-server/src/routes/imports.ts
+
+There are NO dependency changes and NO database migration needed this time.
+
+After syncing those files, rebuild and restart the api-server.
+
+Then re-test the memory loop and report the result:
+- On Today, click "Bring a page back" and confirm a memory surfaces (or an honest "nothing surfaced this time" message instead of an error).
+- Confirm that a surfaced memory then appears under Returns.
+
+Do not edit application code or prompts. If something still errors, tell me the exact error and I'll fix it in GitHub.
