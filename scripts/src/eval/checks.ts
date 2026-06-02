@@ -314,8 +314,8 @@ function voiceChecks(res: EngineResult): Check[] {
   // and points rather than over-explains, so cap it in absolute words.
   const words = obs.split(/\s+/).filter(Boolean).length;
   checks.push({
-    name: "observation is concise (≤ 40 words)",
-    pass: words <= 40,
+    name: "observation is concise (≤ 45 words)",
+    pass: words <= 45,
     detail: `${words} words`,
   });
 

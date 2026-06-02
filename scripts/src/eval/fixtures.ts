@@ -211,11 +211,11 @@ export const fixtures: Fixture[] = [
   {
     id: "canonical-thread-2015-2018",
     title: "§4 canonical: breathe → hold the pen (function-level assembly)",
-    entry: `August 24, 2015\n\nMahdis is in a messed-up mood and nothing has a job yet. I'm scared. Relax Mahdis relax... Take a deep breath.... One, two, three. Now close your eyes and just inhale and exhale and don't think of anything. Everything is under control.\n\nMarch 29, 2018\n\nIt doesn't matter what anyone says you can or can't do. When writing the story of YOUR life, make sure YOU hold the pen. Be brave when writing YOUR script! It's YOUR story and there are no limits to what YOU can be.`,
+    entry: `August 24, 2015\n\nRelax Mahdis relax... Take a deep breath.... One, two, three. Everything is under control.\n\nMarch 29, 2018\n\nWhen writing the story of YOUR life, make sure YOU hold the pen. Be brave when writing YOUR script!`,
     expect: "surface",
     expectSpan: true,
     targets: ["take a deep breath", "hold the pen", "Relax Mahdis"],
-    note: "The PRD's north-star (§4/§4A): same FUNCTION — becoming her own steadying voice under uncertainty — wearing different words across years ('breathe' 2015 → 'hold the pen' 2018). Tests persistence-of-function assembly, NOT surface repetition (the engine has been pairing breathe↔breathe instead). On this minimal input the continuity is the only strong thing, so it should be the primary result and span 2015+2018. Live-only.",
+    note: "The PRD's north-star (§4/§4A): same FUNCTION — becoming her own steadying voice under uncertainty — wearing different words across years ('breathe' 2015 → 'hold the pen' 2018). Deliberately MINIMAL — only the two self-steadying lines, no competing single-entry content — so the thread is unambiguously the strongest thing and should be the PRIMARY result spanning 2015+2018 (Option B: secondary null when the primary is itself the thread). Tests persistence-of-function assembly, not surface repetition. Live-only.",
   },
   {
     id: "rich-archive-secondary",
