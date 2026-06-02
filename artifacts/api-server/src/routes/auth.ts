@@ -16,8 +16,17 @@ import {
   buildGoogleAuthUrl,
   exchangeGoogleCode,
 } from "../lib/auth";
+import { rateLimit, ipKey } from "../lib/rate-limit";
 
 const router = Router();
+
+// Per-IP throttle on credential endpoints to blunt brute-force / signup abuse.
+const credentialLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  keyOf: ipKey,
+  message: "Too many attempts. Please wait a few minutes and try again.",
+});
 
 const OAUTH_STATE_COOKIE = "still_oauth_state";
 
@@ -37,7 +46,7 @@ async function startSession(res: import("express").Response, userId: string) {
 
 // ── Email + password ─────────────────────────────────────────────────────────
 
-router.post("/auth/register", async (req, res): Promise<void> => {
+router.post("/auth/register", credentialLimiter, async (req, res): Promise<void> => {
   const parsed = RegisterBody.safeParse(req.body);
   if (!parsed.success) {
     res
@@ -75,7 +84,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
   }
 });
 
-router.post("/auth/login", async (req, res): Promise<void> => {
+router.post("/auth/login", credentialLimiter, async (req, res): Promise<void> => {
   const parsed = LoginBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Email and password are required" });

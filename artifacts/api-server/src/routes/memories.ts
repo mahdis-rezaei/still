@@ -18,11 +18,21 @@ import {
 } from "@workspace/db";
 import { RunMemoryBody, UpdateMemoryBody } from "@workspace/api-zod";
 import { requireAuth } from "../lib/auth";
+import { rateLimit } from "../lib/rate-limit";
 
 const router = Router();
 // Scope auth to /memories only — a path-less use would 401 the internal,
 // cookieless /still/* engine calls that run through this root-mounted router.
 router.use("/memories", requireAuth);
+
+// /memories/run is the costly path (two LLM calls). Cap per user to protect
+// against runaway cost. requireAuth runs first, so req.userId is set.
+const runLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 30,
+  keyOf: (req) => req.userId ?? "anon",
+  message: "You've brought back many pages just now — give it a little while.",
+});
 
 const ENGINE_BASE = `http://127.0.0.1:${process.env.PORT}/api`;
 const CRISIS_FALLBACK =
@@ -77,7 +87,7 @@ async function callEngine(
 }
 
 // POST /memories/run — the heart of the product.
-router.post("/memories/run", async (req, res): Promise<void> => {
+router.post("/memories/run", runLimiter, async (req, res): Promise<void> => {
   const parsed = RunMemoryBody.safeParse(req.body ?? {});
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid run input" });

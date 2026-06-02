@@ -55,7 +55,11 @@ real domain).
       NOTE: `returned_memories.full_engine_response` (jsonb debug trace) is left
       unencrypted for now — a fast-follow.
 - [ ] Auth completeness: password reset + email verification (needs email).
-- [ ] Rate limiting / per-user quotas (Anthropic cost protection).
+- [x] Rate limiting (in-memory, no deps): per-user cap on /memories/run (the
+      costly LLM path, 30/hr), per-IP throttle on login/register (30 / 15 min),
+      and a per-IP guard on the raw /still/* engine endpoints (60/hr, loopback
+      exempt so the internal /memories/run call is unaffected). `trust proxy` set
+      so req.ip is the real client. (Single-instance; move to Redis if it scales.)
 - [ ] Error monitoring + uptime.
 
 **Phase D — launch**: soft launch to a few trusted people → fix → public.
