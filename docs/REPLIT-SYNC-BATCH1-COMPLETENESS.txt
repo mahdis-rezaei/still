@@ -1,8 +1,8 @@
 Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
-(head e2464b4), same method as before (native GitHub pull / Contents API).
+(head 7d2e73e), same method as before (native GitHub pull / Contents API).
 
-NOTE: this includes an api-server change (request body-size limit), so the
-SERVER process must be restarted/redeployed — a client-only rebuild is not
+NOTE: this range still includes the api-server change (request body-size limit),
+so the SERVER process must be restarted/redeployed — a client-only rebuild is not
 enough.
 
 This single prompt SUPERSEDES the earlier completeness re-sync. None of the
@@ -40,7 +40,11 @@ What's in this publish:
    limit and returned a raw "Payload Too Large" page. The api-server body limit
    is now 10mb, and the import UI shows a friendly message (with "bring it in a
    few chunks" guidance) instead of leaking the raw HTTP error.
-10. Regenerated lib/api-zod + lib/api-client-react from lib/api-spec/openapi.yaml.
+10. Import review browsability: each page can expand to its full text ("Read
+    full page" / "Show less"), and year tabs (All / 2026 / … / Undated) filter
+    the review to one year at a time. The year filter is a view only — "Keep"
+    still keeps every checked page across all years.
+11. Regenerated lib/api-zod + lib/api-client-react from lib/api-spec/openapi.yaml.
 
 Steps:
 1. SYNC the code to origin (head 51e8f62). Do not edit app code.
@@ -73,6 +77,8 @@ Steps:
    - Large paste: paste a very long archive (hundreds of entries) -> it should
      reach the review screen, NOT a 413 "Payload Too Large". (Confirms the
      api-server restarted with the new 10mb body limit.)
+   - In the review: click "Read full page" on an entry -> it expands to the full
+     text; the year tabs along the top switch which year you're scanning.
 
 Report what you ran and anything that looked off. Do not change application code
 or prompts. No DB migration, no secrets, no cron changes for this publish.
