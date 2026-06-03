@@ -243,6 +243,14 @@ export default function Library() {
         ) : (
           <>
             <ContinuityCard />
+            <p className="-mt-3 mb-8">
+              <Link
+                href="/timeline"
+                className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"
+              >
+                See your life as a timeline →
+              </Link>
+            </p>
             {hasSamples && (
               <div className="flex items-center justify-between gap-4 mb-6 rounded-xl border border-accent-sepia/25 bg-[#F3EAD7]/60 px-4 py-3">
                 <p className="font-body text-sm text-deep-brown/80 leading-relaxed">
