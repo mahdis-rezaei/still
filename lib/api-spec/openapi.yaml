@@ -678,6 +678,31 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /memories/look-back:
+    get:
+      operationId: getLookBack
+      tags: [memories]
+      summary: The date-based browse — on this day, around this time, and treasured pages
+      parameters:
+        - name: date
+          in: query
+          required: false
+          description: Target date (YYYY-MM-DD); defaults to the server's today.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Date-based memories grouped by kind (any bucket may be empty)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LookBack"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /memories/{id}:
     get:
       operationId: getMemory
@@ -1331,6 +1356,46 @@ components:
         - favorite
         - yearsAgo
         - onThisExactDay
+    DateMemory:
+      type: object
+      properties:
+        entryId:
+          type: string
+        title:
+          type: ["string", "null"]
+        excerpt:
+          type: string
+        entryDate:
+          type: string
+        favorite:
+          type: boolean
+        yearsAgo:
+          type: integer
+      required:
+        - entryId
+        - excerpt
+        - entryDate
+        - favorite
+        - yearsAgo
+    LookBack:
+      type: object
+      properties:
+        onThisDay:
+          type: array
+          items:
+            $ref: "#/components/schemas/OnThisDayMemory"
+        aroundThisTime:
+          type: array
+          items:
+            $ref: "#/components/schemas/DateMemory"
+        favorites:
+          type: array
+          items:
+            $ref: "#/components/schemas/DateMemory"
+      required:
+        - onThisDay
+        - aroundThisTime
+        - favorites
     MemoryRunInput:
       type: object
       properties:

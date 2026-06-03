@@ -9,7 +9,11 @@ import { UpdateMemoryBody, RunMemoryBody } from "@workspace/api-zod";
 import { requireAuth } from "../lib/auth";
 import { rateLimit } from "../lib/rate-limit";
 import { runMemoryForUser } from "../lib/memory-engine";
-import { onThisDayForUser } from "../lib/on-this-day";
+import {
+  onThisDayForUser,
+  aroundThisTimeForUser,
+  favoritesForUser,
+} from "../lib/on-this-day";
 
 const router = Router();
 // Scope auth to /memories only — a path-less use would 401 the internal,
@@ -82,26 +86,60 @@ router.get("/memories", async (req, res): Promise<void> => {
   }
 });
 
+// Resolve the ?date=YYYY-MM-DD param (the reader's local day) to a UTC-midnight
+// Date, or null when the param is present but malformed. Absent → server today.
+function targetDate(
+  req: { query: { date?: string } },
+): Date | null {
+  const dateParam = req.query.date;
+  if (!dateParam) return new Date();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) return null;
+  const d = new Date(dateParam + "T00:00:00Z");
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
 // GET /memories/on-this-day?date=YYYY-MM-DD — date-based resurfacing (see
 // lib/on-this-day). Declared BEFORE /memories/:id so "on-this-day" is never read
 // as a memory id. The date param is optional and defaults to the server's today;
 // the client passes its local date so the window matches the reader's calendar.
 router.get("/memories/on-this-day", async (req, res): Promise<void> => {
-  const dateParam = (req.query as { date?: string }).date;
-  const target =
-    dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)
-      ? new Date(dateParam + "T00:00:00Z")
-      : new Date();
-  if (Number.isNaN(target.getTime())) {
+  const target = targetDate(req as { query: { date?: string } });
+  if (!target) {
     res.status(400).json({ error: "Invalid date" });
     return;
   }
-
   try {
     res.json(await onThisDayForUser(req.userId!, target));
   } catch (err) {
     req.log.error({ err }, "On this day error");
     res.status(500).json({ error: "Failed to load on-this-day memories" });
+  }
+});
+
+// GET /memories/look-back?date=YYYY-MM-DD — the dedicated browse: all the
+// date-based ways a page returns, gathered. Favorites already shown in the
+// on-this-day / around-this-time buckets are dropped so nothing appears twice.
+router.get("/memories/look-back", async (req, res): Promise<void> => {
+  const target = targetDate(req as { query: { date?: string } });
+  if (!target) {
+    res.status(400).json({ error: "Invalid date" });
+    return;
+  }
+  try {
+    const [onThisDay, aroundThisTime, favoritesRaw] = await Promise.all([
+      onThisDayForUser(req.userId!, target),
+      aroundThisTimeForUser(req.userId!, target),
+      favoritesForUser(req.userId!),
+    ]);
+    const shown = new Set([
+      ...onThisDay.map((m) => m.entryId),
+      ...aroundThisTime.map((m) => m.entryId),
+    ]);
+    const favorites = favoritesRaw.filter((m) => !shown.has(m.entryId));
+    res.json({ onThisDay, aroundThisTime, favorites });
+  } catch (err) {
+    req.log.error({ err }, "Look back error");
+    res.status(500).json({ error: "Failed to load look-back memories" });
   }
 });
 

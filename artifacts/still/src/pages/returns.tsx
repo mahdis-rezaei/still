@@ -44,6 +44,16 @@ export default function Returns() {
           subtitle="Pages Yadegar has brought back. They stay here for you to revisit."
         />
 
+        <p className="-mt-4 mb-8">
+          <Link
+            href="/look-back"
+            className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"
+          >
+            Or look back through your own pages, by date and by the ones you
+            treasured →
+          </Link>
+        </p>
+
         {isLoading ? (
           <p className="font-sans text-sm text-faint-ink">Gathering…</p>
         ) : memories.length === 0 ? (

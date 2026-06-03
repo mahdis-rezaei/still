@@ -16,7 +16,18 @@ export interface OnThisDayMemory {
   onThisExactDay: boolean;
 }
 
-function localTodayISO(): string {
+// "A year ago today" / "7 years ago, around this day" — honest about whether
+// it's the exact calendar day or merely near it. Shared by the Today section
+// and the Look Back browse.
+export function onThisDayLabel(m: {
+  yearsAgo: number;
+  onThisExactDay: boolean;
+}): string {
+  const span = m.yearsAgo === 1 ? "A year ago" : `${m.yearsAgo} years ago`;
+  return m.onThisExactDay ? `${span} today` : `${span}, around this day`;
+}
+
+export function localTodayISO(): string {
   const d = new Date();
   const tz = d.getTimezoneOffset() * 60000;
   return new Date(d.getTime() - tz).toISOString().slice(0, 10);
