@@ -79,3 +79,18 @@ curl -X POST "https://yadegarjournal.com/api/cron/tag-resurface-safety?limit=500
 Repeat until the response shows `considered:0`. Until themes are fully backfilled,
 diversity rotation and the why-today tiebreak run at reduced strength (untagged
 entries can't be theme-muted and don't contribute to `recentThemes`).
+
+## GitHub Actions backups (optional, dormant by default)
+`.github/workflows/cron-tag-resurface-safety.yml` and `cron-run-nudges.yml` are
+version-controlled BACKUPS that hit the same endpoints on a schedule. They are
+NOT the primary scheduler — cron-job.org is. They do nothing until BOTH:
+1. they live on the **default branch (`main`)** — scheduled workflows only run
+   from main; and
+2. a repository secret **`CRON_SECRET`** is set (repo → Settings → Secrets and
+   variables → Actions → New repository secret) matching the live app's value.
+
+GitHub's scheduler is best-effort (delayed under load; auto-disabled after 60
+days of repo inactivity), so it's a safety net, not a replacement — keep
+cron-job.org as primary. Running alongside it is safe: both endpoints are
+idempotent (tagging only drains pending rows; run-nudges skips already-nudged
+users and delivers each capsule once).
