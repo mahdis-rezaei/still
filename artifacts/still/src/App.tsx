@@ -32,6 +32,7 @@ import LookBack from "@/pages/look-back";
 import Timeline from "@/pages/timeline";
 import Search from "@/pages/search";
 import Letter from "@/pages/letter";
+import Calendar from "@/pages/calendar";
 import Import from "@/pages/import";
 import Settings from "@/pages/settings";
 import Privacy from "@/pages/privacy";
@@ -90,6 +91,7 @@ function ProtectedApp() {
       <Route path="/timeline" component={Timeline} />
       <Route path="/search" component={Search} />
       <Route path="/letters/:year" component={Letter} />
+      <Route path="/calendar" component={Calendar} />
       <Route path="/import" component={Import} />
       <Route path="/settings" component={Settings} />
       <Route path="/settings/notifications" component={Notifications} />
