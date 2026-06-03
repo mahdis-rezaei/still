@@ -1,3 +1,12 @@
+*** SUPERSEDED (2026-06-03) — DO NOT ENABLE FROM THIS DOC. ***
+The prompt-clause approach below was empirically falsified on the DEV engine: a
+fixed-candidate-set control showed today's context inflates emotional_center
+(+1.0), so the clause was REMOVED and scoring is now context-blind. Why-today is
+being rebuilt as a post-score code seam. See docs/adr/0001-personalization-seam.md
+for the decision and the staged plan. Enabling the flag does nothing useful until
+the seam (S2b/S2c) lands. The rest of this file is kept for history only.
+
+----------------------------------------------------------------------
 Re-sync to GitHub branch claude/ecstatic-wright-y4npO (head: after the why-today
 commit). NO migration, NO new behavior on deploy — this ships the why-today
 tiebreak DARK (off by default). You turn it on only after a live harness check.

@@ -806,20 +806,11 @@ const ScoreInputSchema = z.object({
     .optional(),
 });
 
-// Dark-shipped flag for the why-today selection tiebreak. Default OFF: the score
-// path is identical to today (same prompt, same cache key). Enable in Replit
-// (WHY_TODAY_TIEBREAK=on) only AFTER a live harness run confirms no regression.
+// Dark-shipped flag for the why-today preference. Default OFF. When ON, scoring
+// is STILL context-blind (above); the flag only enables the post-score code seam
+// in why-today.ts, which re-ranks among near-ties using the model's pure scores.
 function whyTodayEnabled(): boolean {
   return process.env.WHY_TODAY_TIEBREAK === "on";
-}
-
-// The why-today clause — a THIRD soft tiebreak in the exact idiom of CROSS-TIME
-// and FRESH-GRIEF above: subordinate to emotional_center, breaks near-ties only,
-// never lowers the silence bar. Appended to PASS2_SYSTEM only when enabled AND
-// context is present.
-function whyTodayClause(today: string | undefined, themes: string[]): string {
-  const themeStr = themes.length > 0 ? themes.join(", ") : "none recorded";
-  return `WHY-TODAY PREFERENCE (a SOFT TIEBREAK only, among already-surfaceable candidates — the LAST tiebreak, applied after every tiebreak above). Today is ${today ?? "unknown"}; the writer's recent entries have centered on these themes: ${themeStr}. CRITICAL — today's context MUST NOT change any axis score. Score emotional_center, specificity, discovery, contradiction, and worth_returning_to EXACTLY as you would if you did not know today's date or the recent themes: resonance with today is NEVER evidence of emotional_center (or any other axis), and must NOT make a resonant line read as more central, specific, surprising, or worth-returning than it scores on its own merits. Today enters ONLY at the final selection step, as the last tiebreak between candidates whose axis scores ALREADY tie — never as a reason to raise or lower a score. emotional_center stays the master axis and still decides any clear winner. ONLY when two candidates are of COMPARABLE strength (they tie on emotional_center, or are within one point with neither clearly ahead down the remaining axes) you MAY prefer the one that resonates with today — written in the same calendar season, or near this date in an earlier year (an anniversary), or echoing one of today's recent themes. This NEVER overrides a candidate that is clearly stronger on the axes, NEVER lowers the bar for silence (if nothing honest surfaces, still return mode="nothing"), and NEVER manufactures a resonance that isn't there. It is the gentlest nudge between two lines that have each already earned their place — meaning first, the moment only to break a tie.`;
 }
 
 // --- Result cache ---
@@ -1277,24 +1268,16 @@ router.post("/still/score", async (req, res) => {
   // from cache (zero model calls end-to-end). Key on a canonical (sorted-key)
   // form so cache-served candidates — whose key order is changed by jsonb
   // round-tripping — still hash to the same value as the cold run.
+  // Scoring is ALWAYS context-blind. A DEV-engine fixed-candidate-set control
+  // proved that putting today's context in the scoring prompt inflates axis
+  // scores (the resonant candidate's emotional_center rose a clean +1.0 and won
+  // on the MASTER axis rather than as a tiebreak) — so the calibrated scorer must
+  // never see personalization context. The why-today preference is applied AFTER
+  // scoring, deterministically in code, over the model's pure scores (see
+  // why-today.ts and docs/adr/0001-personalization-seam.md). The cache key is
+  // therefore pure candidates — shared with the flag-off path, no churn.
   const payload = JSON.stringify({ candidates: annotated });
-
-  // Why-today: only when the flag is ON and context was sent do we (a) append
-  // the tiebreak clause and (b) fold the context into the cache key. When OFF
-  // (or no context), system + key are exactly as before — no cache churn.
-  const wtActive = whyTodayEnabled() && !!parsed.data.context;
-  const systemPrompt = wtActive
-    ? `${PASS2_SYSTEM}\n\n${whyTodayClause(
-        parsed.data.context?.today,
-        parsed.data.context?.recentThemes ?? [],
-      )}`
-    : PASS2_SYSTEM;
-  const key = cacheKey(
-    "score",
-    wtActive
-      ? canonicalize({ candidates: annotated, whyToday: parsed.data.context })
-      : canonicalize({ candidates: annotated }),
-  );
+  const key = cacheKey("score", canonicalize({ candidates: annotated }));
   const fresh = isFreshRequested(req.query);
 
   try {
@@ -1311,7 +1294,7 @@ router.post("/still/score", async (req, res) => {
       model: MODEL,
       max_tokens: MAX_TOKENS_PASS2,
       temperature: 0,
-      system: systemPrompt,
+      system: PASS2_SYSTEM,
       messages: [{ role: "user", content: payload }],
     });
 
