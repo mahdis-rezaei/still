@@ -1,5 +1,5 @@
 Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
-(head 7d2e73e), same method as before (native GitHub pull / Contents API).
+(head 6306011), same method as before (native GitHub pull / Contents API).
 
 NOTE: this range still includes the api-server change (request body-size limit),
 so the SERVER process must be restarted/redeployed — a client-only rebuild is not
@@ -14,9 +14,9 @@ SCOPE (accurate — please read):
 - NO database migration. The new endpoints reuse the existing journal_entries
   table and the existing source = "sample" value, so the schema is unchanged.
 - NO new secret/env var.
-- There ARE two new npm dependencies (pdfjs-dist, mammoth) for in-browser file
-  parsing — the lockfile is committed, so `pnpm install` must run before the
-  client build.
+- There is one new npm dependency (mammoth) for in-browser .docx parsing — the
+  lockfile is committed, so `pnpm install` must run before the client build.
+  (An earlier pdfjs-dist dep was added then removed — `pnpm install` reconciles.)
 
 What's in this publish:
 1. Library: month + source filters (a calm "filing line": written / imported /
@@ -29,10 +29,11 @@ What's in this publish:
 5. Library: a subtle banner when sample pages are present, with "Remove them."
 6. New backend endpoints: POST /api/entries/samples (idempotent seed) and
    DELETE /api/entries/samples (soft-delete clear).
-7. Import: now accepts PDF and Word/Google-Doc (.docx) files in addition to
-   .txt/.md. Text is extracted IN THE BROWSER (pdf.js / mammoth), so the import
-   API contract is unchanged (still sends rawText). Scanned images / handwriting
-   photos are not supported (the page says so; paste instead).
+7. Import: accepts .txt/.md and .docx (Word / Google Doc export). .docx text is
+   extracted IN THE BROWSER (mammoth, faithful for English + RTL/Farsi), so the
+   import API contract is unchanged (still sends rawText). PDF is intentionally
+   NOT supported — a PDF stores glyphs, not text, so extraction altered words and
+   mangled Farsi; the page explains this and points to .docx / paste.
 8. Import review: large pastes (years of entries) are now legible — a span
    summary ("Spanning 2015–2026…"), a "Keep N pages" action at the top as well
    as the bottom, and year dividers down the list.
@@ -48,7 +49,7 @@ What's in this publish:
 
 Steps:
 1. SYNC the code to origin (head 51e8f62). Do not edit app code.
-2. pnpm install  (this WILL fetch pdfjs-dist and mammoth — let it).
+2. pnpm install  (this WILL fetch mammoth and drop pdfjs-dist — let it).
 3. NO migration. If you run drizzle-kit push out of habit it should report
    "No changes detected." If it proposes ANY change (drop/rename/alter), STOP
    and tell me — the schema did not change.
@@ -70,10 +71,10 @@ Steps:
    - Onboarding (fresh account or /onboarding): "Let me see how it feels first"
      adds sample pages and drops you on Today; the Library sample banner's
      "Remove them" clears them.
-   - Import: upload a small PDF and a .docx -> text is extracted and you reach
-     the review screen. Paste a multi-year archive with date headings (e.g.
-     "May 25, 2026") -> it splits into many dated pages, the review shows the
-     span + year dividers + a top "Keep" button.
+   - Import: upload a .docx -> text is extracted and you reach the review screen
+     (the file picker no longer offers PDF). Paste a multi-year archive with date
+     headings (e.g. "May 25, 2026") -> it splits into many dated pages, the
+     review shows the span + year dividers + a top "Keep" button.
    - Large paste: paste a very long archive (hundreds of entries) -> it should
      reach the review screen, NOT a 413 "Payload Too Large". (Confirms the
      api-server restarted with the new 10mb body limit.)
