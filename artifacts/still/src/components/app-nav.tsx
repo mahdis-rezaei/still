@@ -11,6 +11,7 @@ const EXPLORE_ITEMS = [
   { href: "/look-back", label: "Look back" },
   { href: "/calendar", label: "Calendar" },
   { href: "/shelf", label: "Shelf" },
+  { href: "/capsules", label: "Capsules" },
 ];
 
 // The quiet top bar for the signed-in app: wordmark, a couple of calm links,

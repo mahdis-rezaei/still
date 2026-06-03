@@ -858,6 +858,84 @@ paths:
       responses:
         "204":
           description: Removed
+  /capsules:
+    get:
+      operationId: listCapsules
+      tags: [memories]
+      summary: The user's Memory Capsules (sealed until delivered)
+      responses:
+        "200":
+          description: Capsules, soonest delivery first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Capsule"
+    post:
+      operationId: createCapsule
+      tags: [memories]
+      summary: Seal a letter to a future self
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body:
+                  type: string
+                deliverAt:
+                  type: string
+              required:
+                - body
+                - deliverAt
+      responses:
+        "201":
+          description: The sealed capsule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Capsule"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /capsules/{id}:
+    patch:
+      operationId: openCapsule
+      tags: [memories]
+      summary: Mark a delivered capsule as opened
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                opened:
+                  type: boolean
+      responses:
+        "200":
+          description: The capsule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Capsule"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /resurface-mutes:
     get:
       operationId: listResurfaceMutes
@@ -1711,6 +1789,28 @@ components:
         - entryId
         - excerpt
         - favorite
+    Capsule:
+      type: object
+      properties:
+        id:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        deliverAt:
+          type: string
+          format: date-time
+        delivered:
+          type: boolean
+        openedAt:
+          type: ["string", "null"]
+        body:
+          type: ["string", "null"]
+      required:
+        - id
+        - createdAt
+        - deliverAt
+        - delivered
     MemoryRunInput:
       type: object
       properties:

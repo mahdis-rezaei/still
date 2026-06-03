@@ -11,4 +11,5 @@ export * from "./reflections";
 export * from "./notification-preferences";
 export * from "./resurface-mutes";
 export * from "./shelf-items";
+export * from "./capsules";
 export * from "./still-results";

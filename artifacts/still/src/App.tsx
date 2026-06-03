@@ -35,6 +35,7 @@ import Search from "@/pages/search";
 import Letter from "@/pages/letter";
 import Calendar from "@/pages/calendar";
 import Shelf from "@/pages/shelf";
+import Capsules from "@/pages/capsules";
 import Import from "@/pages/import";
 import Settings from "@/pages/settings";
 import Privacy from "@/pages/privacy";
@@ -95,6 +96,7 @@ function ProtectedApp() {
       <Route path="/letters/:year" component={Letter} />
       <Route path="/calendar" component={Calendar} />
       <Route path="/shelf" component={Shelf} />
+      <Route path="/capsules" component={Capsules} />
       <Route path="/import" component={Import} />
       <Route path="/settings" component={Settings} />
       <Route path="/settings/notifications" component={Notifications} />

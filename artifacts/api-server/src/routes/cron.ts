@@ -1,9 +1,10 @@
 import { Router } from "express";
-import { and, eq, isNull, ne, or } from "drizzle-orm";
+import { and, eq, isNull, lte, ne, or } from "drizzle-orm";
 import {
   db,
   usersTable,
   notificationPreferencesTable,
+  capsulesTable,
   type NudgeFrequency,
 } from "@workspace/db";
 import {
@@ -11,6 +12,7 @@ import {
   writingNudgeEmail,
   memoryNudgeEmail,
   onThisDayNudgeEmail,
+  capsuleEmail,
 } from "../lib/email";
 import { runMemoryForUser } from "../lib/memory-engine";
 import { tagPendingEntries } from "../lib/resurface-safety";
@@ -84,6 +86,7 @@ router.post("/cron/run-nudges", async (req, res): Promise<void> => {
     writingSent: 0,
     memorySent: 0,
     memorySilent: 0,
+    capsulesDelivered: 0,
     errors: 0,
   };
 
@@ -177,6 +180,34 @@ router.post("/cron/run-nudges", async (req, res): Promise<void> => {
           .set({ lastMemoryNudgeAt: new Date(), updatedAt: new Date() })
           .where(eq(notificationPreferencesTable.id, prefs.id));
       }
+    }
+
+    // Deliver any Memory Capsules whose date has arrived (independent of nudge
+    // prefs — a sealed letter is delivered regardless). Marking delivered
+    // unseals it in-app even if the courtesy email fails.
+    const dueCapsules = await db
+      .select({ id: capsulesTable.id, email: usersTable.email })
+      .from(capsulesTable)
+      .innerJoin(usersTable, eq(capsulesTable.userId, usersTable.id))
+      .where(
+        and(
+          isNull(capsulesTable.deliveredAt),
+          isNull(usersTable.deletedAt),
+          lte(capsulesTable.deliverAt, new Date()),
+        ),
+      );
+    for (const cap of dueCapsules) {
+      await db
+        .update(capsulesTable)
+        .set({ deliveredAt: new Date() })
+        .where(eq(capsulesTable.id, cap.id));
+      try {
+        await sendEmail({ to: cap.email, ...capsuleEmail(`${appUrl()}/capsules`) });
+      } catch (err) {
+        req.log.error({ err, capsuleId: cap.id }, "Capsule email failed");
+        summary.errors++;
+      }
+      summary.capsulesDelivered++;
     }
 
     res.json(summary);
