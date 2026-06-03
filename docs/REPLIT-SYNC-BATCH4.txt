@@ -1,41 +1,53 @@
 Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
-(head 0f9921d), same method as before. This sync requires ONE additive migration
-(capsules table). No new secrets.
+(head 7e5a3a8), same method as before. This is the FULL Batch 4 superset. It
+requires TWO additive migrations (no destructive changes, no new secrets).
 
-This is the Batch 4 Tier A superset (sync to 0f9921d brings all three):
+What lands (all of Batch 4 except the design-only Legacy controls):
 
-  1. Philosophy page (/philosophy) — content only; the values behind Yadegar,
-     linked from Settings. (no migration)
-  2. Extended Export — Markdown + plain text exports (+ scope=all|favorites),
-     beside the existing JSON archive. GET /api/privacy/export/markdown and
-     /text. The Privacy page now offers all three formats. (no migration)
-  3. Memory Capsule — a sealed letter to a future self. New `capsules` table;
-     POST/GET/PATCH /api/capsules; a /capsules page in the Explore menu. The
-     body stays sealed (withheld by the API) until its delivery date.
+  TIER A
+  1. Philosophy page (/philosophy) — the values behind Yadegar; linked from
+     Settings. (no migration)
+  2. Extended Export — Markdown + plain text (+ scope=all|favorites) beside the
+     JSON archive (GET /api/privacy/export/markdown and /text). (no migration)
+  3. Memory Capsule — a sealed letter to a future self. `capsules` table;
+     /api/capsules; the body stays sealed until delivery. (MIGRATION)
+
+  TIER B
+  4. Collections — the unifying primitive behind People, Places, Themes,
+     Thoughts-over-time, and Before & After: a user-named group of pages shown
+     chronologically (pure curation, no AI judgment). `collections` +
+     `collection_items` tables; /api/collections… ; a "Collections" control on
+     the page reader; a Collections home + detail. (MIGRATION)
+  5. The Book of You (/book?scope=year&year=YYYY or ?scope=favorites) — a
+     print-CSS full book (cover + chapters + full pages); linked from the year
+     letter. (no migration)
 
 Steps:
-1. SYNC the code to origin (head 0f9921d). Do not edit app code or prompts.
+1. SYNC the code to origin (head 7e5a3a8). Do not edit app code or prompts.
 2. pnpm install — no-op.
 3. DB MIGRATION — additive, non-destructive. Run:
      pnpm --filter @workspace/db exec drizzle-kit push
-   Apply: CREATE TABLE capsules (id, user_id, body, deliver_at, delivered_at,
-   opened_at, created_at). No existing data touched.
+   Apply (all new, no existing data touched):
+     - CREATE TABLE capsules (id, user_id, body, deliver_at, delivered_at,
+       opened_at, created_at)
+     - CREATE TABLE collections (id, user_id, name, kind, created_at)
+     - CREATE TABLE collection_items (id, collection_id, journal_entry_id,
+       order_index, created_at) + unique index on (collection_id, journal_entry_id)
 4. RE-PUBLISH the deployment.
 
-IMPORTANT — capsule delivery depends on the run-nudges cron:
-   Capsules are delivered (unsealed + emailed "a page from your past arrived")
-   by POST /api/cron/run-nudges. If you have NOT scheduled that cron yet (it also
-   sends the optional nudges), capsules will stay sealed forever. Schedule a
-   DAILY job, same pattern as the tagging cron:
+IMPORTANT — capsule delivery needs the run-nudges cron:
+   Capsules are delivered (unsealed + emailed) by POST /api/cron/run-nudges. If
+   that cron isn't scheduled yet, schedule a DAILY job (same secret as the tagging
+   cron):
      curl -X POST "https://yadegarjournal.com/api/cron/run-nudges" \
        -H "x-cron-secret: $CRON_SECRET"
-   (Daily is enough — capsule delivery + per-user nudge cadence are date-driven.)
 
 Verify:
-  - /philosophy renders; Settings → "The Yadegar philosophy" links to it.
-  - Settings → Privacy: Export offers Markdown / Plain text / JSON; Markdown
-    downloads a readable .md with pages + reflections.
-  - Explore → Capsules: write one, deliver "On a date…" set to tomorrow, "Seal
-    it" → it lists as "Sealed · opens <date>". (To test delivery now, you can
-    temporarily set deliver_at in the past in the DB, then fire /cron/run-nudges
-    and confirm it flips to "arrived".)
+  - /philosophy renders (linked from Settings).
+  - Settings → Privacy: Export offers Markdown / Plain text / JSON.
+  - Explore → Capsules: seal one; it lists as "Sealed · opens <date>".
+  - Explore → Collections: create e.g. "Mom" (kind People); open any page → the
+    "Collections" control → check it into "Mom"; the collection page lists that
+    page. A "Before & after" collection with exactly two pages renders side by side.
+  - On a year letter (/letters/<year>): "Make a full book →" opens /book with a
+    cover + chapters + full pages and a Print / Save as PDF button.
