@@ -75,6 +75,12 @@ export default function Settings() {
             Your pages are private. Yadegar never shares your journals — they're
             encrypted at rest, and yours to export or delete whenever you like.
           </p>
+          <Link
+            href="/philosophy"
+            className="inline-block mt-3 font-sans text-sm text-soft-ink hover:text-ink transition-colors"
+          >
+            The Yadegar philosophy →
+          </Link>
         </section>
 
         <button
