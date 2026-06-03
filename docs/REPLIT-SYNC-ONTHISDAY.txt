@@ -1,0 +1,31 @@
+Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
+(head 4b5dc24), same method as before. This is a CODE-ONLY sync — NO database
+migration and NO new secrets. Your previous sync (f7653ce) included only the
+safety-tagging foundation; this brings the actual feature that uses it live.
+
+What lands:
+  - GET /api/memories/on-this-day — the date-based surfacer (was missing; would
+    have 404'd before this sync).
+  - On This Day section on the /today page (frontend).
+  - Date-first memory nudge: the memory nudge now sends an "on this day" page
+    when one exists (no engine call), else falls back to the engine.
+  - A .github/workflows/* file — irrelevant to Replit (GitHub Actions only); ignore.
+
+Steps:
+1. SYNC the code to origin (head 4b5dc24). Do not edit app code or prompts.
+2. pnpm install — no-op (no new deps).
+3. NO drizzle-kit push needed — there is no schema change in this sync. (The
+   resurface_safety column from the previous sync is already in place.)
+4. RE-PUBLISH the deployment so production serves the new route + UI + nudge.
+
+Verify:
+  - GET https://yadegarjournal.com/api/memories/on-this-day returns 200 with a
+    JSON array (empty is fine if no past-year entries match today's ±3-day
+    window) — NOT 404.
+  - On an account with dated entries from prior years near today's date, the
+    /today page shows an "On this day" section above the writing area. It stays
+    silent (renders nothing) when there's nothing from this day in years past.
+  - "not this one" on a card sets that entry's resurfacing preference to never.
+
+The tagging cron (cron-job.org, every ~10 min) is already running and keeps
+resurface_safety populated, so eligible pages appear automatically.
