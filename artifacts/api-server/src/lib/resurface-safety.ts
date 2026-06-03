@@ -13,9 +13,13 @@ const ENGINE_BASE = `http://127.0.0.1:${process.env.PORT}/api`;
 // sample / otherwise non-manual entries are already complete → no wait.
 const SETTLE_MS = 10 * 60 * 1000;
 
-// How many entries one cron tick will classify. Bounds per-tick cost/latency;
-// the backlog drains over successive ticks.
-const DEFAULT_BATCH = 50;
+// How many entries one cron tick will classify when no ?limit is given. Each
+// entry costs a classify call (crisis + hard-floor + theme), so this is tuned to
+// finish within a typical 30 s scheduler timeout (e.g. cron-job.org's free tier);
+// 50 overran it during re-tag backlogs. The backlog drains over successive ticks.
+// For a large one-off backfill, call from a terminal (no client timeout) with a
+// higher ?limit (capped at 500).
+const DEFAULT_BATCH = 10;
 
 interface ClassifyResponse {
   crisis?: boolean;

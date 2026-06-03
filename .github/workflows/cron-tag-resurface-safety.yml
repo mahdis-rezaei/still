@@ -23,7 +23,7 @@ on:
       limit:
         description: "Entries to tag this run (use up to 500 to backfill a big archive)"
         required: false
-        default: "50"
+        default: "10"
 
 # Don't let a delayed run overlap the next tick.
 concurrency:
@@ -38,7 +38,7 @@ jobs:
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           BASE_URL: ${{ vars.APP_BASE_URL || 'https://yadegarjournal.com' }}
-          LIMIT: ${{ github.event.inputs.limit || '50' }}
+          LIMIT: ${{ github.event.inputs.limit || '10' }}
         run: |
           set -euo pipefail
           if [ -z "${CRON_SECRET}" ]; then

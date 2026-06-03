@@ -35,7 +35,8 @@ A successful run returns HTTP 200 with a JSON summary, e.g.
 - Schedule: tagging = *Every 10–15 minutes*; delivery = *Every day at* e.g. 08:00.
 - Tagging URL: append **`?limit=10`** →
   `…/api/cron/tag-resurface-safety?limit=10`. See the timeout note below — the
-  default batch (50) × per-entry LLM calls overruns the 30 s timeout, especially
+  default batch (10) × per-entry LLM calls fits a 30 s timeout; an explicit higher
+  ?limit (or the old 50 default) overruns it, especially
   during a re-tag backlog after a `PROMPT_VERSION` bump. `?limit=10` keeps each
   tick under 30 s; drop to `?limit=5` if it still times out.
 
@@ -52,10 +53,10 @@ header; 503 = `CRON_SECRET` not set on the server.
 ### Timeout caveat (BOTH jobs)
 cron-job.org's free timeout is 30 s. Both endpoints make LLM calls per item, so
 a tick can exceed it:
-- **Tagging**: default batch = 50 entries × (crisis + hard-floor + theme) calls
-  each → overruns 30 s, especially during a re-tag backlog. Bound it with
-  **`?limit=10`** (see setup above). Each tick drains a slice; the backlog clears
-  over a few ticks.
+- **Tagging**: default batch = 10 entries × (crisis + hard-floor + theme) calls
+  each, tuned to fit 30 s. A higher explicit `?limit` (for backfill) can overrun
+  it — run those from a terminal (no client timeout), not the scheduler. The
+  backlog drains over a few ticks regardless.
 - **Delivery** (`run-nudges`): loops all due users and may run the engine per
   user; as the user base grows a single call can exceed 30 s.
 
