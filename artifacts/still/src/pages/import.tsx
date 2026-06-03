@@ -72,8 +72,8 @@ export default function Import() {
     try {
       const name = file.name.toLowerCase();
       let rawText: string;
-      if (name.endsWith(".pdf") || name.endsWith(".docx")) {
-        // Load the heavy parsers (pdf.js / mammoth) only when actually needed.
+      if (name.endsWith(".docx")) {
+        // Load mammoth only when a .docx is actually chosen.
         const { extractText } = await import("@/lib/extract-text");
         rawText = await extractText(file);
       } else {
@@ -378,9 +378,9 @@ export default function Import() {
               Bring old pages into Yadegar
             </h1>
             <p className="font-body text-soft-ink mb-8">
-              Paste a journal archive, or upload a file — plain text (.txt, .md),
-              a PDF, or a Word/Google Doc export (.docx). You can review
-              everything before saving.
+              Paste a journal archive, or upload a file — plain text (.txt, .md)
+              or a Word/Google Doc export (.docx). You can review everything
+              before saving.
             </p>
 
             <div className="rounded-2xl border border-border bg-surface/80 shadow-sm p-6 md:p-7">
@@ -408,7 +408,7 @@ export default function Import() {
                 or upload a file
                 <input
                   type="file"
-                  accept=".txt,.md,.pdf,.docx,text/plain,text/markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  accept=".txt,.md,.docx,text/plain,text/markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                   onChange={onFile}
                   className="hidden"
                 />
@@ -422,9 +422,11 @@ export default function Import() {
             )}
 
             <p className="font-sans text-xs text-faint-ink mt-6 leading-relaxed">
-              Have a Google Doc? In Google Docs choose File → Download →
-              Microsoft Word (.docx), then upload that here. Scanned images and
-              photos of handwriting can't be read yet — paste the words instead.
+              Have a Google Doc? Choose File → Download → Microsoft Word (.docx)
+              and upload that — your words come through exactly, in any language.
+              We don't take PDFs: a PDF stores glyphs, not text, so it can't be
+              read back without altering your words. Scanned images and photos of
+              handwriting can't be read either — paste those instead.
             </p>
           </>
         )}

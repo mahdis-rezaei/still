@@ -75,7 +75,6 @@
     "zod": "catalog:"
   },
   "dependencies": {
-    "mammoth": "^1.12.0",
-    "pdfjs-dist": "^6.0.227"
+    "mammoth": "^1.12.0"
   }
 }
