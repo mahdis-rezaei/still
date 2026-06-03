@@ -798,6 +798,66 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /shelf:
+    get:
+      operationId: listShelf
+      tags: [memories]
+      summary: The Memory Shelf — a small curated set of pages kept close
+      responses:
+        "200":
+          description: Shelf items, in shelf order
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ShelfItem"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: addToShelf
+      tags: [memories]
+      summary: Add a page to the shelf (idempotent)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entryId:
+                  type: string
+              required:
+                - entryId
+      responses:
+        "201":
+          description: Added
+        "200":
+          description: Already on the shelf
+        "404":
+          description: Page not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /shelf/{entryId}:
+    delete:
+      operationId: removeFromShelf
+      tags: [memories]
+      summary: Take a page off the shelf
+      parameters:
+        - name: entryId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Removed
   /resurface-mutes:
     get:
       operationId: listResurfaceMutes
@@ -1586,6 +1646,23 @@ components:
         - pageCount
         - reflectionCount
         - favorites
+    ShelfItem:
+      type: object
+      properties:
+        entryId:
+          type: string
+        title:
+          type: ["string", "null"]
+        excerpt:
+          type: string
+        entryDate:
+          type: ["string", "null"]
+        favorite:
+          type: boolean
+      required:
+        - entryId
+        - excerpt
+        - favorite
     MemoryRunInput:
       type: object
       properties:

@@ -10,6 +10,7 @@ const EXPLORE_ITEMS = [
   { href: "/timeline", label: "Timeline" },
   { href: "/look-back", label: "Look back" },
   { href: "/calendar", label: "Calendar" },
+  { href: "/shelf", label: "Shelf" },
 ];
 
 // The quiet top bar for the signed-in app: wordmark, a couple of calm links,
