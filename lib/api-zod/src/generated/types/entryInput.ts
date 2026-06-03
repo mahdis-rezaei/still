@@ -7,7 +7,8 @@
  */
 
 export interface EntryInput {
+  title?: string;
   /** @minLength 1 */
-  date: string;
-  text: string;
+  body: string;
+  entryDate?: string;
 }

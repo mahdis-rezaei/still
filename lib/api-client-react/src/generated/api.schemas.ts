@@ -13,17 +13,292 @@ export interface ErrorResponse {
   error: string;
 }
 
+export interface AuthUser {
+  id: string;
+  email: string;
+  /** @nullable */
+  name?: string | null;
+  /** @nullable */
+  avatarUrl?: string | null;
+  onboardingCompleted: boolean;
+  emailVerified: boolean;
+}
+
+export interface VerifyEmailInput {
+  /** @minLength 1 */
+  token: string;
+}
+
+export interface RequestResetInput {
+  /** @minLength 3 */
+  email: string;
+}
+
+export interface ResetPasswordInput {
+  /** @minLength 1 */
+  token: string;
+  /** @minLength 8 */
+  password: string;
+}
+
+export interface RegisterInput {
+  /** @minLength 3 */
+  email: string;
+  /** @minLength 8 */
+  password: string;
+  name?: string;
+}
+
+export interface LoginInput {
+  /** @minLength 3 */
+  email: string;
+  /** @minLength 1 */
+  password: string;
+}
+
+export type EntrySource = typeof EntrySource[keyof typeof EntrySource];
+
+
+export const EntrySource = {
+  manual: 'manual',
+  pasted_import: 'pasted_import',
+  file_import: 'file_import',
+  google_doc: 'google_doc',
+  sample: 'sample',
+} as const;
+
+export type EntryResurfacingPreference = typeof EntryResurfacingPreference[keyof typeof EntryResurfacingPreference];
+
+
+export const EntryResurfacingPreference = {
+  normal: 'normal',
+  more_often: 'more_often',
+  never: 'never',
+} as const;
+
 export interface Entry {
-  id: number;
-  date: string;
-  text: string;
+  id: string;
+  /** @nullable */
+  title?: string | null;
+  body: string;
+  /** @nullable */
+  entryDate?: string | null;
+  source: EntrySource;
+  favorite: boolean;
+  resurfacingPreference: EntryResurfacingPreference;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface EntryInput {
+  title?: string;
   /** @minLength 1 */
-  date: string;
-  text: string;
+  body: string;
+  entryDate?: string;
+}
+
+export interface BulkDeleteInput {
+  ids: string[];
+}
+
+export type EntryUpdateResurfacingPreference = typeof EntryUpdateResurfacingPreference[keyof typeof EntryUpdateResurfacingPreference];
+
+
+export const EntryUpdateResurfacingPreference = {
+  normal: 'normal',
+  more_often: 'more_often',
+  never: 'never',
+} as const;
+
+export interface EntryUpdate {
+  /** @nullable */
+  title?: string | null;
+  /** @minLength 1 */
+  body?: string;
+  /** @nullable */
+  entryDate?: string | null;
+  favorite?: boolean;
+  resurfacingPreference?: EntryUpdateResurfacingPreference;
+}
+
+export type PrivacyExportAccount = {
+  email: string;
+  /** @nullable */
+  name?: string | null;
+  createdAt: string;
+};
+
+export interface Reflection {
+  id: string;
+  journalEntryId: string;
+  body: string;
+  /** @nullable */
+  reflectionDate?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReturnedMemory {
+  id: string;
+  /** @nullable */
+  label?: string | null;
+  /** @nullable */
+  observation?: string | null;
+  /** @nullable */
+  quote?: string | null;
+  /** @nullable */
+  quoteDate?: string | null;
+  /** @nullable */
+  lens?: string | null;
+  /** @nullable */
+  journalEntryId?: string | null;
+  dismissed: boolean;
+  favorite: boolean;
+  createdAt: string;
+  /** @nullable */
+  openedAt?: string | null;
+}
+
+export interface PrivacyExport {
+  exportedAt: string;
+  account: PrivacyExportAccount;
+  entries: Entry[];
+  reflections: Reflection[];
+  memories: ReturnedMemory[];
+}
+
+export interface ReflectionInput {
+  /** @minLength 1 */
+  body: string;
+}
+
+export interface ReflectionUpdate {
+  /** @minLength 1 */
+  body: string;
+}
+
+export type ParsedEntryDateConfidence = typeof ParsedEntryDateConfidence[keyof typeof ParsedEntryDateConfidence];
+
+
+export const ParsedEntryDateConfidence = {
+  high: 'high',
+  medium: 'medium',
+  low: 'low',
+  unknown: 'unknown',
+} as const;
+
+export interface ParsedEntry {
+  id: string;
+  /** @nullable */
+  detectedDate?: string | null;
+  dateConfidence: ParsedEntryDateConfidence;
+  body: string;
+  /** @nullable */
+  title?: string | null;
+  include: boolean;
+  /** @nullable */
+  orderIndex?: number | null;
+}
+
+export interface ImportReview {
+  id: string;
+  source: string;
+  status: string;
+  parsedCount: number;
+  importedCount: number;
+  entries: ParsedEntry[];
+}
+
+export interface ImportPasteInput {
+  /** @minLength 1 */
+  rawText: string;
+}
+
+export interface ImportFileInput {
+  filename: string;
+  /** @minLength 1 */
+  rawText: string;
+}
+
+export interface ParsedEntryUpdate {
+  /** @nullable */
+  detectedDate?: string | null;
+  body?: string;
+  /** @nullable */
+  title?: string | null;
+  include?: boolean;
+}
+
+export interface ImportConfirmResult {
+  importedCount: number;
+}
+
+export type NotificationPreferencesWritingFrequency = typeof NotificationPreferencesWritingFrequency[keyof typeof NotificationPreferencesWritingFrequency];
+
+
+export const NotificationPreferencesWritingFrequency = {
+  off: 'off',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export type NotificationPreferencesMemoryFrequency = typeof NotificationPreferencesMemoryFrequency[keyof typeof NotificationPreferencesMemoryFrequency];
+
+
+export const NotificationPreferencesMemoryFrequency = {
+  off: 'off',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export interface NotificationPreferences {
+  writingFrequency: NotificationPreferencesWritingFrequency;
+  memoryFrequency: NotificationPreferencesMemoryFrequency;
+}
+
+export type NotificationUpdateWritingFrequency = typeof NotificationUpdateWritingFrequency[keyof typeof NotificationUpdateWritingFrequency];
+
+
+export const NotificationUpdateWritingFrequency = {
+  off: 'off',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export type NotificationUpdateMemoryFrequency = typeof NotificationUpdateMemoryFrequency[keyof typeof NotificationUpdateMemoryFrequency];
+
+
+export const NotificationUpdateMemoryFrequency = {
+  off: 'off',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export interface NotificationUpdate {
+  writingFrequency?: NotificationUpdateWritingFrequency;
+  memoryFrequency?: NotificationUpdateMemoryFrequency;
+}
+
+export interface MemoryRunInput {
+  year?: number;
+  month?: number;
+  entryIds?: string[];
+  fresh?: boolean;
+}
+
+export interface MemoryRunResult {
+  surfaced: boolean;
+  /** @nullable */
+  reason?: string | null;
+  /** @nullable */
+  supportMessage?: string | null;
+  memory?: ReturnedMemory;
+}
+
+export interface MemoryUpdate {
+  favorite?: boolean;
+  dismissed?: boolean;
+  opened?: boolean;
 }
 
 export type QuoteSourceType = typeof QuoteSourceType[keyof typeof QuoteSourceType];
@@ -129,4 +404,16 @@ export interface ScoreResult {
   /** @nullable */
   message?: string | null;
 }
+
+export type ListEntriesParams = {
+year?: number;
+month?: number;
+favorite?: boolean;
+source?: string;
+search?: string;
+};
+
+export type BulkDeleteEntries200 = {
+  deletedCount?: number;
+};
 

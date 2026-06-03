@@ -1,0 +1,26 @@
+Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
+(head bb603f8), same method as before (native GitHub pull / Contents API). This
+is a FRONTEND-ONLY change: a redesigned landing page (an editorial scroll) plus
+an interactive "Bring a page back" demo on it.
+
+There is NO database migration and NO new dependency.
+
+Changed files (frontend only):
+- new: artifacts/still/src/components/landing.tsx
+- updated: artifacts/still/src/pages/login.tsx (delegates the hero to <Landing/>)
+
+Steps:
+1. Sync so the workspace matches origin/claude/ecstatic-wright-y4npO (head
+   bb603f8). Do not edit application code.
+2. pnpm install (no-op).
+3. Rebuild the frontend and RE-PUBLISH the deployment so the live site picks up
+   the new landing.
+4. Verify on https://yadegarjournal.com (logged out):
+   - The landing is now a full scroll: hero (with the Persian word یادگار) →
+     "What comes back" with a "✦ Bring a page back" button that reveals an
+     example return and a "Show me another →" that cycles through them →
+     "How it works" → "The word" → "A note from the maker" → final CTA → footer.
+   - Clicking "Create account" / "Sign in" still opens the auth form as before.
+   - "Read across your own years" / "Why I built this" links work.
+
+Report anything that errored. Do not change application code or prompts.

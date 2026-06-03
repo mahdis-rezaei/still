@@ -93,41 +93,582 @@ export const ScoreCandidatesResponse = zod.object({
 
 
 /**
- * @summary List all stored journal entries
+ * @summary List the current user's journal entries
  */
+export const ListEntriesQueryParams = zod.object({
+  "year": zod.coerce.number().optional(),
+  "month": zod.coerce.number().optional(),
+  "favorite": zod.coerce.boolean().optional(),
+  "source": zod.coerce.string().optional(),
+  "search": zod.coerce.string().optional()
+})
+
 export const ListEntriesResponseItem = zod.object({
-  "id": zod.number(),
-  "date": zod.string(),
-  "text": zod.string(),
-  "createdAt": zod.coerce.date()
+  "id": zod.string(),
+  "title": zod.string().nullish(),
+  "body": zod.string(),
+  "entryDate": zod.string().nullish(),
+  "source": zod.enum(['manual', 'pasted_import', 'file_import', 'google_doc', 'sample']),
+  "favorite": zod.boolean(),
+  "resurfacingPreference": zod.enum(['normal', 'more_often', 'never']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
 })
 export const ListEntriesResponse = zod.array(ListEntriesResponseItem)
 
 
 /**
- * @summary Store a single journal entry verbatim
+ * @summary Create a journal entry
  */
 
 
 
 export const CreateEntryBody = zod.object({
-  "date": zod.string().min(1),
-  "text": zod.string()
+  "title": zod.string().optional(),
+  "body": zod.string().min(1),
+  "entryDate": zod.string().optional()
 })
 
 
 /**
- * @summary Fetch a single stored entry's full text by id
+ * @summary Add a small set of sample pages (idempotent) for first-run exploration
+ */
+export const SeedSampleEntriesResponseItem = zod.object({
+  "id": zod.string(),
+  "title": zod.string().nullish(),
+  "body": zod.string(),
+  "entryDate": zod.string().nullish(),
+  "source": zod.enum(['manual', 'pasted_import', 'file_import', 'google_doc', 'sample']),
+  "favorite": zod.boolean(),
+  "resurfacingPreference": zod.enum(['normal', 'more_often', 'never']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const SeedSampleEntriesResponse = zod.array(SeedSampleEntriesResponseItem)
+
+
+/**
+ * @summary Soft-delete several of the current user's entries by id
+ */
+export const BulkDeleteEntriesBody = zod.object({
+  "ids": zod.array(zod.string())
+})
+
+export const BulkDeleteEntriesResponse = zod.object({
+  "deletedCount": zod.number().optional()
+})
+
+
+/**
+ * @summary Fetch a single entry by id
  */
 export const GetEntryParams = zod.object({
-  "id": zod.coerce.number()
+  "id": zod.coerce.string()
 })
 
 export const GetEntryResponse = zod.object({
-  "id": zod.number(),
-  "date": zod.string(),
-  "text": zod.string(),
+  "id": zod.string(),
+  "title": zod.string().nullish(),
+  "body": zod.string(),
+  "entryDate": zod.string().nullish(),
+  "source": zod.enum(['manual', 'pasted_import', 'file_import', 'google_doc', 'sample']),
+  "favorite": zod.boolean(),
+  "resurfacingPreference": zod.enum(['normal', 'more_often', 'never']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update an entry
+ */
+export const UpdateEntryParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+
+
+export const UpdateEntryBody = zod.object({
+  "title": zod.string().nullish(),
+  "body": zod.string().min(1).optional(),
+  "entryDate": zod.string().nullish(),
+  "favorite": zod.boolean().optional(),
+  "resurfacingPreference": zod.enum(['normal', 'more_often', 'never']).optional()
+})
+
+export const UpdateEntryResponse = zod.object({
+  "id": zod.string(),
+  "title": zod.string().nullish(),
+  "body": zod.string(),
+  "entryDate": zod.string().nullish(),
+  "source": zod.enum(['manual', 'pasted_import', 'file_import', 'google_doc', 'sample']),
+  "favorite": zod.boolean(),
+  "resurfacingPreference": zod.enum(['normal', 'more_often', 'never']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete an entry (soft delete)
+ */
+export const DeleteEntryParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+/**
+ * @summary Parse pasted journal text into reviewable entries
+ */
+
+
+
+export const ImportPasteBody = zod.object({
+  "rawText": zod.string().min(1)
+})
+
+export const ImportPasteResponse = zod.object({
+  "id": zod.string(),
+  "source": zod.string(),
+  "status": zod.string(),
+  "parsedCount": zod.number(),
+  "importedCount": zod.number(),
+  "entries": zod.array(zod.object({
+  "id": zod.string(),
+  "detectedDate": zod.string().nullish(),
+  "dateConfidence": zod.enum(['high', 'medium', 'low', 'unknown']),
+  "body": zod.string(),
+  "title": zod.string().nullish(),
+  "include": zod.boolean(),
+  "orderIndex": zod.number().nullish()
+}))
+})
+
+
+/**
+ * @summary Parse an uploaded .txt/.md file's text into reviewable entries
+ */
+
+
+
+export const ImportFileBody = zod.object({
+  "filename": zod.string(),
+  "rawText": zod.string().min(1)
+})
+
+export const ImportFileResponse = zod.object({
+  "id": zod.string(),
+  "source": zod.string(),
+  "status": zod.string(),
+  "parsedCount": zod.number(),
+  "importedCount": zod.number(),
+  "entries": zod.array(zod.object({
+  "id": zod.string(),
+  "detectedDate": zod.string().nullish(),
+  "dateConfidence": zod.enum(['high', 'medium', 'low', 'unknown']),
+  "body": zod.string(),
+  "title": zod.string().nullish(),
+  "include": zod.boolean(),
+  "orderIndex": zod.number().nullish()
+}))
+})
+
+
+/**
+ * @summary Get an import session and its parsed entries
+ */
+export const GetImportReviewParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetImportReviewResponse = zod.object({
+  "id": zod.string(),
+  "source": zod.string(),
+  "status": zod.string(),
+  "parsedCount": zod.number(),
+  "importedCount": zod.number(),
+  "entries": zod.array(zod.object({
+  "id": zod.string(),
+  "detectedDate": zod.string().nullish(),
+  "dateConfidence": zod.enum(['high', 'medium', 'low', 'unknown']),
+  "body": zod.string(),
+  "title": zod.string().nullish(),
+  "include": zod.boolean(),
+  "orderIndex": zod.number().nullish()
+}))
+})
+
+
+/**
+ * @summary Edit a parsed entry before import (date, body, title, include)
+ */
+export const UpdateParsedEntryParams = zod.object({
+  "id": zod.coerce.string(),
+  "parsedEntryId": zod.coerce.string()
+})
+
+export const UpdateParsedEntryBody = zod.object({
+  "detectedDate": zod.string().nullish(),
+  "body": zod.string().optional(),
+  "title": zod.string().nullish(),
+  "include": zod.boolean().optional()
+})
+
+export const UpdateParsedEntryResponse = zod.object({
+  "id": zod.string(),
+  "detectedDate": zod.string().nullish(),
+  "dateConfidence": zod.enum(['high', 'medium', 'low', 'unknown']),
+  "body": zod.string(),
+  "title": zod.string().nullish(),
+  "include": zod.boolean(),
+  "orderIndex": zod.number().nullish()
+})
+
+
+/**
+ * @summary Create journal entries from the included parsed entries
+ */
+export const ConfirmImportParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ConfirmImportResponse = zod.object({
+  "importedCount": zod.number()
+})
+
+
+/**
+ * @summary List reflections written on an entry
+ */
+export const ListReflectionsParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ListReflectionsResponseItem = zod.object({
+  "id": zod.string(),
+  "journalEntryId": zod.string(),
+  "body": zod.string(),
+  "reflectionDate": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const ListReflectionsResponse = zod.array(ListReflectionsResponseItem)
+
+
+/**
+ * @summary Write a reflection on an entry
+ */
+export const CreateReflectionParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+
+
+export const CreateReflectionBody = zod.object({
+  "body": zod.string().min(1)
+})
+
+
+/**
+ * @summary Edit a reflection
+ */
+export const UpdateReflectionParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+
+
+export const UpdateReflectionBody = zod.object({
+  "body": zod.string().min(1)
+})
+
+export const UpdateReflectionResponse = zod.object({
+  "id": zod.string(),
+  "journalEntryId": zod.string(),
+  "body": zod.string(),
+  "reflectionDate": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a reflection (soft delete)
+ */
+export const DeleteReflectionParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+/**
+ * @summary Get the current user's nudge preferences
+ */
+export const GetNotificationsResponse = zod.object({
+  "writingFrequency": zod.enum(['off', 'weekly', 'monthly']),
+  "memoryFrequency": zod.enum(['off', 'weekly', 'monthly'])
+})
+
+
+/**
+ * @summary Update the current user's nudge preferences
+ */
+export const UpdateNotificationsBody = zod.object({
+  "writingFrequency": zod.enum(['off', 'weekly', 'monthly']).optional(),
+  "memoryFrequency": zod.enum(['off', 'weekly', 'monthly']).optional()
+})
+
+export const UpdateNotificationsResponse = zod.object({
+  "writingFrequency": zod.enum(['off', 'weekly', 'monthly']),
+  "memoryFrequency": zod.enum(['off', 'weekly', 'monthly'])
+})
+
+
+/**
+ * @summary Run the engine over eligible entries and surface one thing (or stay quiet)
+ */
+export const RunMemoryBody = zod.object({
+  "year": zod.number().optional(),
+  "month": zod.number().optional(),
+  "entryIds": zod.array(zod.string()).optional(),
+  "fresh": zod.boolean().optional()
+})
+
+export const RunMemoryResponse = zod.object({
+  "surfaced": zod.boolean(),
+  "reason": zod.string().nullish(),
+  "supportMessage": zod.string().nullish(),
+  "memory": zod.object({
+  "id": zod.string(),
+  "label": zod.string().nullish(),
+  "observation": zod.string().nullish(),
+  "quote": zod.string().nullish(),
+  "quoteDate": zod.string().nullish(),
+  "lens": zod.string().nullish(),
+  "journalEntryId": zod.string().nullish(),
+  "dismissed": zod.boolean(),
+  "favorite": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "openedAt": zod.string().nullish()
+}).optional()
+})
+
+
+/**
+ * @summary List the user's returned memories
+ */
+export const ListMemoriesResponseItem = zod.object({
+  "id": zod.string(),
+  "label": zod.string().nullish(),
+  "observation": zod.string().nullish(),
+  "quote": zod.string().nullish(),
+  "quoteDate": zod.string().nullish(),
+  "lens": zod.string().nullish(),
+  "journalEntryId": zod.string().nullish(),
+  "dismissed": zod.boolean(),
+  "favorite": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "openedAt": zod.string().nullish()
+})
+export const ListMemoriesResponse = zod.array(ListMemoriesResponseItem)
+
+
+/**
+ * @summary Fetch a returned memory
+ */
+export const GetMemoryParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetMemoryResponse = zod.object({
+  "id": zod.string(),
+  "label": zod.string().nullish(),
+  "observation": zod.string().nullish(),
+  "quote": zod.string().nullish(),
+  "quoteDate": zod.string().nullish(),
+  "lens": zod.string().nullish(),
+  "journalEntryId": zod.string().nullish(),
+  "dismissed": zod.boolean(),
+  "favorite": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "openedAt": zod.string().nullish()
+})
+
+
+/**
+ * @summary Favorite, dismiss, or mark a memory opened
+ */
+export const UpdateMemoryParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const UpdateMemoryBody = zod.object({
+  "favorite": zod.boolean().optional(),
+  "dismissed": zod.boolean().optional(),
+  "opened": zod.boolean().optional()
+})
+
+export const UpdateMemoryResponse = zod.object({
+  "id": zod.string(),
+  "label": zod.string().nullish(),
+  "observation": zod.string().nullish(),
+  "quote": zod.string().nullish(),
+  "quoteDate": zod.string().nullish(),
+  "lens": zod.string().nullish(),
+  "journalEntryId": zod.string().nullish(),
+  "dismissed": zod.boolean(),
+  "favorite": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "openedAt": zod.string().nullish()
+})
+
+
+/**
+ * @summary Export all of the current user's data
+ */
+export const ExportDataResponse = zod.object({
+  "exportedAt": zod.coerce.date(),
+  "account": zod.object({
+  "email": zod.string(),
+  "name": zod.string().nullish(),
   "createdAt": zod.coerce.date()
+}),
+  "entries": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string().nullish(),
+  "body": zod.string(),
+  "entryDate": zod.string().nullish(),
+  "source": zod.enum(['manual', 'pasted_import', 'file_import', 'google_doc', 'sample']),
+  "favorite": zod.boolean(),
+  "resurfacingPreference": zod.enum(['normal', 'more_often', 'never']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})),
+  "reflections": zod.array(zod.object({
+  "id": zod.string(),
+  "journalEntryId": zod.string(),
+  "body": zod.string(),
+  "reflectionDate": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})),
+  "memories": zod.array(zod.object({
+  "id": zod.string(),
+  "label": zod.string().nullish(),
+  "observation": zod.string().nullish(),
+  "quote": zod.string().nullish(),
+  "quoteDate": zod.string().nullish(),
+  "lens": zod.string().nullish(),
+  "journalEntryId": zod.string().nullish(),
+  "dismissed": zod.boolean(),
+  "favorite": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "openedAt": zod.string().nullish()
+}))
+})
+
+
+/**
+ * @summary Confirm an email address with a token
+ */
+
+
+
+export const VerifyEmailBody = zod.object({
+  "token": zod.string().min(1)
+})
+
+
+/**
+ * @summary Request a password-reset email (always succeeds)
+ */
+export const requestPasswordResetBodyEmailMin = 3;
+
+
+
+export const RequestPasswordResetBody = zod.object({
+  "email": zod.string().min(requestPasswordResetBodyEmailMin)
+})
+
+
+/**
+ * @summary Set a new password using a reset token
+ */
+
+export const resetPasswordBodyPasswordMin = 8;
+
+
+
+export const ResetPasswordBody = zod.object({
+  "token": zod.string().min(1),
+  "password": zod.string().min(resetPasswordBodyPasswordMin)
+})
+
+
+/**
+ * @summary Create an account with email and password
+ */
+export const registerBodyEmailMin = 3;
+
+export const registerBodyPasswordMin = 8;
+
+
+
+export const RegisterBody = zod.object({
+  "email": zod.string().email().min(registerBodyEmailMin),
+  "password": zod.string().min(registerBodyPasswordMin),
+  "name": zod.string().optional()
+})
+
+
+/**
+ * @summary Sign in with email and password
+ */
+export const loginBodyEmailMin = 3;
+
+
+
+
+export const LoginBody = zod.object({
+  "email": zod.string().min(loginBodyEmailMin),
+  "password": zod.string().min(1)
+})
+
+export const LoginResponse = zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "name": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "onboardingCompleted": zod.boolean(),
+  "emailVerified": zod.boolean()
+})
+
+
+/**
+ * @summary Mark the current user's onboarding as complete
+ */
+export const CompleteOnboardingResponse = zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "name": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "onboardingCompleted": zod.boolean(),
+  "emailVerified": zod.boolean()
+})
+
+
+/**
+ * @summary Get the currently authenticated user
+ */
+export const GetCurrentUserResponse = zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "name": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "onboardingCompleted": zod.boolean(),
+  "emailVerified": zod.boolean()
 })
 
 

@@ -1,0 +1,55 @@
+ONE-TIME sync + migration for the Phase 2 schema. GitHub is the source of truth;
+this makes Replit match it. This migration is DESTRUCTIVE on purpose (prototype):
+it resets accounts and journal entries. The engine cache (still_results) is kept.
+
+1. SYNC CODE so this workspace exactly matches the GitHub branch
+   claude/ecstatic-wright-y4npO at its latest commit. If the git CLI is
+   restricted in this sandbox (git fetch was blocked during the engine push),
+   use your native GitHub integration to pull/checkout the branch, or pull the
+   changed files via the GitHub Contents API. Do NOT edit application code. The
+   goal is simply: workspace files == origin/claude/ecstatic-wright-y4npO.
+
+2. INSTALL DEPS:
+   pnpm install
+
+3. DESTRUCTIVE DB RESET (prototype). The schema changed from serial integer
+   keys to UUID and renamed `entries` -> `journal_entries`, and added new
+   tables. drizzle-kit cannot do this in place, so drop the OLD tables first.
+   This clears any test accounts/entries — that is expected and fine. Run this
+   SQL against the database, keeping still_results intact:
+
+     psql "$DATABASE_URL" -c "DROP TABLE IF EXISTS entries, sessions, users CASCADE;"
+
+   Do NOT drop still_results.
+
+4. CREATE THE NEW SCHEMA:
+   pnpm --filter @workspace/db exec drizzle-kit push
+
+   This creates: users (uuid), sessions, journal_entries, journal_imports,
+   parsed_import_entries, returned_memories, reflections,
+   notification_preferences. still_results is unchanged. If push asks to confirm
+   creating tables, proceed.
+
+5. (Only if needed) regenerate the API client — it is already committed, so
+   normally SKIP this:
+   pnpm --filter @workspace/api-spec run codegen
+
+6. REBUILD AND RESTART both services (api-server and the still frontend) and
+   confirm the server boots with no errors. Note: the api-server calls its own
+   engine internally at http://127.0.0.1:$PORT/api, so PORT must be set (it
+   already is).
+
+7. VERIFY the full loop end to end and report results:
+   - Register a NEW account (old accounts were cleared by the reset).
+     Email/password works; Google works if GOOGLE_CLIENT_ID/SECRET are set.
+   - Today: write a page; confirm it auto-saves (status shows "kept").
+   - Library: the page appears; open it; favorite it; try the "when Still may
+     return this" settings; edit it; (optionally) delete it.
+   - Import: go to /import, paste a few dated entries (lines starting with
+     [2018-03-29], etc.), review, and keep them; confirm they appear in Library.
+   - Today: click "Bring a page back" and confirm a memory surfaces (or honest
+     silence). Confirm it then appears under Returns.
+
+Report what you ran, the public URL, and anything that errored. Do NOT change
+application code or prompts — if something needs a code fix, tell me and I will
+fix it in GitHub and you can re-sync.

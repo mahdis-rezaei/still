@@ -40,7 +40,7 @@ export function DevPanel() {
 
           {/* Header */}
           <div className="text-white font-bold text-sm mb-3 border-b border-gray-700 pb-2 flex justify-between items-center">
-            <span>Still Dev Panel</span>
+            <span>Yadegar Dev Panel</span>
             <span className="text-gray-400 font-normal">
               mode:{" "}
               <span className={`font-bold ${modeColor}`}>

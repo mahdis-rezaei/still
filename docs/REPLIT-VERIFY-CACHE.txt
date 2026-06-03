@@ -1,0 +1,20 @@
+This is a read-only check — do not change anything.
+
+The engine's result cache is the table referenced as `stillResultsTable` in
+artifacts/api-server/src/routes/still.ts. In the live database, please look up
+its real schema and tell me:
+
+1. The exact table name.
+2. The exact column names and their types.
+
+You can do this by running, in the database, either:
+   \d still_results
+or:
+   SELECT table_name, column_name, data_type
+   FROM information_schema.columns
+   WHERE table_name LIKE '%still%result%' OR table_name LIKE '%result%';
+
+Report back the table name and columns. I'm comparing them to GitHub's
+declaration: table `still_results` with columns `cache_key` (text, unique),
+`result` (jsonb), `created_at` (timestamptz). Tell me if anything differs.
+Do not run any migration or modify the database.

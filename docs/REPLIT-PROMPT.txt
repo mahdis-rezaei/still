@@ -1,0 +1,33 @@
+STANDARD SYNC PROMPT — use this whenever I tell you GitHub has new changes.
+
+(Use this AFTER the one-time engine push in REPLIT-PUSH-ENGINE-ONCE.txt has been
+done. Before that, the engine isn't on GitHub yet and a hard reset would lose
+it.)
+
+GitHub is the single source of truth. This Replit workspace is where the app
+RUNS — please do not edit application code or prompts here. To bring in the
+latest from the branch claude/ecstatic-wright-y4npO:
+
+1. git fetch origin
+2. git reset --hard origin/claude/ecstatic-wright-y4npO
+   (GitHub now holds everything, including the real engine, so a clean reset is
+   safe and is the whole point — it guarantees Replit matches GitHub exactly.)
+
+   NOTE: if the git CLI is restricted in this sandbox (e.g. `git fetch` is
+   blocked, as it was during the engine push), do not fight it — instead use
+   your native GitHub integration to pull/checkout the branch, OR pull the
+   changed files via the GitHub Contents API. The ONLY goal of this step is to
+   make the workspace files exactly match origin/claude/ecstatic-wright-y4npO.
+3. pnpm install
+4. If the API contract (lib/api-spec/openapi.yaml) changed, regenerate the
+   client: pnpm --filter @workspace/api-spec run codegen
+5. If I told you there is a database schema change, migrate:
+   pnpm --filter @workspace/db exec drizzle-kit push
+6. Rebuild and restart both services (api-server and the still frontend) and
+   confirm they boot with no errors.
+7. Report what you ran and any errors.
+
+Do not change application code or prompts. If an engine or prompt change is ever
+needed, it will come through GitHub. If you ever must change the engine here,
+immediately commit and push it to the branch so GitHub stays complete — never
+leave a change living only in Replit.

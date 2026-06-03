@@ -1,0 +1,41 @@
+Goal: publish Yadegar as a Replit Deployment and verify it on the temporary
+*.replit.app URL BEFORE we attach the custom domain. Do not connect the custom
+domain yet.
+
+1. SYNC: make this workspace match the latest of GitHub branch
+   claude/ecstatic-wright-y4npO (head 49b6230), same method as before (native
+   GitHub pull / Contents API). The important new change: the api-server now
+   serves the built frontend in production (single-service deploy). Don't edit app code.
+
+2. PRODUCTION DATABASE: confirm which DATABASE_URL the Deployment will use.
+   - If the Deployment uses a SEPARATE production database from the dev
+     workspace, run the schema push against that database so all tables exist:
+     pnpm --filter @workspace/db exec drizzle-kit push
+     (Tables: users, sessions, journal_entries, journal_imports,
+     parsed_import_entries, returned_memories, reflections,
+     notification_preferences, still_results.)
+   - If dev and the Deployment share one database, it's already migrated — skip.
+
+3. DEPLOYMENT ENV: ensure the Deployment has these available (Secrets +
+   Configurations): DATABASE_URL, ANTHROPIC_API_KEY, ENCRYPTION_KEY,
+   SESSION_SECRET, RESEND_API_KEY, EMAIL_FROM, SUPPORT_EMAIL, NODE_ENV=production,
+   and APP_URL (leave as the current value for now — we'll switch it to
+   https://yadegarjournal.com after the domain is attached). The frontend build
+   must run with BASE_PATH=/ so assets resolve at the domain root, and the
+   api-server must run with NODE_ENV=production so it serves the built SPA.
+
+4. PUBLISH the app (autoscale deployment). Build = the workspace build (frontend
+   + api-server); run = the api-server (it serves both the SPA and /api on the
+   deployment port).
+
+5. VERIFY on the temporary *.replit.app deployment URL and report results:
+   - The landing page loads and shows "Yadegar" (NOT a blank page or raw /api).
+   - Register a new account → land in onboarding → choose a path.
+   - Write a page on Today → it saves ("kept").
+   - "Bring a page back" returns a memory or an honest "nothing" (not a 500).
+   - A client route loads on direct hit (open <url>/settings/privacy directly).
+   These confirm the SPA is served, the DB schema is present, and ENCRYPTION_KEY
+   + ANTHROPIC_API_KEY work in the Deployment.
+
+Report the deployment (*.replit.app) URL and the verification results. Do NOT
+attach the custom domain or change APP_URL yet — we'll do that once this passes.

@@ -10,15 +10,15 @@ function resolveFullText(
   stored: Entry[] | undefined,
   fallback: Record<string, string>
 ): string | null {
-  const onDate = (stored ?? []).filter((e) => e.date === date);
+  const onDate = (stored ?? []).filter((e) => e.entryDate === date);
   if (onDate.length > 0) {
     // Prefer the stored entry whose text actually contains the fragment.
     const withFragment = onDate.find(
       (e) =>
         fragment &&
-        e.text.toLowerCase().includes(fragment.toLowerCase())
+        e.body.toLowerCase().includes(fragment.toLowerCase())
     );
-    return (withFragment ?? onDate[0]).text;
+    return (withFragment ?? onDate[0]).body;
   }
   return fallback[date] ?? null;
 }

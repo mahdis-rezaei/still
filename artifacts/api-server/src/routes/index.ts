@@ -1,10 +1,44 @@
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
+import authRouter from "./auth";
+import privacyRouter from "./privacy";
+import reflectionsRouter from "./reflections";
+import entriesRouter from "./entries";
+import memoriesRouter from "./memories";
+import resurfaceMutesRouter from "./resurface-mutes";
+import importsRouter from "./imports";
+import notificationsRouter from "./notifications";
+import cronRouter from "./cron";
 import stillRouter from "./still";
+import { rateLimit, ipKey, isLoopback } from "../lib/rate-limit";
 
 const router: IRouter = Router();
 
+// Guard the raw engine endpoints from external abuse (they're costly LLM calls).
+// The internal call from /memories/run comes from loopback and is exempt, so
+// real users (who go through the rate-limited /memories/run) are unaffected.
+// This lives here, not in the engine file, so the engine stays untouched.
+const engineGuard = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 60,
+  keyOf: ipKey,
+  skip: isLoopback,
+  message: "Too many requests to the engine — please slow down.",
+});
+
 router.use(healthRouter);
+router.use(authRouter);
+router.use(privacyRouter);
+// Reflections before entries so /entries/:id/reflections matches here first
+// (single auth) rather than falling through the entries router.
+router.use(reflectionsRouter);
+router.use(entriesRouter);
+router.use(memoriesRouter);
+router.use(resurfaceMutesRouter);
+router.use(importsRouter);
+router.use(notificationsRouter);
+router.use(cronRouter);
+router.use("/still", engineGuard);
 router.use(stillRouter);
 
 export default router;
