@@ -15,6 +15,7 @@ import {
 } from "@workspace/api-client-react";
 import { AppNav } from "@/components/app-nav";
 import { ShelfToggle } from "@/components/shelf-toggle";
+import { CollectionPicker } from "@/components/collection-picker";
 
 const RESURFACING: {
   value: EntryUpdateResurfacingPreference;
@@ -155,6 +156,7 @@ export default function EntryDetail() {
                 {longDate(entry.entryDate)}
               </h1>
               <div className="flex items-center gap-4 shrink-0">
+                <CollectionPicker entryId={id} />
                 <ShelfToggle entryId={id} />
                 <button
                   onClick={() => patch({ favorite: !entry.favorite })}

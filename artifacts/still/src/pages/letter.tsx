@@ -44,12 +44,20 @@ export default function Letter() {
             </Link>
           </div>
           {hasPages && (
-            <button
-              onClick={() => window.print()}
-              className="rounded-full border border-border hover:border-accent-sepia text-soft-ink hover:text-ink px-4 py-2 font-sans text-sm transition-colors"
-            >
-              Print / Save as PDF
-            </button>
+            <div className="flex items-center gap-4">
+              <Link
+                href={`/book?scope=year&year=${year}`}
+                className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"
+              >
+                Make a full book →
+              </Link>
+              <button
+                onClick={() => window.print()}
+                className="rounded-full border border-border hover:border-accent-sepia text-soft-ink hover:text-ink px-4 py-2 font-sans text-sm transition-colors"
+              >
+                Print / Save as PDF
+              </button>
+            </div>
           )}
         </div>
 

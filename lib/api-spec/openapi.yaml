@@ -936,6 +936,129 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /collections:
+    get:
+      operationId: listCollections
+      tags: [memories]
+      summary: The user's collections (with counts; optional per-entry membership)
+      parameters:
+        - name: entryId
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Collections
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CollectionSummary"
+    post:
+      operationId: createCollection
+      tags: [memories]
+      summary: Create a collection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                kind:
+                  type: string
+              required: [name]
+      responses:
+        "201":
+          description: The created collection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollectionSummary"
+  /collections/{id}:
+    get:
+      operationId: getCollection
+      tags: [memories]
+      summary: A collection with its pages, chronological
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The collection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollectionDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteCollection
+      tags: [memories]
+      summary: Delete a collection
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+  /collections/{id}/items:
+    post:
+      operationId: addCollectionItem
+      tags: [memories]
+      summary: Add a page to a collection (idempotent)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entryId:
+                  type: string
+              required: [entryId]
+      responses:
+        "201":
+          description: Added
+  /collections/{id}/items/{entryId}:
+    delete:
+      operationId: removeCollectionItem
+      tags: [memories]
+      summary: Remove a page from a collection
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: entryId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Removed
   /resurface-mutes:
     get:
       operationId: listResurfaceMutes
@@ -1811,6 +1934,60 @@ components:
         - createdAt
         - deliverAt
         - delivered
+    CollectionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        kind:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        itemCount:
+          type: integer
+        containsEntry:
+          type: boolean
+      required:
+        - id
+        - name
+        - kind
+        - itemCount
+        - containsEntry
+    CollectionItem:
+      type: object
+      properties:
+        entryId:
+          type: string
+        title:
+          type: ["string", "null"]
+        excerpt:
+          type: string
+        entryDate:
+          type: ["string", "null"]
+      required:
+        - entryId
+        - excerpt
+    CollectionDetail:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        kind:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CollectionItem"
+      required:
+        - id
+        - name
+        - kind
+        - items
     MemoryRunInput:
       type: object
       properties:

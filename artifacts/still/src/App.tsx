@@ -34,8 +34,11 @@ import Timeline from "@/pages/timeline";
 import Search from "@/pages/search";
 import Letter from "@/pages/letter";
 import Calendar from "@/pages/calendar";
+import Book from "@/pages/book";
 import Shelf from "@/pages/shelf";
 import Capsules from "@/pages/capsules";
+import CollectionsPage from "@/pages/collections";
+import CollectionDetail from "@/pages/collection-detail";
 import Import from "@/pages/import";
 import Settings from "@/pages/settings";
 import Privacy from "@/pages/privacy";
@@ -95,8 +98,11 @@ function ProtectedApp() {
       <Route path="/search" component={Search} />
       <Route path="/letters/:year" component={Letter} />
       <Route path="/calendar" component={Calendar} />
+      <Route path="/book" component={Book} />
       <Route path="/shelf" component={Shelf} />
       <Route path="/capsules" component={Capsules} />
+      <Route path="/collections" component={CollectionsPage} />
+      <Route path="/collections/:id" component={CollectionDetail} />
       <Route path="/import" component={Import} />
       <Route path="/settings" component={Settings} />
       <Route path="/settings/notifications" component={Notifications} />

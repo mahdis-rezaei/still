@@ -12,4 +12,5 @@ export * from "./notification-preferences";
 export * from "./resurface-mutes";
 export * from "./shelf-items";
 export * from "./capsules";
+export * from "./collections";
 export * from "./still-results";

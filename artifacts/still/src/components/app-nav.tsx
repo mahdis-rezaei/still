@@ -11,6 +11,7 @@ const EXPLORE_ITEMS = [
   { href: "/look-back", label: "Look back" },
   { href: "/calendar", label: "Calendar" },
   { href: "/shelf", label: "Shelf" },
+  { href: "/collections", label: "Collections" },
   { href: "/capsules", label: "Capsules" },
 ];
 
