@@ -33,7 +33,7 @@ const CRISIS_SUPPORT_MESSAGE =
 // resolution penalty, the voice block, or the why field changes — bumping it
 // automatically invalidates the result cache so you never serve stale results
 // while tuning.
-const PROMPT_VERSION = "2026-06-02.9";
+const PROMPT_VERSION = "2026-06-03.1";
 
 // A focused, sensitivity-biased safety classifier run BEFORE extraction. It only
 // answers "is the writer in active, present-tense crisis right now?" — distinct
@@ -419,6 +419,36 @@ async function detectCrisis(
     log.error({ err }, "Crisis detection failed — falling through to normal extraction");
     return false;
   }
+}
+
+// --- Present-state scoping for the crisis check ---
+// §3.1 asks "is the writer in ACTIVE crisis RIGHT NOW?" — a question about the
+// present, not the whole archive. Running it over years of entries makes it
+// over-fire: a lifetime of journaling almost always contains some survived
+// despair, and the err-toward-crisis safeguard then flags the entire run. We
+// scope the detector to the writer's PRESENT state — the most recent entry (by
+// date; a tie or fully dateless input falls back to the last entry in input
+// order, matching the classifier prompt's own "the last one in the input" rule).
+// This does NOT weaken safety on older pages: the Pass 1 hard floor and Pass 2
+// gate_hard_floors still independently exclude any active-crisis LINE from being
+// surfaced, so narrowing the detector can never let a crisis line through — it
+// only stops survived past pain from masquerading as a present-tense crisis.
+function presentStateEntries(raw: string): string {
+  const blocks = parseEntryBlocks(raw);
+  if (blocks.length <= 1) return raw;
+
+  const dated = blocks.filter((b) => b.date && b.date !== "unknown");
+  const present =
+    dated.length > 0
+      ? blocks.filter(
+          (b) => b.date === dated.reduce((a, b) => (b.date > a.date ? b : a)).date,
+        )
+      : [blocks[blocks.length - 1]];
+
+  return present
+    .map((b) => `[${b.date}]\n${b.text.trim()}`)
+    .join("\n\n")
+    .trim();
 }
 
 // --- Coherence invariant guard ---
@@ -1056,12 +1086,14 @@ router.post("/still/extract", async (req, res) => {
       }
     }
 
-    // Crisis safeguard: check the raw entries (especially the most recent) for
-    // active, present-tense crisis BEFORE extracting. If present, never produce a
-    // thread/memory/observation/quote — return a dedicated crisis signal with
-    // empty candidates so the client renders care instead of an insight, and
-    // never reaches scoring. Cached like any other result so re-opens are stable.
-    if (await detectCrisis(parsed.data.entries, req.log)) {
+    // Crisis safeguard: check the writer's PRESENT state (most recent entry) for
+    // active, present-tense crisis BEFORE extracting. Scoped to the present so a
+    // lifetime of survived pain doesn't read as a current crisis (see
+    // presentStateEntries). If present, never produce a thread/memory/observation/
+    // quote — return a dedicated crisis signal with empty candidates so the client
+    // renders care instead of an insight, and never reaches scoring. Cached like
+    // any other result so re-opens are stable.
+    if (await detectCrisis(presentStateEntries(parsed.data.entries), req.log)) {
       const crisisResult = {
         candidates: [],
         crisis: { supportMessage: CRISIS_SUPPORT_MESSAGE },
