@@ -205,15 +205,17 @@ export default function Import() {
               everything before saving.
             </p>
 
-            <textarea
-              value={raw}
-              onChange={(e) => setRaw(e.target.value)}
-              placeholder={
-                "Paste your journal here. Dates like [2018-03-29], 2018-03-29, or March 29, 2018 help Yadegar split the pages."
-              }
-              className="w-full min-h-[320px] bg-surface border border-border rounded-xl p-5 text-base text-ink font-body leading-relaxed placeholder:text-faint-ink focus:outline-none focus:border-accent-sepia resize-none"
-              data-testid="input-import-text"
-            />
+            <div className="rounded-2xl border border-border bg-surface/80 shadow-sm p-6 md:p-7">
+              <textarea
+                value={raw}
+                onChange={(e) => setRaw(e.target.value)}
+                placeholder={
+                  "Paste your journal here. Dates like [2018-03-29], 2018-03-29, or March 29, 2018 help Yadegar split the pages."
+                }
+                className="w-full min-h-[320px] bg-transparent text-base text-ink font-body leading-relaxed placeholder:text-faint-ink/80 focus:outline-none resize-none"
+                data-testid="input-import-text"
+              />
+            </div>
 
             <div className="flex items-center gap-4 mt-5">
               <button

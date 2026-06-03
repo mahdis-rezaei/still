@@ -8,6 +8,7 @@ import {
   type Entry,
 } from "@workspace/api-client-react";
 import { AppNav } from "@/components/app-nav";
+import { PageHeader } from "@/components/page";
 
 const SOURCE_LABELS: Record<string, string> = {
   pasted_import: "imported",
@@ -76,23 +77,23 @@ export default function Library() {
     <div className="min-h-[100dvh] flex flex-col">
       <AppNav />
 
-      <main className="flex-1 w-full max-w-[720px] mx-auto px-6 py-12 md:py-16">
-        <div className="flex items-baseline justify-between mb-8">
-          <h1 className="font-display text-4xl text-deep-brown">Library</h1>
-          <div className="flex items-baseline gap-4">
-            {all.length > 0 && (
-              <span className="font-sans text-xs text-faint-ink">
-                {all.length} {all.length === 1 ? "page" : "pages"} kept
-              </span>
-            )}
+      <main className="flex-1 w-full max-w-[680px] mx-auto px-6 py-12 md:py-16">
+        <PageHeader
+          title="Library"
+          subtitle={
+            all.length > 0
+              ? `${all.length} ${all.length === 1 ? "page" : "pages"} kept`
+              : "Every page you write or bring in lives here."
+          }
+          right={
             <Link
               href="/import"
               className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"
             >
               Bring old journals →
             </Link>
-          </div>
-        </div>
+          }
+        />
 
         {isLoading ? (
           <p className="font-sans text-sm text-faint-ink">
@@ -154,9 +155,12 @@ export default function Library() {
 
             {yearGroups.map(([year, items]) => (
               <section key={year} className="mb-10">
-                <h2 className="font-display text-2xl text-deep-brown mb-3">
-                  {year}
-                </h2>
+                <div className="flex items-center gap-4 mb-2">
+                  <h2 className="font-sans text-xs uppercase tracking-[0.18em] text-faint-ink">
+                    {year}
+                  </h2>
+                  <span className="flex-1 h-px bg-border/60" />
+                </div>
                 <div className="flex flex-col">
                   {items.map((entry) => (
                     <div

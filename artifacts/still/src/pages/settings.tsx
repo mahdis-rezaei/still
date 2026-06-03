@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { AppNav } from "@/components/app-nav";
+import { PageHeader } from "@/components/page";
 
 export default function Settings() {
   const { user, logout } = useAuth();
@@ -9,8 +10,9 @@ export default function Settings() {
   return (
     <div className="min-h-[100dvh] flex flex-col">
       <AppNav />
-      <main className="flex-1 w-full max-w-[640px] mx-auto px-6 py-12 md:py-16">
-        <h1 className="font-display text-4xl text-deep-brown mb-10">Settings</h1>
+      <main className="flex-1 w-full max-w-[680px] mx-auto px-6 py-12 md:py-16">
+        <PageHeader title="Settings" />
+
 
         <section className="mb-10">
           <p className="font-sans text-xs uppercase tracking-[0.18em] text-faint-ink mb-3">

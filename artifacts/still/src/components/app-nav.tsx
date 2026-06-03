@@ -71,8 +71,8 @@ export function AppNav() {
       </nav>
 
       {user && !user.emailVerified && (
-        <div className="w-full bg-surface/70 border-b border-border/60 px-6 md:px-8 py-2.5 text-center">
-          <span className="font-sans text-xs text-soft-ink">
+        <div className="w-full bg-[#F3EAD7] border-b border-accent-sepia/20 px-6 md:px-8 py-2.5 text-center">
+          <span className="font-sans text-xs text-deep-brown/80">
             {resent ? (
               "Sent — check your inbox to confirm your email."
             ) : (
@@ -80,7 +80,7 @@ export function AppNav() {
                 Confirm your email to keep your pages safe.{" "}
                 <button
                   onClick={handleResend}
-                  className="text-accent-sepia hover:text-deep-brown underline underline-offset-2"
+                  className="text-accent-sepia hover:text-deep-brown underline underline-offset-2 font-medium"
                   data-testid="button-resend-verification"
                 >
                   Resend link

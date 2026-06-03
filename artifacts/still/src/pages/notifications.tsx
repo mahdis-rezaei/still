@@ -55,7 +55,7 @@ export default function Notifications() {
   return (
     <div className="min-h-[100dvh] flex flex-col">
       <AppNav />
-      <main className="flex-1 w-full max-w-[640px] mx-auto px-6 py-12 md:py-16">
+      <main className="flex-1 w-full max-w-[680px] mx-auto px-6 py-12 md:py-16">
         <Link
           href="/settings"
           className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"

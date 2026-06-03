@@ -7,6 +7,7 @@ import {
   type ReturnedMemory,
 } from "@workspace/api-client-react";
 import { AppNav } from "@/components/app-nav";
+import { PageHeader } from "@/components/page";
 import { MemoryCard } from "@/components/memory-card";
 
 export default function Returns() {
@@ -38,10 +39,10 @@ export default function Returns() {
       <AppNav />
 
       <main className="flex-1 w-full max-w-[680px] mx-auto px-6 py-12 md:py-16">
-        <h1 className="font-display text-4xl text-deep-brown mb-2">Returns</h1>
-        <p className="font-body text-soft-ink mb-10">
-          Pages Yadegar has brought back. They stay here for you to revisit.
-        </p>
+        <PageHeader
+          title="Returns"
+          subtitle="Pages Yadegar has brought back. They stay here for you to revisit."
+        />
 
         {isLoading ? (
           <p className="font-sans text-sm text-faint-ink">Gathering…</p>
