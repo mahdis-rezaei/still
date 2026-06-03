@@ -44,4 +44,5 @@ Engine = PRD build-order steps 1–2 ("the whole bet") **done and verified live*
 
 ## Git
 - Develop on the branch the task specifies (last: `claude/ecstatic-wright-y4npO`). Push with `git push -u origin <branch>`.
-- PRs → `main`, squash-merge. **After a squash merge, `git reset --hard origin/main` and force-push the branch** before the next PR (squash divergence — see HANDOFF).
+- **`main` reflects the live product** (caught up via merge commit PR #6). Merge future PRs as **merge commits, NOT squash** — that keeps the branch and `main` sharing history, so there's no divergence and no `reset --hard`/force-push dance. (Squash-merging is what previously left `main` stale and caused the add/add conflicts.)
+- **Replit deploys from the working branch, not `main`** — so a PR/merge to `main` is housekeeping, not a release. Production ships via the `docs/REPLIT-SYNC-*.txt` re-sync flow. Don't create PRs unless asked.
