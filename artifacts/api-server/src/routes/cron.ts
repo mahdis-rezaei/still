@@ -131,8 +131,13 @@ router.post("/cron/run-nudges", async (req, res): Promise<void> => {
 
       // Memory nudge — DATE-FIRST: a free "on this day" return if one exists
       // today (no model call), else fall back to the engine for a deeper find.
-      // Either way, send only when a real page surfaces.
-      if (isDue(prefs.memoryFrequency, prefs.lastMemoryNudgeAt)) {
+      // Either way, send only when a real page surfaces. Gated by memory
+      // sensitivity: only "open" gets UNBIDDEN memory nudges (gentle/protected
+      // still receive writing nudges and can browse memories themselves).
+      if (
+        user.memorySensitivity === "open" &&
+        isDue(prefs.memoryFrequency, prefs.lastMemoryNudgeAt)
+      ) {
         try {
           const onThisDay = await onThisDayForUser(
             user.id,

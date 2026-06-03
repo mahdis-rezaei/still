@@ -1059,6 +1059,41 @@ paths:
       responses:
         "204":
           description: Removed
+  /preferences:
+    get:
+      operationId: getPreferences
+      tags: [memories]
+      summary: User-level preferences (memory sensitivity)
+      responses:
+        "200":
+          description: Preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Preferences"
+    patch:
+      operationId: updatePreferences
+      tags: [memories]
+      summary: Update memory sensitivity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Preferences"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Preferences"
+        "400":
+          description: Invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /resurface-mutes:
     get:
       operationId: listResurfaceMutes
@@ -1934,6 +1969,14 @@ components:
         - createdAt
         - deliverAt
         - delivered
+    Preferences:
+      type: object
+      properties:
+        memorySensitivity:
+          type: string
+          enum: [open, gentle, protected]
+      required:
+        - memorySensitivity
     CollectionSummary:
       type: object
       properties:

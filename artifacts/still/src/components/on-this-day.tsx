@@ -1,14 +1,18 @@
 import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { useOnThisDay, onThisDayLabel } from "@/lib/use-on-this-day";
+import { usePreferences } from "@/lib/use-preferences";
 import { DateMemoryCard } from "@/components/date-memory-card";
 
 // The On This Day section on Today. Stays SILENT (renders nothing) when there's
 // nothing from this day in years past — never an empty box, never a nudge to
-// look. A quiet link leads to the fuller Look Back browse.
+// look. A quiet link leads to the fuller Look Back browse. In "protected"
+// memory-sensitivity, it doesn't auto-surface at all (nothing returns unbidden).
 export function OnThisDay() {
   const queryClient = useQueryClient();
+  const { data: prefs } = usePreferences();
   const { data, isLoading } = useOnThisDay();
+  if (prefs?.memorySensitivity === "protected") return null;
   if (isLoading || !data || data.length === 0) return null;
 
   const refresh = () =>
