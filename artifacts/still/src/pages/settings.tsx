@@ -55,6 +55,10 @@ export default function Settings() {
               Export everything, or delete your account — anytime.
             </p>
           </Link>
+          <p className="font-body text-sm text-faint-ink mt-3 leading-relaxed">
+            Your pages are private. Yadegar never shares your journals — they're
+            encrypted at rest, and yours to export or delete whenever you like.
+          </p>
         </section>
 
         <button

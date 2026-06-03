@@ -17,6 +17,29 @@ const SOURCE_LABELS: Record<string, string> = {
   sample: "sample",
 };
 
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+// Group the raw entry sources into the three kinds a person actually thinks in.
+type SourceKind = "written" | "imported" | "sample";
+function sourceKind(source: string): SourceKind {
+  if (source === "sample") return "sample";
+  if (source === "manual") return "written";
+  return "imported";
+}
+
 function firstLines(body: string, max = 2): string {
   return body
     .trim()
@@ -33,13 +56,38 @@ export default function Library() {
 
   const [query, setQuery] = useState("");
   const [favOnly, setFavOnly] = useState(false);
+  const [yearFilter, setYearFilter] = useState("all");
+  const [monthFilter, setMonthFilter] = useState("all");
+  const [sourceFilter, setSourceFilter] = useState<"all" | SourceKind>("all");
 
   const all = data ?? [];
+
+  // The years and source kinds actually present, so we never offer an empty filter.
+  const years = useMemo(() => {
+    const set = new Set<string>();
+    for (const e of all) {
+      const y = e.entryDate?.slice(0, 4);
+      if (y) set.add(y);
+    }
+    return [...set].sort((a, b) => (a < b ? 1 : -1));
+  }, [all]);
+
+  const sourceKinds = useMemo(() => {
+    const set = new Set<SourceKind>();
+    for (const e of all) set.add(sourceKind(e.source));
+    return set;
+  }, [all]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return all.filter((e) => {
       if (favOnly && !e.favorite) return false;
+      if (yearFilter !== "all" && e.entryDate?.slice(0, 4) !== yearFilter)
+        return false;
+      if (monthFilter !== "all" && e.entryDate?.slice(5, 7) !== monthFilter)
+        return false;
+      if (sourceFilter !== "all" && sourceKind(e.source) !== sourceFilter)
+        return false;
       if (!q) return true;
       return (
         e.body.toLowerCase().includes(q) ||
@@ -47,7 +95,16 @@ export default function Library() {
         (e.title ?? "").toLowerCase().includes(q)
       );
     });
-  }, [all, query, favOnly]);
+  }, [all, query, favOnly, yearFilter, monthFilter, sourceFilter]);
+
+  const filtersActive =
+    yearFilter !== "all" || monthFilter !== "all" || sourceFilter !== "all";
+
+  function clearFilters() {
+    setYearFilter("all");
+    setMonthFilter("all");
+    setSourceFilter("all");
+  }
 
   const yearGroups = useMemo(() => {
     const map = new Map<string, Entry[]>();
@@ -147,9 +204,71 @@ export default function Library() {
               </button>
             </div>
 
+            {/* A quiet filing line — narrow the shelf by year, month, or kind. */}
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-8 font-sans text-sm text-soft-ink">
+              <span className="text-faint-ink">Showing</span>
+              <select
+                value={sourceFilter}
+                onChange={(e) =>
+                  setSourceFilter(e.target.value as "all" | SourceKind)
+                }
+                className="bg-transparent text-ink border-b border-border focus:border-accent-sepia focus:outline-none py-0.5 cursor-pointer"
+                data-testid="filter-source"
+              >
+                <option value="all">all pages</option>
+                {sourceKinds.has("written") && (
+                  <option value="written">written here</option>
+                )}
+                {sourceKinds.has("imported") && (
+                  <option value="imported">imported</option>
+                )}
+                {sourceKinds.has("sample") && (
+                  <option value="sample">samples</option>
+                )}
+              </select>
+              <span className="text-faint-ink">from</span>
+              <select
+                value={yearFilter}
+                onChange={(e) => setYearFilter(e.target.value)}
+                className="bg-transparent text-ink border-b border-border focus:border-accent-sepia focus:outline-none py-0.5 cursor-pointer"
+                data-testid="filter-year"
+              >
+                <option value="all">any year</option>
+                {years.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={monthFilter}
+                onChange={(e) => setMonthFilter(e.target.value)}
+                className="bg-transparent text-ink border-b border-border focus:border-accent-sepia focus:outline-none py-0.5 cursor-pointer"
+                data-testid="filter-month"
+              >
+                <option value="all">any month</option>
+                {MONTHS.map((name, i) => (
+                  <option key={name} value={String(i + 1).padStart(2, "0")}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+              {filtersActive && (
+                <button
+                  onClick={clearFilters}
+                  className="text-faint-ink hover:text-ink underline underline-offset-2 transition-colors"
+                  data-testid="button-clear-filters"
+                >
+                  clear
+                </button>
+              )}
+            </div>
+
             {filtered.length === 0 && (
               <p className="font-body text-soft-ink py-4">
-                No pages match “{query.trim()}”.
+                {query.trim()
+                  ? `No pages match “${query.trim()}”.`
+                  : "No pages here yet — try widening the filters."}
               </p>
             )}
 

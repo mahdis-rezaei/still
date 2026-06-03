@@ -101,6 +101,26 @@ export default function EntryDetail() {
     setLocation("/library");
   }
 
+  // Take this page with you — a plain-text copy, entry plus any reflections.
+  function exportEntry() {
+    if (!entry) return;
+    const lines = [longDate(entry.entryDate)];
+    if (entry.title) lines.push("", entry.title);
+    lines.push("", entry.body);
+    for (const r of reflections ?? []) {
+      lines.push("", "—", `Reflection · ${longDate(r.reflectionDate)}`, "", r.body);
+    }
+    const blob = new Blob([lines.join("\n")], {
+      type: "text/plain;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `yadegar-${entry.entryDate ?? "undated"}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="min-h-[100dvh] flex flex-col">
       <AppNav />
@@ -289,6 +309,13 @@ export default function EntryDetail() {
                     data-testid="button-edit"
                   >
                     Edit
+                  </button>
+                  <button
+                    onClick={exportEntry}
+                    className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"
+                    data-testid="button-export"
+                  >
+                    Export
                   </button>
                   {confirmDelete ? (
                     <span className="flex items-center gap-3 font-sans text-sm">
