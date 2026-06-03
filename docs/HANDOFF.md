@@ -179,6 +179,38 @@ Live-only verification (DB/engine in Replit) is the real proof; deploy via
 endpoints are in `openapi.yaml` but the app uses small hand-written hooks until
 `pnpm --filter @workspace/api-spec run codegen` is run.
 
+### Batch 3 — ownership, continuity & delight (DONE except Themes; see `docs/PRD/batch-3.md`)
+Deepening the lifelong relationship without becoming a habit-loop. Key principle
+added: **browse vs. resurface** — *navigation* surfaces (search/timeline/calendar)
+show the **whole archive** like the Library; only *resurfacing* (engine, nudge,
+On This Day, Look Back) honors the safety floors/mutes. We do not hide a page from
+the person actively looking for it. Shipped:
+- **Continuity + Gentle Milestones** — `GET /continuity`; an archival card on
+  Library (the deliberate ANTI-streak: pages, span, oldest-page age,
+  writing-since, reflections + true-now milestones). No migration.
+- **The Timeline of You** — `/timeline`, a chronological spine over existing
+  entry dates. No backend.
+- **Search Your Life** — `/search`, **client-side** (bodies are encrypted →
+  server can't search them), year-grouped, highlighted. No backend.
+- **Explore nav** — a calm dropdown grouping Search · Timeline · Look back ·
+  Calendar · Shelf (keeps the top bar to Today · Library · Explore · Returns ·
+  Settings).
+- **Annual Letters** — `GET /letters/:year` + `/letters/:year`, a typeset,
+  **print-CSS** "Your Year in Pages" (no server PDF dep). No migration.
+- **Memory Calendar** — `/calendar`, a month grid → that month across all years.
+  Frontend over dates; navigation (full archive), distinct from Look Back's
+  floored view. No migration.
+- **Memory Shelf** — a small curated "kept close" set, distinct from Favorites.
+  New `shelf_items` table; `GET/POST/DELETE /shelf`; a reader toggle + `/shelf`.
+  **The only Batch 3 migration** (superset deploy: `docs/REPLIT-SYNC-SHELF.txt`).
+
+**Reflections Across Time** (the original Batch 3 Feature 12) was already shipped
+in Batch 2 — closed. **Themes Across a Life** is the one Batch 3 feature NOT
+built: it's cross-entry LLM work and the highest "diagnosis" risk, so it's
+**deferred to the Engine V2 track** (`memory-engine-v2-vision.md`), to be built
+with the strict guardrail "a theme = a word + the pages, never a sentence
+interpreting the person."
+
 ---
 
 ## 6. Known reds on the live board (understood, non-blocking)

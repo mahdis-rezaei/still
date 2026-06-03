@@ -30,6 +30,37 @@ times. The rule:
 | 2 | Write / store / list / read full entry (DB-backed) + import + memory engine | **done, verified live in Replit** |
 | 3 | Launch: encryption at rest, email verify/reset, rate limiting, onboarding, nudges, legal, custom domain | **done — LIVE at yadegarjournal.com** |
 | 4 | **Batch 2 — date-based resurfacing** (see below) | **built; deploy via the migration sync** |
+| 5 | **Batch 3 — ownership, continuity & delight** (see below) | **built except Themes; deploy via the superset sync** |
+
+---
+
+## Batch 3 — ownership, continuity & delight (`docs/PRD/batch-3.md`, `docs/HANDOFF.md` §5)
+
+Deepening the lifelong relationship without a habit-loop. Core principle:
+**browse vs. resurface** — navigation surfaces show the whole archive (like
+Library); only resurfacing honors the safety floors/mutes. Shipped on the branch:
+
+- **Continuity + Gentle Milestones** — `GET /continuity`; an archival anti-streak
+  card on Library. (no migration)
+- **Timeline of You** — `/timeline`, a chronological spine over entry dates.
+  (no backend)
+- **Search Your Life** — `/search`, client-side (encryption → no server text
+  search), year-grouped + highlighted. (no backend)
+- **Explore nav** — dropdown grouping Search · Timeline · Look back · Calendar ·
+  Shelf.
+- **Annual Letters** — `GET /letters/:year` + `/letters/:year`, print-CSS "Your
+  Year in Pages" (no server PDF dep). (no migration)
+- **Memory Calendar** — `/calendar`, month grid → that month across years.
+  (no migration)
+- **Memory Shelf** — `shelf_items` table + `GET/POST/DELETE /shelf` + reader
+  toggle + `/shelf`. **The only Batch 3 migration.**
+
+Reflections Across Time was already done in Batch 2. **Themes Across a Life** is
+deferred to the Engine V2 track (cross-entry LLM + highest diagnosis-risk).
+
+Deploy: one superset sync with one additive migration (`shelf_items`) —
+`docs/REPLIT-SYNC-SHELF.txt`. (The other Batch 3 pieces are code-only and also
+ride that sync.)
 
 ---
 
