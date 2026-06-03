@@ -1,0 +1,22 @@
+Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
+(head 0830f92), same method as before. CODE-ONLY (frontend) — NO migration, NO
+new endpoints, NO new secrets.
+
+What lands:
+  - /timeline — "The Timeline of You": the user's own pages rendered oldest ->
+    newest along a spine (large year anchors, year-jump row, undated grouped
+    last). Pure frontend over the existing GET /entries data; opens any page in
+    the full reader. Nothing inferred, no AI.
+  - A quiet "See your life as a timeline ->" link on the Library page.
+
+Steps:
+1. SYNC the code to origin (head 0830f92). Do not edit app code or prompts.
+2. pnpm install — no-op.
+3. NO drizzle-kit push (no schema change).
+4. RE-PUBLISH the deployment.
+
+Verify:
+  - Visit /timeline on an account with dated entries: years appear oldest-first,
+    each with its pages; clicking a year chip jumps to it; clicking a page opens
+    it. Undated pages appear under an "Undated" group at the end.
+  - Empty account shows a gentle "Your timeline begins with your first page."
