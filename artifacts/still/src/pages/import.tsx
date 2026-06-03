@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -113,6 +113,18 @@ export default function Import() {
 
   const includedCount = review?.entries.filter((e) => e.include).length ?? 0;
 
+  // For big imports: the span of years found, so the scope is legible at a glance.
+  const yearSpan = useMemo(() => {
+    const years = (review?.entries ?? [])
+      .map((e) => e.detectedDate?.slice(0, 4))
+      .filter((y): y is string => Boolean(y))
+      .sort();
+    if (years.length === 0) return null;
+    const lo = years[0];
+    const hi = years[years.length - 1];
+    return lo === hi ? lo : `${lo}–${hi}`;
+  }, [review]);
+
   return (
     <div className="min-h-[100dvh] flex flex-col">
       <AppNav />
@@ -142,22 +154,56 @@ export default function Import() {
             <p className="font-body text-soft-ink mb-8">
               {review.parsedCount === 0
                 ? "Try pasting again, or add a date line like [2018-03-29] before each entry."
-                : "Review them below. Fix any dates, uncheck anything you'd rather not keep, then save."}
+                : yearSpan
+                  ? `Spanning ${yearSpan}. Everything is selected to keep — scan below, fix any dates, and uncheck anything you'd rather skip.`
+                  : "Review them below. Fix any dates, uncheck anything you'd rather not keep, then save."}
             </p>
 
+            {/* A keep action up top too, so a long import doesn't need a scroll to save. */}
+            {review.parsedCount > 0 && (
+              <div className="flex items-center gap-4 mb-8">
+                <button
+                  onClick={confirm}
+                  disabled={busy || includedCount === 0}
+                  className="rounded-full bg-deep-brown text-background px-7 py-2.5 font-sans text-sm hover:bg-ink disabled:opacity-50 transition-colors"
+                  data-testid="button-keep-top"
+                >
+                  {busy
+                    ? "Keeping…"
+                    : `Keep ${includedCount} ${includedCount === 1 ? "page" : "pages"}`}
+                </button>
+                {includedCount !== review.parsedCount && (
+                  <span className="font-sans text-sm text-faint-ink">
+                    {review.parsedCount - includedCount} unchecked
+                  </span>
+                )}
+              </div>
+            )}
+
             <div className="space-y-4">
-              {review.entries.map((entry) => {
+              {review.entries.map((entry, i) => {
                 const hint = CONFIDENCE_HINT[entry.dateConfidence];
+                const year = entry.detectedDate?.slice(0, 4) ?? null;
+                const prevYear =
+                  i > 0
+                    ? (review.entries[i - 1].detectedDate?.slice(0, 4) ?? null)
+                    : null;
+                const showYear = year && year !== prevYear;
                 return (
-                  <div
-                    key={entry.id}
-                    className={
-                      "border rounded-xl p-5 transition-opacity " +
-                      (entry.include
-                        ? "border-border bg-surface/60"
-                        : "border-border/60 bg-transparent opacity-50")
-                    }
-                  >
+                  <Fragment key={entry.id}>
+                    {showYear && (
+                      <h2 className="font-sans text-xs uppercase tracking-[0.18em] text-faint-ink pt-4">
+                        {year}
+                      </h2>
+                    )}
+                    <div
+                      className={
+                        "border rounded-xl p-5 transition-opacity " +
+                        (entry.include
+                          ? "border-border bg-surface/60"
+                          : "border-border/60 bg-transparent opacity-50")
+                      }
+                    >
                     <div className="flex items-center gap-3 mb-3">
                       <input
                         type="checkbox"
@@ -182,10 +228,11 @@ export default function Import() {
                         </span>
                       )}
                     </div>
-                    <p className="font-body text-soft-ink leading-relaxed">
-                      {excerpt(entry.body)}
-                    </p>
-                  </div>
+                      <p className="font-body text-soft-ink leading-relaxed">
+                        {excerpt(entry.body)}
+                      </p>
+                    </div>
+                  </Fragment>
                 );
               })}
             </div>
