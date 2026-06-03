@@ -1,0 +1,32 @@
+Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
+(head 82fde57), same method as before. Requires ONE additive migration (a column
+on users). No new secrets.
+
+What lands — Memory Sensitivity (Open / Gentle / Protected):
+  A global dial for how Yadegar brings pages back, layered over the existing
+  safety machinery (no new classifier, no engine):
+    - open      — memory nudges + in-app "on this day" (current behavior)
+    - gentle    — no memory nudges; in-app date returns still appear
+    - protected — nothing returns unbidden (no nudges, On This Day doesn't
+                  auto-surface); pages come back only when the user goes looking
+  Hard floors (body/appearance/eating), active-crisis exclusion, and muted
+  periods apply in EVERY mode — unchanged.
+  Endpoints: GET/PATCH /api/preferences. The run-nudges cron now only sends
+  memory nudges to "open" users. Control lives on Settings → What returns
+  (/settings/resurfacing).
+
+Steps:
+1. SYNC the code to origin (head 82fde57). Do not edit app code or prompts.
+2. pnpm install — no-op.
+3. DB MIGRATION — additive, non-destructive. Run:
+     pnpm --filter @workspace/db exec drizzle-kit push
+   Apply: ADD COLUMN users.memory_sensitivity (text, NOT NULL, default 'open').
+   Existing users default to 'open' (current behavior) — nothing changes for them.
+4. RE-PUBLISH the deployment.
+
+Verify:
+  - GET https://yadegarjournal.com/api/preferences → {"memorySensitivity":"open"}.
+  - Settings → What returns: "How memories return" shows Open / Gentle /
+    Protected; selecting one persists (reload to confirm).
+  - Set Protected: the "On this day" section no longer auto-appears on /today
+    (Look back / Calendar / Search still work). Set back to Open: it returns.
