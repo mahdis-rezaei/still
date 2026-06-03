@@ -13,11 +13,15 @@ entries — a thread, a forgotten page, a distance traveled — always pointing 
 to the writer's own words, and stays **silent** when nothing honest surfaces.
 Governing rule: **offer the meaning, never push the moment.**
 
-- **Engine** = lives in **Replit** (two-pass HTTP service). PRD build-order
-  **steps 1–2 are done and verified live.**
+- **Status: LAUNCHED.** The full product is live at **yadegarjournal.com** (PRD
+  steps 1–6) plus **Batch 2 (date-based resurfacing)** — see §5. The "steps 1–2"
+  framing below the engine bullet is historical; the whole loop ships now.
+- **Engine** = lives in **Replit** (two-pass HTTP service), PROMPT_VERSION
+  `2026-06-03.1`. The source is also in this repo (`artifacts/api-server/src/
+  routes/still.ts`); `main` now holds the whole product (§7).
 - **Eval harness** = lives in **this GitHub repo** under `scripts/src/eval/`.
   It's the regression suite that proves the engine's selection AND voice
-  calibration. PRs #1–#5 merged to `main`.
+  calibration. PRs #1–#5 plus the product-catch-up PR #6 are on `main`.
 - **Live board** (last full live run): **Selection 12/16, Voice 10/11.** The
   remaining reds are understood and judged non-blocking (see §6).
 
@@ -141,10 +145,39 @@ ships a wound; we assert both.
 | Step | What | State |
 |---|---|---|
 | 1–2 | The whole bet: extraction + holistic selection + gates + voice + §3.1 crisis + determinism | **DONE, verified live, guarded by harness** |
-| 3 | UI (single-result view; **"full entry unavailable" expand fix** is the known open defect) | not started |
-| 4 | Privacy/storage architecture (§8) | not started |
-| 5 | Import pipeline | not started |
-| 6 | Gentle-return | not started |
+| 3 | UI (Today / Library / full entry view / Returns) | **DONE, live** |
+| 4 | Privacy/storage architecture (encryption at rest + export/delete) | **DONE, live** |
+| 5 | Import pipeline (paste / .txt / .md) | **DONE, live** |
+| 6 | Gentle-return (nudges) | **DONE, live** |
+
+Steps 3–6 shipped as part of the launched product (see `LAUNCH-PLAN.md` /
+`PRODUCT-BUILD.md`). The product is **live at yadegarjournal.com**.
+
+### Batch 2 — date-based resurfacing (DONE; see `docs/PRD/batch-2.md`)
+The rewritten Batch 2 spec relaxed the old "all resurfacing goes through the
+engine — never raw by-date" rule. Date-based resurfacing is now a first-class
+mode alongside the engine. Shipped:
+- **Crisis-scope fix** — §3.1 now assesses the writer's *present* state (most
+  recent entry), not the whole archive, so "Bring a page back" stopped
+  over-firing the support card. PROMPT_VERSION → `2026-06-03.1`.
+- **Per-entry resurfacing-safety tagging** — `POST /still/classify` (crisis +
+  whole-entry hard-floor) writes a stored verdict to `journal_entries
+  .resurface_safety`; a deferred cron (`/cron/tag-resurface-safety`) drains
+  untagged entries so date surfacers are pure DB queries. NULL = not eligible
+  (fail-safe).
+- **Surfacers** (`lib/on-this-day.ts`, all sharing one eligibility floor): On
+  This Day, Around This Time, Favorites, Forgotten Page (needs
+  `journal_entries.last_opened_at`, set on full-page open).
+- **Look Back** browse page (`/look-back`) gathering the above; On This Day also
+  shows on Today. Date-**first** memory nudge (on-this-day before the engine).
+- **Date-range mute** — `resurface_mutes` table + `/settings/resurfacing`;
+  `notMutedSql` folded into every surfacer AND the engine, so a muted season
+  never returns by any path.
+
+Live-only verification (DB/engine in Replit) is the real proof; deploy via
+`docs/REPLIT-SYNC-FORGOTTEN-MUTE.txt` (one additive migration). Date-based
+endpoints are in `openapi.yaml` but the app uses small hand-written hooks until
+`pnpm --filter @workspace/api-spec run codegen` is run.
 
 ---
 
@@ -162,28 +195,31 @@ bodies never won" bug was an *extraction* miss masquerading as a selection bug.
 
 ---
 
-## 7. Git workflow (squash-divergence rule — important)
+## 7. Git workflow
 
 - Develop on the branch the task names (last: `claude/ecstatic-wright-y4npO`).
   Push `git push -u origin <branch>`. Never push to a different branch without
   explicit permission.
-- PRs target `main`, **squash-merged**. After a squash merge the feature branch
-  shares no commit with main's squash → the next branch will conflict
-  (add/add). **Fix:** `git reset --hard origin/main`, then re-apply your net
-  delta (`git checkout <oldHEAD> -- scripts/` if needed), one clean commit,
-  force-push.
+- **`main` now reflects the live product.** It was caught up via a **merge
+  commit** (PR #6, `4ff40f0`) — not a squash — so the branch and `main` share
+  full history and there is **no squash-divergence** anymore. Future PRs merge
+  cleanly; merge them as **merge commits** (not squash) to keep it that way.
+  (The old squash-merge convention is what left `main` stale + caused the
+  add/add divergence dance; we stopped doing that.)
+- **Replit deploys from the working branch, not `main`** — so merging to `main`
+  is housekeeping, not a release. Production ships via the Replit re-sync docs.
 - Do **not** create PRs unless the user explicitly asks.
 - Commit/PR footer for this lineage: `https://claude.ai/code/session_01Mwd5bztHUQiFeo39Aqyaxa`.
 
 ---
 
-## 8. Productization advice already given (so you're consistent)
+## 8. Productization (HISTORICAL — superseded by launch)
 
-- **Publish the Replit app as a prototype/link-only demo only.** Privacy §8 is
-  not built — do not market it for real journals. Add a "Prototype — use sample
-  entries" note. The crisis floor IS live, which is the one must-have.
-- **Do not buy the Still domain yet** — premature; the `.replit.app` URL is fine
-  for interviews. Revisit after §8 (privacy/storage) exists.
+This section's old advice ("publish as a prototype only," "don't buy a domain
+yet," "don't market for real journals") is **superseded**: the product launched
+on the **yadegarjournal.com** domain with encryption at rest, auth, privacy
+export/delete, and legal pages. The crisis floor is live (and now present-state
+scoped — §5). For current state see `LAUNCH-PLAN.md` + `PRODUCT-BUILD.md`.
 
 ---
 

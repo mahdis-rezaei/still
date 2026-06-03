@@ -28,8 +28,31 @@ times. The rule:
 |---|---|---|
 | 1 | Auth (Google + email/password) + user-scoped storage | **done, verified live in Replit** |
 | 2 | Write / store / list / read full entry (DB-backed) + import + memory engine | **done, verified live in Replit** |
-| 3 | Filter year/month → run engine | not started |
-| 4 | Cadence + "on this day" + favorites + email + Google Doc import | not started |
+| 3 | Launch: encryption at rest, email verify/reset, rate limiting, onboarding, nudges, legal, custom domain | **done — LIVE at yadegarjournal.com** |
+| 4 | **Batch 2 — date-based resurfacing** (see below) | **built; deploy via the migration sync** |
+
+---
+
+## Batch 2 — date-based resurfacing (`docs/PRD/batch-2.md`, `docs/HANDOFF.md` §5)
+
+The Batch 2 rewrite made date-based resurfacing a first-class mode alongside the
+engine (relaxing "never raw by-date"). Built on the branch and merged to `main`
+via PR #6 (merge commit — `main` now reflects the live product). Pieces:
+
+- **Crisis-scope fix** — §3.1 assesses the writer's present state (most recent
+  entry), not the whole archive. PROMPT_VERSION `2026-06-03.1`.
+- **Resurfacing-safety tagging** — `POST /still/classify` + `/cron/tag-resurface-safety`
+  write `journal_entries.resurface_safety`; surfacers read the stored verdict.
+- **Surfacers** — On This Day, Around This Time, Favorites, Forgotten Page
+  (`journal_entries.last_opened_at`), all behind one eligibility floor.
+- **Look Back** browse + Today section; **date-first** memory nudge.
+- **Date-range mute** — `resurface_mutes` + `/settings/resurfacing`; respected by
+  every surfacer and the engine.
+
+Deploy: two additive migrations (`resurface_safety`/`last_opened_at` columns +
+`resurface_mutes` table) — see `docs/REPLIT-SYNC-FORGOTTEN-MUTE.txt`. The tagging
+cron runs via cron-job.org (the `.github/workflows` version is dormant unless a
+scheduled-capable default branch is used).
 
 ---
 
