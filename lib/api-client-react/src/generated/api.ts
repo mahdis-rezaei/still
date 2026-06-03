@@ -21,6 +21,8 @@ import type {
 
 import type {
   AuthUser,
+  BulkDeleteEntries200,
+  BulkDeleteInput,
   Entry,
   EntryInput,
   EntryUpdate,
@@ -579,6 +581,77 @@ export const useClearSampleEntries = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getClearSampleEntriesMutationOptions(options));
+    }
+
+export const getBulkDeleteEntriesUrl = () => {
+
+
+
+
+  return `/api/entries/bulk-delete`
+}
+
+/**
+ * @summary Soft-delete several of the current user's entries by id
+ */
+export const bulkDeleteEntries = async (bulkDeleteInput: BulkDeleteInput, options?: RequestInit): Promise<BulkDeleteEntries200> => {
+
+  return customFetch<BulkDeleteEntries200>(getBulkDeleteEntriesUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      bulkDeleteInput,)
+  }
+);}
+
+
+
+
+export const getBulkDeleteEntriesMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkDeleteEntries>>, TError,{data: BodyType<BulkDeleteInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof bulkDeleteEntries>>, TError,{data: BodyType<BulkDeleteInput>}, TContext> => {
+
+const mutationKey = ['bulkDeleteEntries'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof bulkDeleteEntries>>, {data: BodyType<BulkDeleteInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  bulkDeleteEntries(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BulkDeleteEntriesMutationResult = NonNullable<Awaited<ReturnType<typeof bulkDeleteEntries>>>
+    export type BulkDeleteEntriesMutationBody = BodyType<BulkDeleteInput>
+    export type BulkDeleteEntriesMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Soft-delete several of the current user's entries by id
+ */
+export const useBulkDeleteEntries = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkDeleteEntries>>, TError,{data: BodyType<BulkDeleteInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof bulkDeleteEntries>>,
+        TError,
+        {data: BodyType<BulkDeleteInput>},
+        TContext
+      > => {
+      return useMutation(getBulkDeleteEntriesMutationOptions(options));
     }
 
 export const getGetEntryUrl = (id: string,) => {

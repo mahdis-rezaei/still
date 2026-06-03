@@ -5,6 +5,7 @@ import {
   useListEntries,
   useUpdateEntry,
   useClearSampleEntries,
+  useBulkDeleteEntries,
   getListEntriesQueryKey,
   type Entry,
 } from "@workspace/api-client-react";
@@ -139,6 +140,45 @@ export default function Library() {
     queryClient.invalidateQueries({ queryKey: getListEntriesQueryKey() });
   }
 
+  // Selection mode — tick pages (or "select all" within the current filters) and
+  // remove them in one go. A two-step confirm guards the delete.
+  const bulkDelete = useBulkDeleteEntries();
+  const [selecting, setSelecting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const filteredIds = useMemo(() => filtered.map((e) => e.id), [filtered]);
+  const allFilteredSelected =
+    filteredIds.length > 0 && filteredIds.every((id) => selectedIds.has(id));
+
+  function exitSelect() {
+    setSelecting(false);
+    setSelectedIds(new Set());
+    setConfirmDelete(false);
+  }
+
+  function toggleSelect(id: string) {
+    setConfirmDelete(false);
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    setConfirmDelete(false);
+    setSelectedIds(allFilteredSelected ? new Set() : new Set(filteredIds));
+  }
+
+  async function deleteSelected() {
+    if (selectedIds.size === 0) return;
+    await bulkDelete.mutateAsync({ data: { ids: [...selectedIds] } });
+    queryClient.invalidateQueries({ queryKey: getListEntriesQueryKey() });
+    exitSelect();
+  }
+
   return (
     <div className="min-h-[100dvh] flex flex-col">
       <AppNav />
@@ -152,12 +192,23 @@ export default function Library() {
               : "Every page you write or bring in lives here."
           }
           right={
-            <Link
-              href="/import"
-              className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"
-            >
-              Bring old journals →
-            </Link>
+            <div className="flex items-center gap-4">
+              {all.length > 0 && (
+                <button
+                  onClick={() => (selecting ? exitSelect() : setSelecting(true))}
+                  className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"
+                  data-testid="button-select-mode"
+                >
+                  {selecting ? "Done" : "Select"}
+                </button>
+              )}
+              <Link
+                href="/import"
+                className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"
+              >
+                Bring old journals →
+              </Link>
+            </div>
           }
         />
 
@@ -289,6 +340,56 @@ export default function Library() {
               )}
             </div>
 
+            {selecting && (
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-6 rounded-xl border border-border bg-surface/60 px-4 py-3">
+                <button
+                  onClick={toggleSelectAll}
+                  className="font-sans text-sm text-ink hover:text-deep-brown transition-colors"
+                  data-testid="button-select-all"
+                >
+                  {allFilteredSelected ? "Clear all" : "Select all"}
+                </button>
+                <span className="font-sans text-sm text-faint-ink">
+                  {selectedIds.size} selected
+                </span>
+                <span className="flex-1" />
+                {confirmDelete ? (
+                  <span className="flex items-center gap-3">
+                    <span className="font-body text-sm text-soft-ink">
+                      Delete {selectedIds.size}{" "}
+                      {selectedIds.size === 1 ? "page" : "pages"}? This can't be
+                      undone.
+                    </span>
+                    <button
+                      onClick={deleteSelected}
+                      disabled={bulkDelete.isPending}
+                      className="font-sans text-sm text-red-700 hover:text-red-800 disabled:opacity-50 transition-colors"
+                      data-testid="button-confirm-delete"
+                    >
+                      {bulkDelete.isPending ? "Deleting…" : "Yes, delete"}
+                    </button>
+                    <button
+                      onClick={() => setConfirmDelete(false)}
+                      className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => setConfirmDelete(true)}
+                    disabled={selectedIds.size === 0}
+                    className="font-sans text-sm text-red-700 hover:text-red-800 disabled:opacity-40 transition-colors"
+                    data-testid="button-delete-selected"
+                  >
+                    Delete{" "}
+                    {selectedIds.size > 0 ? `${selectedIds.size} ` : ""}
+                    {selectedIds.size === 1 ? "page" : "pages"}
+                  </button>
+                )}
+              </div>
+            )}
+
             {filtered.length === 0 && (
               <p className="font-body text-soft-ink py-4">
                 {query.trim()
@@ -306,31 +407,9 @@ export default function Library() {
                   <span className="flex-1 h-px bg-border/60" />
                 </div>
                 <div className="flex flex-col">
-                  {items.map((entry) => (
-                    <div
-                      key={entry.id}
-                      className="group flex items-start gap-3 py-4 border-b border-border/70 last:border-0"
-                    >
-                      <button
-                        onClick={() => toggleFavorite(entry)}
-                        className={
-                          "mt-1 text-lg leading-none transition-colors " +
-                          (entry.favorite
-                            ? "text-accent-sepia"
-                            : "text-faint-ink hover:text-soft-ink")
-                        }
-                        aria-label={
-                          entry.favorite ? "Unfavorite" : "Favorite"
-                        }
-                        data-testid={`button-fav-${entry.id}`}
-                      >
-                        {entry.favorite ? "★" : "☆"}
-                      </button>
-                      <Link
-                        href={`/library/${entry.id}`}
-                        className="flex-1 min-w-0 text-left"
-                        data-testid={`link-entry-${entry.id}`}
-                      >
+                  {items.map((entry) => {
+                    const rowInner = (
+                      <>
                         <div className="flex items-baseline justify-between gap-3">
                           <span className="font-sans text-xs text-faint-ink tracking-wide">
                             {entry.entryDate ?? "Undated"}
@@ -344,9 +423,59 @@ export default function Library() {
                         <p className="font-body text-base text-soft-ink leading-snug truncate group-hover:text-ink transition-colors mt-0.5">
                           {entry.title || firstLines(entry.body)}
                         </p>
-                      </Link>
-                    </div>
-                  ))}
+                      </>
+                    );
+                    return (
+                      <div
+                        key={entry.id}
+                        className="group flex items-start gap-3 py-4 border-b border-border/70 last:border-0"
+                      >
+                        {selecting ? (
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(entry.id)}
+                            onChange={() => toggleSelect(entry.id)}
+                            className="mt-1.5 accent-[var(--color-accent-sepia)]"
+                            aria-label="Select page"
+                            data-testid={`select-entry-${entry.id}`}
+                          />
+                        ) : (
+                          <button
+                            onClick={() => toggleFavorite(entry)}
+                            className={
+                              "mt-1 text-lg leading-none transition-colors " +
+                              (entry.favorite
+                                ? "text-accent-sepia"
+                                : "text-faint-ink hover:text-soft-ink")
+                            }
+                            aria-label={
+                              entry.favorite ? "Unfavorite" : "Favorite"
+                            }
+                            data-testid={`button-fav-${entry.id}`}
+                          >
+                            {entry.favorite ? "★" : "☆"}
+                          </button>
+                        )}
+                        {selecting ? (
+                          <button
+                            onClick={() => toggleSelect(entry.id)}
+                            className="flex-1 min-w-0 text-left"
+                            data-testid={`row-entry-${entry.id}`}
+                          >
+                            {rowInner}
+                          </button>
+                        ) : (
+                          <Link
+                            href={`/library/${entry.id}`}
+                            className="flex-1 min-w-0 text-left"
+                            data-testid={`link-entry-${entry.id}`}
+                          >
+                            {rowInner}
+                          </Link>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </section>
             ))}

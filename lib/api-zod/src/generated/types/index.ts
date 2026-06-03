@@ -7,6 +7,8 @@
  */
 
 export * from './authUser';
+export * from './bulkDeleteEntries200';
+export * from './bulkDeleteInput';
 export * from './candidate';
 export * from './candidateMode';
 export * from './candidateScore';

@@ -148,6 +148,18 @@ export const SeedSampleEntriesResponse = zod.array(SeedSampleEntriesResponseItem
 
 
 /**
+ * @summary Soft-delete several of the current user's entries by id
+ */
+export const BulkDeleteEntriesBody = zod.object({
+  "ids": zod.array(zod.string())
+})
+
+export const BulkDeleteEntriesResponse = zod.object({
+  "deletedCount": zod.number().optional()
+})
+
+
+/**
  * @summary Fetch a single entry by id
  */
 export const GetEntryParams = zod.object({

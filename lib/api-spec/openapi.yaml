@@ -208,6 +208,39 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /entries/bulk-delete:
+    post:
+      operationId: bulkDeleteEntries
+      tags: [entries]
+      summary: Soft-delete several of the current user's entries by id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkDeleteInput"
+      responses:
+        "200":
+          description: How many entries were removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deletedCount:
+                    type: integer
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /entries/{id}:
     get:
       operationId: getEntry
@@ -1011,6 +1044,15 @@ components:
           type: string
       required:
         - body
+    BulkDeleteInput:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
+      required:
+        - ids
     EntryUpdate:
       type: object
       properties:

@@ -97,6 +97,10 @@ export interface EntryInput {
   entryDate?: string;
 }
 
+export interface BulkDeleteInput {
+  ids: string[];
+}
+
 export type EntryUpdateResurfacingPreference = typeof EntryUpdateResurfacingPreference[keyof typeof EntryUpdateResurfacingPreference];
 
 
@@ -407,5 +411,9 @@ month?: number;
 favorite?: boolean;
 source?: string;
 search?: string;
+};
+
+export type BulkDeleteEntries200 = {
+  deletedCount?: number;
 };
 

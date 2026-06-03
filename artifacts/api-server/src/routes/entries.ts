@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { db, journalEntriesTable } from "@workspace/db";
 import { CreateEntryBody, UpdateEntryBody } from "@workspace/api-zod";
 import { requireAuth } from "../lib/auth";
@@ -147,6 +147,38 @@ router.delete("/entries/samples", async (req, res): Promise<void> => {
   } catch (err) {
     req.log.error({ err }, "Clear sample entries route error");
     res.status(500).json({ error: "Failed to remove sample pages" });
+  }
+});
+
+// POST /entries/bulk-delete — soft-delete many of the user's pages at once (the
+// Library's "delete selected"). Scoped to the user; ignores ids that aren't
+// theirs. Declared before /entries/:id so "bulk-delete" isn't read as an id.
+router.post("/entries/bulk-delete", async (req, res): Promise<void> => {
+  const ids = req.body?.ids;
+  if (!Array.isArray(ids) || ids.some((id) => typeof id !== "string")) {
+    res.status(400).json({ error: "A list of ids is required" });
+    return;
+  }
+  if (ids.length === 0) {
+    res.json({ deletedCount: 0 });
+    return;
+  }
+  try {
+    const rows = await db
+      .update(journalEntriesTable)
+      .set({ deletedAt: new Date() })
+      .where(
+        and(
+          eq(journalEntriesTable.userId, req.userId!),
+          inArray(journalEntriesTable.id, ids as string[]),
+          isNull(journalEntriesTable.deletedAt),
+        ),
+      )
+      .returning({ id: journalEntriesTable.id });
+    res.json({ deletedCount: rows.length });
+  } catch (err) {
+    req.log.error({ err }, "Bulk delete entries route error");
+    res.status(500).json({ error: "Failed to remove pages" });
   }
 });
 
