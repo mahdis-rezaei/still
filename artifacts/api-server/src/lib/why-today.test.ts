@@ -85,19 +85,18 @@ const entry = (over: Partial<ScoreEntry> = {}): ScoreEntry => ({
   ...over,
 });
 
-test("comparableSet: within one point at/below winner, surfaceable, not penalized", () => {
+test("comparableSet: only master-axis TIES, surfaceable, not penalized", () => {
   const winner = entry({ candidate_title: "W", emotional_center: 4 });
   const scores = [
     winner,
     entry({ candidate_title: "tie", emotional_center: 4 }),
-    entry({ candidate_title: "one-below", emotional_center: 3 }),
-    entry({ candidate_title: "two-below", emotional_center: 2 }), // excluded (>1 below)
+    entry({ candidate_title: "one-below", emotional_center: 3 }), // excluded (winner clearly ahead)
     entry({ candidate_title: "above", emotional_center: 5 }), // excluded (above winner)
     entry({ candidate_title: "penalized", emotional_center: 4, resolution_penalty_fired: true }),
     entry({ candidate_title: "gated", emotional_center: 4, surfaceable: false }),
   ];
   const got = comparableSet(winner, scores).map((s) => s.candidate_title).sort();
-  assert.deepEqual(got, ["one-below", "tie"]);
+  assert.deepEqual(got, ["tie"]);
 });
 
 // --- identifyWinner ---
@@ -143,10 +142,10 @@ test("override: tips a real near-tie toward the resonant candidate", () => {
   assert.equal(d!.toTitle, "Happiest Mask");
 });
 
-test("override: never overrides a clear winner (ec gap > 1)", () => {
+test("override: never overrides a higher emotional_center (the becki ec 5→4 case)", () => {
   const { result, candidates } = scenario();
-  result.scores![0].emotional_center = 5; // Long Way clearly ahead
-  result.scores![1].emotional_center = 3;
+  result.scores![0].emotional_center = 5; // Long Way clearly ahead on the master axis
+  result.scores![1].emotional_center = 4; // resonant, but one below — must NOT win
   const d = chooseWhyTodayOverride(result, candidates, { today: "2026-09-03" });
   assert.equal(d, null);
 });

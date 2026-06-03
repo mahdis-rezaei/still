@@ -152,8 +152,6 @@ function monthName(m: number): string {
 
 // --- selection helpers ---
 
-const EC_NEAR_TIE = 1; // "within one point" — same window CROSS-TIME/FRESH-GRIEF use
-
 function ec(s: ScoreEntry): number {
   return typeof s.emotional_center === "number" ? s.emotional_center : 0;
 }
@@ -194,9 +192,12 @@ export function identifyWinner(result: ScoreResult): ScoreEntry | null {
 }
 
 // Candidates the model scored as comparable to the winner: surfaceable, not
-// resolution-penalized, not the winner, and within one emotional_center point
-// AT OR BELOW the winner (a higher-ec entry would already have won on the master
-// axis — we never promote upward past the model's own ranking).
+// resolution-penalized, not the winner, and TIED on the master axis
+// (emotional_center). The tie is the whole licence for a why-today nudge — when
+// two lines are equally central, the engine was already choosing between them on
+// the secondary axes, so "today" is a legitimate final tiebreak there. A lower
+// emotional_center means the winner is CLEARLY AHEAD on the deciding axis, and we
+// must never override that (this is what the becki ec 5→4 observation taught us).
 export function comparableSet(
   winner: ScoreEntry,
   scores: ScoreEntry[],
@@ -207,8 +208,7 @@ export function comparableSet(
       s !== winner &&
       s.surfaceable !== false &&
       !s.resolution_penalty_fired &&
-      ec(s) <= wEc &&
-      ec(s) >= wEc - EC_NEAR_TIE,
+      ec(s) === wEc,
   );
 }
 

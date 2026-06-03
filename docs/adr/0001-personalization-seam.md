@@ -85,8 +85,11 @@ call.
   Flag + context input retained for the seam to consume. Offline board unchanged.
 - **S2b — DONE:** `artifacts/api-server/src/lib/why-today.ts` — pure functions
   `parseDateParts` / `seasonOf` / `resonance` (anniversary > season, + theme
-  overlap), `comparableSet` (near-tie at/below winner ec, surfaceable,
-  non-penalized), `identifyWinner` (match surfaced quotes → displayable
+  overlap), `comparableSet` (master-axis TIE only — `emotional_center` equal,
+  surfaceable, non-penalized; tightened from the initial within-one-point window
+  after the DEV log-only observation showed a becki ec 5→4 override demoting a
+  strictly higher master axis, which violates "emotional_center decides any clear
+  winner"), `identifyWinner` (match surfaced quotes → displayable
   fragments), and `chooseWhyTodayOverride`. Unit-tested (15 cases) in
   `why-today.test.ts`, run via `pnpm --filter @workspace/scripts run test:engine`
   (uses the scripts package's existing tsx — no new dep, no lockfile change).
