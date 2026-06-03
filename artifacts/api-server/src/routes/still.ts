@@ -4,6 +4,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { db, stillResultsTable } from "@workspace/db";
+import { chooseWhyTodayOverride } from "../lib/why-today";
 
 const router = Router();
 
@@ -1322,6 +1323,29 @@ router.post("/still/score", async (req, res) => {
         { reason: guarded.invariant_guard_reason },
         "Coherence invariant guard fired — downgraded surfaced result to nothing",
       );
+    }
+
+    // Why-today seam (ADR 0001), LOG-ONLY for now. When the flag is on and the
+    // app sent context, compute — over the model's PURE scores — whether a
+    // near-tie resonant candidate would be preferred. S2b only LOGS this; the
+    // surfaced `result` is unchanged, so enabling the flag is still behaviorally
+    // inert. S2c will add the voice pass that actually applies the override.
+    if (whyTodayEnabled() && parsed.data.context) {
+      try {
+        const decision = chooseWhyTodayOverride(
+          result as Parameters<typeof chooseWhyTodayOverride>[0],
+          parsed.data.candidates,
+          parsed.data.context,
+        );
+        if (decision) {
+          req.log.info(
+            { whyToday: decision },
+            "why-today: would override winner (LOG-ONLY; surfaced result unchanged)",
+          );
+        }
+      } catch (err) {
+        req.log.warn({ err }, "why-today seam error (ignored; surfaced result unchanged)");
+      }
     }
 
     await writeCachedResult(key, result);

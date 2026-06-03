@@ -83,13 +83,16 @@ call.
 - **S2a — DONE (this commit):** scoring made context-blind; leaky prompt clause
   removed; scoring cache key reverted to pure candidates (shared with flag-off).
   Flag + context input retained for the seam to consume. Offline board unchanged.
-- **S2b — next:** `artifacts/api-server/src/lib/why-today.ts` — pure functions:
-  `seasonOf` / anniversary / theme-overlap → `resonance(candidate, context)`;
-  `comparableToWinner(scores, winner)` (near-tie set from the model's own
-  scores); `chooseOverride(scoreResult, candidates, context) → candidateId|null`.
-  Unit/harness tests with synthetic score sets. Wire behind the flag in LOG-ONLY
-  mode first (decision logged, surfaced result unchanged) so override decisions
-  can be inspected before any output changes.
+- **S2b — DONE:** `artifacts/api-server/src/lib/why-today.ts` — pure functions
+  `parseDateParts` / `seasonOf` / `resonance` (anniversary > season, + theme
+  overlap), `comparableSet` (near-tie at/below winner ec, surfaceable,
+  non-penalized), `identifyWinner` (match surfaced quotes → displayable
+  fragments), and `chooseWhyTodayOverride`. Unit-tested (15 cases) in
+  `why-today.test.ts`, run via `pnpm --filter @workspace/scripts run test:engine`
+  (uses the scripts package's existing tsx — no new dep, no lockfile change).
+  Wired in `/still/score` in LOG-ONLY mode behind the flag: when on + context, it
+  logs the would-be override; the surfaced `result` is unchanged, so enabling the
+  flag is still behaviorally inert. Offline board unchanged (Selection 3/3).
 - **S2c — then:** voice-only pass that writes the override winner's
   observation/quotes/label (reusing the PASS2 VOICE rules); apply the override;
   cache the override result keyed on `(winner candidate id + context)` so daily
