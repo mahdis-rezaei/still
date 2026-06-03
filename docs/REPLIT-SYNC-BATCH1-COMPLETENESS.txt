@@ -1,50 +1,67 @@
 Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
-(head 5c09eb5), same method as before (native GitHub pull / Contents API).
+(head 51e8f62), same method as before (native GitHub pull / Contents API).
 
-SCOPE (read this — it is accurate, unlike my earlier "frontend-only" note):
-This sync is mostly frontend, PLUS two new backend endpoints and a regenerated
-API client. There is NO database migration and NO new secret required. The new
-endpoints reuse the existing journal_entries table and the existing
-source = "sample" value, so the schema is unchanged.
+This single prompt SUPERSEDES the earlier completeness re-sync. None of the
+changes below are live yet (the deployed import page still says ".txt or .md"),
+so this one publish brings everything current.
 
-What's in this sync (Batch 1 completeness & trust pass):
-- Library: month + source filters added as a calm "filing line" (written /
-  imported / samples · any year · any month), with a "clear" affordance.
-- Entry detail: a per-page "Export" action (downloads the page + any reflections
-  as plain text, entirely client-side).
-- Settings: a privacy-promise line under "Your data."
-- Onboarding: a fourth door, "Let me see how it feels first," which seeds a few
-  sample pages and lands on Today so the person can press "Bring a page back."
-- Library: a subtle banner when sample pages are present, with "Remove them."
-- New backend endpoints: POST /api/entries/samples (idempotent seed) and
-  DELETE /api/entries/samples (soft-delete clear).
-- Regenerated lib/api-zod + lib/api-client-react from lib/api-spec/openapi.yaml.
+SCOPE (accurate — please read):
+- Mostly frontend, PLUS two new backend endpoints and a regenerated API client.
+- NO database migration. The new endpoints reuse the existing journal_entries
+  table and the existing source = "sample" value, so the schema is unchanged.
+- NO new secret/env var.
+- There ARE two new npm dependencies (pdfjs-dist, mammoth) for in-browser file
+  parsing — the lockfile is committed, so `pnpm install` must run before the
+  client build.
+
+What's in this publish:
+1. Library: month + source filters (a calm "filing line": written / imported /
+   samples · any year · any month) with a "clear" affordance.
+2. Entry detail: a per-page "Export" action (downloads the page + its reflections
+   as plain text, entirely client-side).
+3. Settings: a privacy-promise line under "Your data."
+4. Onboarding: a fourth door, "Let me see how it feels first," which seeds a few
+   sample pages and lands on Today.
+5. Library: a subtle banner when sample pages are present, with "Remove them."
+6. New backend endpoints: POST /api/entries/samples (idempotent seed) and
+   DELETE /api/entries/samples (soft-delete clear).
+7. Import: now accepts PDF and Word/Google-Doc (.docx) files in addition to
+   .txt/.md. Text is extracted IN THE BROWSER (pdf.js / mammoth), so the import
+   API contract is unchanged (still sends rawText). Scanned images / handwriting
+   photos are not supported (the page says so; paste instead).
+8. Import review: large pastes (years of entries) are now legible — a span
+   summary ("Spanning 2015–2026…"), a "Keep N pages" action at the top as well
+   as the bottom, and year dividers down the list.
+9. Regenerated lib/api-zod + lib/api-client-react from lib/api-spec/openapi.yaml.
 
 Steps:
-1. SYNC the code to origin (head 5c09eb5). Do not edit app code.
-2. pnpm install (no-op; no new deps).
-3. NO migration. (If you run drizzle-kit push out of habit it should report
-   "No changes detected" — the schema did not change. Do NOT let it drop or
-   rename anything; if it proposes changes, stop and tell me.)
-4. RE-BUILD the client and RE-PUBLISH the deployment so the live app serves the
-   updated screens and the api-server exposes the two new routes.
-   - Manual client build, if needed:
+1. SYNC the code to origin (head 51e8f62). Do not edit app code.
+2. pnpm install  (this WILL fetch pdfjs-dist and mammoth — let it).
+3. NO migration. If you run drizzle-kit push out of habit it should report
+   "No changes detected." If it proposes ANY change (drop/rename/alter), STOP
+   and tell me — the schema did not change.
+4. RE-BUILD the client and RE-PUBLISH so the live app serves the updated screens
+   and the api-server exposes the two new routes.
+   - Manual client build if needed:
        pnpm --filter @workspace/still run build
-     (the existing vite config expects PORT and BASE_PATH in the env, e.g.
-       PORT=5173 BASE_PATH=/  — build-time only, not runtime).
+     (build-time env the vite config expects: PORT and BASE_PATH, e.g.
+       PORT=5173 BASE_PATH=/  — these are build-time only, not runtime.)
 5. VERIFY after publish:
-   - Sanity on the new routes (any signed-in session):
-       POST /api/entries/samples  -> 200 with a JSON array of ~5 sample entries
-       (call it again -> returns the same ones, no duplicates)
-       DELETE /api/entries/samples -> 204
-   - In the browser: Library shows the new "Showing … from … " filter line;
-     pick a source/year/month and confirm the shelf narrows; "clear" resets.
-   - Open any entry -> an "Export" action downloads a .txt of the page.
+   - New routes (any signed-in session):
+       POST   /api/entries/samples  -> 200, JSON array of ~5 sample entries
+       (call again -> same ones, no duplicates)
+       DELETE /api/entries/samples  -> 204
+   - Library shows the "Showing … from … " filter line; picking a source/year/
+     month narrows the shelf; "clear" resets.
+   - Open any entry -> "Export" downloads a .txt of the page.
    - Settings -> the privacy-promise line appears under "Your data."
-   - Onboarding (a fresh account, or visit /onboarding): the fourth option
-     "Let me see how it feels first" adds sample pages and drops you on Today;
-     press "Bring a page back" to see the engine return one. In Library, the
-     sample banner's "Remove them" clears them.
+   - Onboarding (fresh account or /onboarding): "Let me see how it feels first"
+     adds sample pages and drops you on Today; the Library sample banner's
+     "Remove them" clears them.
+   - Import: upload a small PDF and a .docx -> text is extracted and you reach
+     the review screen. Paste a multi-year archive with date headings (e.g.
+     "May 25, 2026") -> it splits into many dated pages, the review shows the
+     span + year dividers + a top "Keep" button.
 
 Report what you ran and anything that looked off. Do not change application code
-or prompts. No DB migration, no secrets, no cron changes for this sync.
+or prompts. No DB migration, no secrets, no cron changes for this publish.
