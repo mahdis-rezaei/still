@@ -32,7 +32,12 @@ A successful run returns HTTP 200 with a JSON summary, e.g.
 - URL: the `https://` URL above. Use **https**, not http — an http→https redirect
   counts as failure (redirect-as-success is off) and drops the POST + headers.
 - Enable job: ON. Save responses in history: ON while verifying (shows the JSON).
-- Schedule: tagging = *Every 15 minutes*; delivery = *Every day at* e.g. 08:00.
+- Schedule: tagging = *Every 10–15 minutes*; delivery = *Every day at* e.g. 08:00.
+- Tagging URL: append **`?limit=10`** →
+  `…/api/cron/tag-resurface-safety?limit=10`. See the timeout note below — the
+  default batch (50) × per-entry LLM calls overruns the 30 s timeout, especially
+  during a re-tag backlog after a `PROMPT_VERSION` bump. `?limit=10` keeps each
+  tick under 30 s; drop to `?limit=5` if it still times out.
 
 **Advanced tab**
 - Time zone: `America/Los_Angeles` (so "every day at 08:00" = 8 AM PT).
@@ -44,12 +49,22 @@ A successful run returns HTTP 200 with a JSON summary, e.g.
 **Verify**: "Execute now" → expect 200 + the JSON summary. 401 = bad/missing
 header; 503 = `CRON_SECRET` not set on the server.
 
-### Timeout caveat (delivery cron)
-`run-nudges` loops all due users and may run the engine (LLM calls) per user, so
-as the user base grows a single call can exceed the 30 s timeout. The server
-keeps finishing the work after the client disconnects, but cron-job.org will
-record a timeout/failure. If timeouts start appearing, make `run-nudges` return
-immediately and do sends in the background (queue/worker) rather than inline.
+### Timeout caveat (BOTH jobs)
+cron-job.org's free timeout is 30 s. Both endpoints make LLM calls per item, so
+a tick can exceed it:
+- **Tagging**: default batch = 50 entries × (crisis + hard-floor + theme) calls
+  each → overruns 30 s, especially during a re-tag backlog. Bound it with
+  **`?limit=10`** (see setup above). Each tick drains a slice; the backlog clears
+  over a few ticks.
+- **Delivery** (`run-nudges`): loops all due users and may run the engine per
+  user; as the user base grows a single call can exceed 30 s.
+
+In BOTH cases the work still completes server-side after the client disconnects
+(entries get tagged / emails get sent) — only the HTTP response is lost, so
+cron-job.org shows a red "Failed (timeout)" even though it did its job. It is
+noisy, not data loss. The durable fix when this becomes routine: shrink the
+tagging batch default and/or make these endpoints return immediately and do the
+work in a background queue/worker instead of inline.
 
 ## Manual backfill (after a tagging change)
 A `PROMPT_VERSION` bump or a new tag column leaves rows pending; the scheduled
