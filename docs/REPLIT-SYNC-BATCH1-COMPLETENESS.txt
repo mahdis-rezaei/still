@@ -1,5 +1,9 @@
 Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
-(head 51e8f62), same method as before (native GitHub pull / Contents API).
+(head e2464b4), same method as before (native GitHub pull / Contents API).
+
+NOTE: this includes an api-server change (request body-size limit), so the
+SERVER process must be restarted/redeployed — a client-only rebuild is not
+enough.
 
 This single prompt SUPERSEDES the earlier completeness re-sync. None of the
 changes below are live yet (the deployed import page still says ".txt or .md"),
@@ -32,7 +36,11 @@ What's in this publish:
 8. Import review: large pastes (years of entries) are now legible — a span
    summary ("Spanning 2015–2026…"), a "Keep N pages" action at the top as well
    as the bottom, and year dividers down the list.
-9. Regenerated lib/api-zod + lib/api-client-react from lib/api-spec/openapi.yaml.
+9. Import 413 fix: a multi-year paste exceeded Express's default 100kb body
+   limit and returned a raw "Payload Too Large" page. The api-server body limit
+   is now 10mb, and the import UI shows a friendly message (with "bring it in a
+   few chunks" guidance) instead of leaking the raw HTTP error.
+10. Regenerated lib/api-zod + lib/api-client-react from lib/api-spec/openapi.yaml.
 
 Steps:
 1. SYNC the code to origin (head 51e8f62). Do not edit app code.
@@ -62,6 +70,9 @@ Steps:
      the review screen. Paste a multi-year archive with date headings (e.g.
      "May 25, 2026") -> it splits into many dated pages, the review shows the
      span + year dividers + a top "Keep" button.
+   - Large paste: paste a very long archive (hundreds of entries) -> it should
+     reach the review screen, NOT a 413 "Payload Too Large". (Confirms the
+     api-server restarted with the new 10mb body limit.)
 
 Report what you ran and anything that looked off. Do not change application code
 or prompts. No DB migration, no secrets, no cron changes for this publish.
