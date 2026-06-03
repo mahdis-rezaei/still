@@ -131,6 +131,23 @@ export const CreateEntryBody = zod.object({
 
 
 /**
+ * @summary Add a small set of sample pages (idempotent) for first-run exploration
+ */
+export const SeedSampleEntriesResponseItem = zod.object({
+  "id": zod.string(),
+  "title": zod.string().nullish(),
+  "body": zod.string(),
+  "entryDate": zod.string().nullish(),
+  "source": zod.enum(['manual', 'pasted_import', 'file_import', 'google_doc', 'sample']),
+  "favorite": zod.boolean(),
+  "resurfacingPreference": zod.enum(['normal', 'more_often', 'never']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const SeedSampleEntriesResponse = zod.array(SeedSampleEntriesResponseItem)
+
+
+/**
  * @summary Fetch a single entry by id
  */
 export const GetEntryParams = zod.object({

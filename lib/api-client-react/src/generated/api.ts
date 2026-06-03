@@ -441,6 +441,146 @@ export const useCreateEntry = <TError = ErrorType<ErrorResponse>,
       return useMutation(getCreateEntryMutationOptions(options));
     }
 
+export const getSeedSampleEntriesUrl = () => {
+
+
+
+
+  return `/api/entries/samples`
+}
+
+/**
+ * @summary Add a small set of sample pages (idempotent) for first-run exploration
+ */
+export const seedSampleEntries = async ( options?: RequestInit): Promise<Entry[]> => {
+
+  return customFetch<Entry[]>(getSeedSampleEntriesUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getSeedSampleEntriesMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof seedSampleEntries>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof seedSampleEntries>>, TError,void, TContext> => {
+
+const mutationKey = ['seedSampleEntries'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof seedSampleEntries>>, void> = () => {
+
+
+          return  seedSampleEntries(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SeedSampleEntriesMutationResult = NonNullable<Awaited<ReturnType<typeof seedSampleEntries>>>
+
+    export type SeedSampleEntriesMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Add a small set of sample pages (idempotent) for first-run exploration
+ */
+export const useSeedSampleEntries = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof seedSampleEntries>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof seedSampleEntries>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getSeedSampleEntriesMutationOptions(options));
+    }
+
+export const getClearSampleEntriesUrl = () => {
+
+
+
+
+  return `/api/entries/samples`
+}
+
+/**
+ * @summary Remove the current user's sample pages
+ */
+export const clearSampleEntries = async ( options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getClearSampleEntriesUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getClearSampleEntriesMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearSampleEntries>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof clearSampleEntries>>, TError,void, TContext> => {
+
+const mutationKey = ['clearSampleEntries'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof clearSampleEntries>>, void> = () => {
+
+
+          return  clearSampleEntries(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ClearSampleEntriesMutationResult = NonNullable<Awaited<ReturnType<typeof clearSampleEntries>>>
+
+    export type ClearSampleEntriesMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Remove the current user's sample pages
+ */
+export const useClearSampleEntries = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearSampleEntries>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof clearSampleEntries>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getClearSampleEntriesMutationOptions(options));
+    }
+
 export const getGetEntryUrl = (id: string,) => {
 
 

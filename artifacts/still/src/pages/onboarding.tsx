@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  useSeedSampleEntries,
+  getListEntriesQueryKey,
+} from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { AmbientField } from "@/components/site-chrome";
 
@@ -9,6 +14,7 @@ const OPTIONS: {
   label: string;
   note: string;
   to: string;
+  seed?: boolean;
 }[] = [
   {
     key: "have",
@@ -28,17 +34,30 @@ const OPTIONS: {
     note: "Write one honest line. It doesn't need to be wise.",
     to: "/today",
   },
+  {
+    key: "explore",
+    label: "Let me see how it feels first",
+    note: "A few sample pages to explore — press “Bring a page back” to watch Yadegar return one. Remove them anytime.",
+    to: "/today",
+    seed: true,
+  },
 ];
 
 export default function Onboarding() {
   const { user, completeOnboarding } = useAuth();
   const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
+  const seedSamples = useSeedSampleEntries();
   const [busy, setBusy] = useState<string | null>(null);
 
-  async function choose(to: string, key: string) {
+  async function choose(to: string, key: string, seed?: boolean) {
     setBusy(key);
     try {
       await completeOnboarding();
+      if (seed) {
+        await seedSamples.mutateAsync();
+        queryClient.invalidateQueries({ queryKey: getListEntriesQueryKey() });
+      }
       setLocation(to);
     } catch {
       setBusy(null);
@@ -68,7 +87,7 @@ export default function Onboarding() {
             {OPTIONS.map((o) => (
               <button
                 key={o.key}
-                onClick={() => choose(o.to, o.key)}
+                onClick={() => choose(o.to, o.key, o.seed)}
                 disabled={busy !== null}
                 className="group rounded-2xl border border-border bg-surface/70 hover:border-accent-sepia transition-colors p-5 disabled:opacity-60"
                 data-testid={`onboarding-${o.key}`}

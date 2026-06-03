@@ -3,6 +3,7 @@ import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { db, journalEntriesTable } from "@workspace/db";
 import { CreateEntryBody, UpdateEntryBody } from "@workspace/api-zod";
 import { requireAuth } from "../lib/auth";
+import { SAMPLE_ENTRIES } from "../lib/sample-entries";
 
 const router = Router();
 
@@ -83,6 +84,69 @@ router.post("/entries", async (req, res): Promise<void> => {
   } catch (err) {
     req.log.error({ err }, "Create entry route error");
     res.status(500).json({ error: "Failed to create entry" });
+  }
+});
+
+// POST /entries/samples — seed a few sample pages so a hesitant first-timer can
+// feel a real return before trusting Yadegar with their own words. Idempotent:
+// if samples already exist, return them rather than duplicating.
+// NB: declared before /entries/:id so the ":id" matcher never captures "samples".
+router.post("/entries/samples", async (req, res): Promise<void> => {
+  try {
+    const existing = await db
+      .select()
+      .from(journalEntriesTable)
+      .where(
+        and(
+          eq(journalEntriesTable.userId, req.userId!),
+          eq(journalEntriesTable.source, "sample"),
+          isNull(journalEntriesTable.deletedAt),
+        ),
+      )
+      .orderBy(sql`${journalEntriesTable.entryDate} desc nulls last`);
+
+    if (existing.length > 0) {
+      res.json(existing);
+      return;
+    }
+
+    const rows = await db
+      .insert(journalEntriesTable)
+      .values(
+        SAMPLE_ENTRIES.map((s) => ({
+          userId: req.userId!,
+          title: s.title,
+          body: s.body,
+          entryDate: s.entryDate,
+          source: "sample" as const,
+        })),
+      )
+      .returning();
+    res.json(rows);
+  } catch (err) {
+    req.log.error({ err }, "Seed sample entries route error");
+    res.status(500).json({ error: "Failed to add sample pages" });
+  }
+});
+
+// DELETE /entries/samples — remove the user's sample pages (soft delete).
+// Declared before /entries/:id for the same routing reason as above.
+router.delete("/entries/samples", async (req, res): Promise<void> => {
+  try {
+    await db
+      .update(journalEntriesTable)
+      .set({ deletedAt: new Date() })
+      .where(
+        and(
+          eq(journalEntriesTable.userId, req.userId!),
+          eq(journalEntriesTable.source, "sample"),
+          isNull(journalEntriesTable.deletedAt),
+        ),
+      );
+    res.status(204).end();
+  } catch (err) {
+    req.log.error({ err }, "Clear sample entries route error");
+    res.status(500).json({ error: "Failed to remove sample pages" });
   }
 });
 

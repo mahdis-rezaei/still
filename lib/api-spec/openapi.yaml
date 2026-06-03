@@ -175,6 +175,39 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /entries/samples:
+    post:
+      operationId: seedSampleEntries
+      tags: [entries]
+      summary: Add a small set of sample pages (idempotent) for first-run exploration
+      responses:
+        "200":
+          description: The user's sample entries (existing or newly seeded)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Entry"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: clearSampleEntries
+      tags: [entries]
+      summary: Remove the current user's sample pages
+      responses:
+        "204":
+          description: Removed
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /entries/{id}:
     get:
       operationId: getEntry

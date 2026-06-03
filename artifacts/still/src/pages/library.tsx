@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   useListEntries,
   useUpdateEntry,
+  useClearSampleEntries,
   getListEntriesQueryKey,
   type Entry,
 } from "@workspace/api-client-react";
@@ -53,6 +54,7 @@ export default function Library() {
   const queryClient = useQueryClient();
   const { data, isLoading } = useListEntries();
   const updateEntry = useUpdateEntry();
+  const clearSamples = useClearSampleEntries();
 
   const [query, setQuery] = useState("");
   const [favOnly, setFavOnly] = useState(false);
@@ -130,6 +132,13 @@ export default function Library() {
     queryClient.invalidateQueries({ queryKey: getListEntriesQueryKey() });
   }
 
+  const hasSamples = all.some((e) => e.source === "sample");
+
+  async function removeSamples() {
+    await clearSamples.mutateAsync();
+    queryClient.invalidateQueries({ queryKey: getListEntriesQueryKey() });
+  }
+
   return (
     <div className="min-h-[100dvh] flex flex-col">
       <AppNav />
@@ -181,6 +190,22 @@ export default function Library() {
           </div>
         ) : (
           <>
+            {hasSamples && (
+              <div className="flex items-center justify-between gap-4 mb-6 rounded-xl border border-accent-sepia/25 bg-[#F3EAD7]/60 px-4 py-3">
+                <p className="font-body text-sm text-deep-brown/80 leading-relaxed">
+                  These are sample pages, here to show you how Yadegar feels.
+                </p>
+                <button
+                  onClick={removeSamples}
+                  disabled={clearSamples.isPending}
+                  className="shrink-0 font-sans text-sm text-accent-sepia hover:text-deep-brown underline underline-offset-2 transition-colors disabled:opacity-50"
+                  data-testid="button-remove-samples"
+                >
+                  {clearSamples.isPending ? "removing…" : "Remove them"}
+                </button>
+              </div>
+            )}
+
             <div className="flex items-center gap-3 mb-8">
               <input
                 type="search"
