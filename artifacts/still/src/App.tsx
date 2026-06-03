@@ -30,6 +30,7 @@ import EntryDetail from "@/pages/entry-detail";
 import Returns from "@/pages/returns";
 import LookBack from "@/pages/look-back";
 import Timeline from "@/pages/timeline";
+import Search from "@/pages/search";
 import Import from "@/pages/import";
 import Settings from "@/pages/settings";
 import Privacy from "@/pages/privacy";
@@ -86,6 +87,7 @@ function ProtectedApp() {
       <Route path="/returns" component={Returns} />
       <Route path="/look-back" component={LookBack} />
       <Route path="/timeline" component={Timeline} />
+      <Route path="/search" component={Search} />
       <Route path="/import" component={Import} />
       <Route path="/settings" component={Settings} />
       <Route path="/settings/notifications" component={Notifications} />

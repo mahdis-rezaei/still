@@ -243,12 +243,18 @@ export default function Library() {
         ) : (
           <>
             <ContinuityCard />
-            <p className="-mt-3 mb-8">
+            <p className="-mt-3 mb-8 flex flex-wrap gap-x-6 gap-y-1">
               <Link
                 href="/timeline"
                 className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"
               >
                 See your life as a timeline →
+              </Link>
+              <Link
+                href="/search"
+                className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"
+              >
+                Search across your pages →
               </Link>
             </p>
             {hasSamples && (
