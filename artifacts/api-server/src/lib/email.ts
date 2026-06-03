@@ -110,6 +110,29 @@ export function memoryNudgeEmail(opts: {
   };
 }
 
+// A date-based "on this day" return — no engine, just a page from this same day
+// in a past year. Warm and quiet: a page placed on the desk, never a demand.
+export function onThisDayNudgeEmail(opts: {
+  monthYear: string; // e.g. "June 2018"
+  excerpt: string;
+  link: string;
+}): { subject: string; html: string; text: string } {
+  // Keep the teaser short for an email; the full page is one tap away.
+  const teaser =
+    opts.excerpt.length > 220
+      ? opts.excerpt.slice(0, 219).trimEnd() + "…"
+      : opts.excerpt;
+  const quoteHtml = `<p style="font-family:Georgia,serif;font-style:italic;font-size:20px;color:#3A2F25;margin:0 0 12px">&ldquo;${teaser}&rdquo;</p>`;
+  return {
+    subject: "A page came back · Yadegar",
+    html: wrap(
+      `A page from ${opts.monthYear} came back today.`,
+      `${quoteHtml}${button(opts.link, "Read the page")}`,
+    ),
+    text: `A page from ${opts.monthYear} came back today.\n\n"${teaser}"\n\nRead it: ${opts.link}\n`,
+  };
+}
+
 export function passwordResetEmail(link: string): {
   subject: string;
   html: string;

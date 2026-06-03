@@ -14,8 +14,11 @@ things land here:
       safety pass (B) has CLEARED — so it appears empty until the tagging cron
       has classified the archive. Run the cron (step 6) before expecting cards.
 
-This sync requires a DB migration and one new scheduled trigger. CRON_SECRET is
-already configured (from the nudges sync) and is reused here.
+This sync requires a DB migration and one new scheduled trigger. It reuses the
+CRON_SECRET env var. NOTE: do NOT assume CRON_SECRET is already set — the nudges
+cron may never have been scheduled, so the secret can be absent. If
+/cron/tag-resurface-safety returns 503 "CRON_SECRET not configured", set
+CRON_SECRET (openssl rand -hex 32) in Secrets and restart before continuing.
 
 1. SYNC the code to origin (head 79d8bfb). Do not edit app code or prompts.
 

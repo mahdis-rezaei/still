@@ -10,11 +10,38 @@ import {
   sendEmail,
   writingNudgeEmail,
   memoryNudgeEmail,
+  onThisDayNudgeEmail,
 } from "../lib/email";
 import { runMemoryForUser } from "../lib/memory-engine";
 import { tagPendingEntries } from "../lib/resurface-safety";
+import { onThisDayForUser } from "../lib/on-this-day";
 
 const router = Router();
+
+// The user's local calendar day, as a UTC-midnight Date (what onThisDayForUser
+// reads). So "on this day" matches the reader's calendar, not the server's.
+function localDayInTz(timeZone: string | null): Date {
+  try {
+    const ymd = new Intl.DateTimeFormat("en-CA", {
+      timeZone: timeZone || "UTC",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+    return new Date(`${ymd}T00:00:00Z`);
+  } catch {
+    return new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00Z`);
+  }
+}
+
+// "June 2018" from a YYYY-MM-DD entry date.
+function monthYear(entryDate: string): string {
+  return new Date(`${entryDate}T00:00:00Z`).toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
 
 function requireCronSecret(req: {
   header: (name: string) => string | undefined;
@@ -99,27 +126,46 @@ router.post("/cron/run-nudges", async (req, res): Promise<void> => {
           .where(eq(notificationPreferencesTable.id, prefs.id));
       }
 
-      // Memory nudge — runs the engine; sends only when a real page surfaces.
+      // Memory nudge — DATE-FIRST: a free "on this day" return if one exists
+      // today (no model call), else fall back to the engine for a deeper find.
+      // Either way, send only when a real page surfaces.
       if (isDue(prefs.memoryFrequency, prefs.lastMemoryNudgeAt)) {
         try {
-          const result = await runMemoryForUser(user.id, {});
-          if (result.surfaced && result.memory) {
-            const m = result.memory;
-            const link = m.journalEntryId
-              ? `${appUrl()}/library/${m.journalEntryId}`
-              : `${appUrl()}/returns`;
+          const onThisDay = await onThisDayForUser(
+            user.id,
+            localDayInTz(user.timezone),
+          );
+          if (onThisDay.length > 0) {
+            const item = onThisDay[0]; // most recent year
             await sendEmail({
               to: user.email,
-              ...memoryNudgeEmail({
-                observation: m.observation,
-                quote: m.quote,
-                quoteDate: m.quoteDate,
-                link,
+              ...onThisDayNudgeEmail({
+                monthYear: monthYear(item.entryDate),
+                excerpt: item.excerpt,
+                link: `${appUrl()}/library/${item.entryId}`,
               }),
             });
             summary.memorySent++;
           } else {
-            summary.memorySilent++;
+            const result = await runMemoryForUser(user.id, {});
+            if (result.surfaced && result.memory) {
+              const m = result.memory;
+              const link = m.journalEntryId
+                ? `${appUrl()}/library/${m.journalEntryId}`
+                : `${appUrl()}/returns`;
+              await sendEmail({
+                to: user.email,
+                ...memoryNudgeEmail({
+                  observation: m.observation,
+                  quote: m.quote,
+                  quoteDate: m.quoteDate,
+                  link,
+                }),
+              });
+              summary.memorySent++;
+            } else {
+              summary.memorySilent++;
+            }
           }
         } catch (err) {
           req.log.error({ err, userId: user.id }, "Memory nudge failed");

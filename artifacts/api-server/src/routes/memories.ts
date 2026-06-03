@@ -1,8 +1,7 @@
 import { Router } from "express";
-import { and, desc, eq, isNotNull, isNull, ne, sql } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import {
   db,
-  journalEntriesTable,
   returnedMemoriesTable,
   type ReturnedMemory,
 } from "@workspace/db";
@@ -10,6 +9,7 @@ import { UpdateMemoryBody, RunMemoryBody } from "@workspace/api-zod";
 import { requireAuth } from "../lib/auth";
 import { rateLimit } from "../lib/rate-limit";
 import { runMemoryForUser } from "../lib/memory-engine";
+import { onThisDayForUser } from "../lib/on-this-day";
 
 const router = Router();
 // Scope auth to /memories only — a path-less use would 401 the internal,
@@ -82,43 +82,10 @@ router.get("/memories", async (req, res): Promise<void> => {
   }
 });
 
-// --- On This Day (date-based resurfacing) ---
-// Deterministic, model-free: entries from the same calendar day (±3 days) in
-// PRIOR years, eligible only when the safety pass cleared them. The opposite of
-// the engine — the user pulls this open; nothing is pushed. Declared BEFORE
-// /memories/:id so "on-this-day" is never read as a memory id.
-
-// Two-digit-padded MM-DD strings within ±windowDays of the target month/day.
-// Built via real Date arithmetic so month/leap-year boundaries are handled.
-function dayWindow(target: Date, windowDays = 3): string[] {
-  const out = new Set<string>();
-  for (let d = -windowDays; d <= windowDays; d++) {
-    const x = new Date(
-      Date.UTC(
-        target.getUTCFullYear(),
-        target.getUTCMonth(),
-        target.getUTCDate() + d,
-      ),
-    );
-    const mm = String(x.getUTCMonth() + 1).padStart(2, "0");
-    const dd = String(x.getUTCDate()).padStart(2, "0");
-    out.add(`${mm}-${dd}`);
-  }
-  return [...out];
-}
-
-// A returned page is shown as an excerpt (the full page is one tap away). Keep
-// enough for context — never a tiny snippet — but bound the payload.
-function excerpt(body: string, maxWords = 300): string {
-  const trimmed = body.trim();
-  const words = trimmed.split(/\s+/);
-  if (words.length <= maxWords) return trimmed;
-  return words.slice(0, maxWords).join(" ") + "…";
-}
-
-// GET /memories/on-this-day?date=YYYY-MM-DD — the date param is optional and
-// defaults to the server's today; the client passes its local date so the
-// window matches the reader's calendar.
+// GET /memories/on-this-day?date=YYYY-MM-DD — date-based resurfacing (see
+// lib/on-this-day). Declared BEFORE /memories/:id so "on-this-day" is never read
+// as a memory id. The date param is optional and defaults to the server's today;
+// the client passes its local date so the window matches the reader's calendar.
 router.get("/memories/on-this-day", async (req, res): Promise<void> => {
   const dateParam = (req.query as { date?: string }).date;
   const target =
@@ -129,58 +96,9 @@ router.get("/memories/on-this-day", async (req, res): Promise<void> => {
     res.status(400).json({ error: "Invalid date" });
     return;
   }
-  const targetYear = target.getUTCFullYear();
-  const targetMmdd = `${String(target.getUTCMonth() + 1).padStart(2, "0")}-${String(
-    target.getUTCDate(),
-  ).padStart(2, "0")}`;
-  const windowMmdd = dayWindow(target);
 
   try {
-    const rows = await db
-      .select({
-        id: journalEntriesTable.id,
-        title: journalEntriesTable.title,
-        body: journalEntriesTable.body,
-        entryDate: journalEntriesTable.entryDate,
-        favorite: journalEntriesTable.favorite,
-      })
-      .from(journalEntriesTable)
-      .where(
-        and(
-          eq(journalEntriesTable.userId, req.userId!),
-          isNull(journalEntriesTable.deletedAt),
-          isNotNull(journalEntriesTable.entryDate),
-          ne(journalEntriesTable.resurfacingPreference, "never"),
-          // Eligible only when the safety pass cleared the page. NULL
-          // (unclassified) and unsafe pages are excluded (fail-safe).
-          sql`(${journalEntriesTable.resurfaceSafety} ->> 'safe') = 'true'`,
-          // Same calendar day (±3), in prior years only.
-          sql`to_char(${journalEntriesTable.entryDate}, 'MM-DD') in (${sql.join(
-            windowMmdd.map((d) => sql`${d}`),
-            sql`, `,
-          )})`,
-          sql`extract(year from ${journalEntriesTable.entryDate}) < ${targetYear}`,
-        ),
-      )
-      // Most recent year first.
-      .orderBy(desc(journalEntriesTable.entryDate));
-
-    const items = rows.map((r) => {
-      const entryDate = r.entryDate as string;
-      const year = Number(entryDate.slice(0, 4));
-      return {
-        entryId: r.id,
-        title: r.title,
-        excerpt: excerpt(r.body),
-        entryDate,
-        favorite: r.favorite,
-        yearsAgo: targetYear - year,
-        // True when it's the exact calendar day (vs. a nearby day in the window).
-        onThisExactDay: entryDate.slice(5) === targetMmdd,
-      };
-    });
-
-    res.json(items);
+    res.json(await onThisDayForUser(req.userId!, target));
   } catch (err) {
     req.log.error({ err }, "On this day error");
     res.status(500).json({ error: "Failed to load on-this-day memories" });
