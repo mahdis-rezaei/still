@@ -1,8 +1,23 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { exportData, useDeleteAccount } from "@workspace/api-client-react";
+import {
+  exportData,
+  useDeleteAccount,
+  customFetch,
+} from "@workspace/api-client-react";
 import { AppNav } from "@/components/app-nav";
+
+function download(content: BlobPart, filename: string, type: string) {
+  const url = URL.createObjectURL(new Blob([content], { type }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
 
 export default function Privacy() {
   const queryClient = useQueryClient();
@@ -10,24 +25,37 @@ export default function Privacy() {
   const deleteAccount = useDeleteAccount();
 
   const [exporting, setExporting] = useState(false);
+  const [scope, setScope] = useState<"all" | "favorites">("all");
   const [confirm, setConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  async function doExport() {
+  const stamp = () => new Date().toISOString().slice(0, 10);
+
+  async function exportJson() {
     setExporting(true);
     try {
       const data = await exportData();
-      const blob = new Blob([JSON.stringify(data, null, 2)], {
-        type: "application/json",
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `still-export-${new Date().toISOString().slice(0, 10)}.json`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      download(
+        JSON.stringify(data, null, 2),
+        `yadegar-archive-${stamp()}.json`,
+        "application/json",
+      );
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function exportText(format: "markdown" | "text") {
+    setExporting(true);
+    try {
+      const q = scope === "favorites" ? "?scope=favorites" : "";
+      const text = await customFetch<string>(
+        `/api/privacy/export/${format}${q}`,
+        { responseType: "text" },
+      );
+      const ext = format === "markdown" ? "md" : "txt";
+      const type = format === "markdown" ? "text/markdown" : "text/plain";
+      download(text, `yadegar-journals-${stamp()}.${ext}`, type);
     } finally {
       setExporting(false);
     }
@@ -104,17 +132,55 @@ export default function Privacy() {
 
         <div className="mt-12 space-y-8">
           <div>
-            <button
-              onClick={doExport}
-              disabled={exporting}
-              className="rounded-full bg-deep-brown text-background px-6 py-2.5 font-sans text-sm hover:bg-ink disabled:opacity-50 transition-colors"
-              data-testid="button-export"
-            >
-              {exporting ? "Preparing…" : "Export my data"}
-            </button>
+            <p className="font-body text-ink mb-1">Export my journals</p>
+            <p className="font-sans text-xs text-faint-ink mb-4">
+              Your journals belong to you — leaving is easier than arriving. Take
+              them in any format, anytime.
+            </p>
+
+            <div className="flex items-center gap-3 mb-4">
+              <span className="font-sans text-xs text-faint-ink">Include</span>
+              <select
+                value={scope}
+                onChange={(e) => setScope(e.target.value as "all" | "favorites")}
+                className="bg-surface border border-border rounded-lg px-3 py-2 text-sm text-soft-ink font-sans focus:outline-none focus:border-accent-sepia"
+              >
+                <option value="all">Everything</option>
+                <option value="favorites">Favorites only</option>
+              </select>
+              <span className="font-sans text-xs text-faint-ink">
+                (applies to Markdown &amp; text)
+              </span>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => exportText("markdown")}
+                disabled={exporting}
+                className="rounded-full bg-deep-brown text-background px-5 py-2.5 font-sans text-sm hover:bg-ink disabled:opacity-50 transition-colors"
+              >
+                Markdown
+              </button>
+              <button
+                onClick={() => exportText("text")}
+                disabled={exporting}
+                className="rounded-full border border-border text-soft-ink hover:text-ink hover:border-accent-sepia px-5 py-2.5 font-sans text-sm disabled:opacity-50 transition-colors"
+              >
+                Plain text
+              </button>
+              <button
+                onClick={exportJson}
+                disabled={exporting}
+                className="rounded-full border border-border text-soft-ink hover:text-ink hover:border-accent-sepia px-5 py-2.5 font-sans text-sm disabled:opacity-50 transition-colors"
+                data-testid="button-export"
+              >
+                JSON (complete archive)
+              </button>
+            </div>
             <p className="font-sans text-xs text-faint-ink mt-2">
-              Downloads everything you've written and been returned, as a JSON
-              file.
+              {exporting
+                ? "Preparing your download…"
+                : "Markdown & text include your pages and the reflections beneath them. JSON is the complete archive."}
             </p>
           </div>
 

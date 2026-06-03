@@ -939,6 +939,54 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /privacy/export/markdown:
+    get:
+      operationId: exportMarkdown
+      tags: [privacy]
+      summary: Export journals (+ reflections) as Markdown
+      parameters:
+        - name: scope
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [all, favorites, year]
+        - name: year
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A Markdown document
+          content:
+            text/markdown:
+              schema:
+                type: string
+  /privacy/export/text:
+    get:
+      operationId: exportText
+      tags: [privacy]
+      summary: Export journals (+ reflections) as plain text
+      parameters:
+        - name: scope
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [all, favorites, year]
+        - name: year
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A plain-text document
+          content:
+            text/plain:
+              schema:
+                type: string
   /privacy/account:
     delete:
       operationId: deleteAccount
