@@ -774,6 +774,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /letters/{year}:
+    get:
+      operationId: getYearLetter
+      tags: [memories]
+      summary: "Your Year in Pages — a printable yearly artifact"
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: The assembled year
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/YearLetter"
+        "400":
+          description: Invalid year
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /resurface-mutes:
     get:
       operationId: listResurfaceMutes
@@ -1530,6 +1554,38 @@ components:
         - pageCount
         - reflectionCount
         - wroteFirstReflectionToday
+    LetterFavorite:
+      type: object
+      properties:
+        entryId:
+          type: string
+        title:
+          type: ["string", "null"]
+        excerpt:
+          type: string
+        entryDate:
+          type: ["string", "null"]
+      required:
+        - entryId
+        - excerpt
+    YearLetter:
+      type: object
+      properties:
+        year:
+          type: integer
+        pageCount:
+          type: integer
+        reflectionCount:
+          type: integer
+        favorites:
+          type: array
+          items:
+            $ref: "#/components/schemas/LetterFavorite"
+      required:
+        - year
+        - pageCount
+        - reflectionCount
+        - favorites
     MemoryRunInput:
       type: object
       properties:

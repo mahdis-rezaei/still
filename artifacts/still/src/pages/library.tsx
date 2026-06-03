@@ -256,6 +256,12 @@ export default function Library() {
               >
                 Search across your pages →
               </Link>
+              <Link
+                href={`/letters/${new Date().getFullYear()}`}
+                className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"
+              >
+                Your year in pages →
+              </Link>
             </p>
             {hasSamples && (
               <div className="flex items-center justify-between gap-4 mb-6 rounded-xl border border-accent-sepia/25 bg-[#F3EAD7]/60 px-4 py-3">
