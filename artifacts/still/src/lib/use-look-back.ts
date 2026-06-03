@@ -21,6 +21,7 @@ export interface LookBack {
   onThisDay: OnThisDayMemory[];
   aroundThisTime: DateMemory[];
   favorites: DateMemory[];
+  forgotten: DateMemory[];
 }
 
 export function useLookBack() {

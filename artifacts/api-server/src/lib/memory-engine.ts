@@ -14,6 +14,7 @@ import {
   returnedMemoriesTable,
   type ReturnedMemory,
 } from "@workspace/db";
+import { notMutedSql } from "./resurface-mutes";
 
 const ENGINE_BASE = `http://127.0.0.1:${process.env.PORT}/api`;
 
@@ -70,6 +71,8 @@ export async function runMemoryForUser(
     isNull(journalEntriesTable.deletedAt),
     ne(journalEntriesTable.resurfacingPreference, "never"),
     isNotNull(journalEntriesTable.entryDate),
+    // Muted date ranges never resurface — by the engine or any date surfacer.
+    notMutedSql(userId),
   ];
   if (opts.year) {
     filters.push(

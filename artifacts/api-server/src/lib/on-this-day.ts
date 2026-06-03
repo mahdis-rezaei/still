@@ -1,5 +1,6 @@
 import { and, desc, eq, isNotNull, isNull, ne, sql, type SQL } from "drizzle-orm";
 import { db, journalEntriesTable } from "@workspace/db";
+import { notMutedSql } from "./resurface-mutes";
 
 // Date-based resurfacing surfacers. Deterministic and model-free — the opposite
 // of the engine: the user pulls these open; nothing is pushed. Every surfacer
@@ -22,7 +23,8 @@ export interface OnThisDayItem extends DateMemory {
 }
 
 // Common eligibility: belongs to the user, not deleted, has a date, not opted
-// out, and the safety pass cleared it (NULL/unsafe excluded — fail-safe).
+// out, the safety pass cleared it (NULL/unsafe excluded — fail-safe), and it's
+// not inside a muted date range.
 function eligible(userId: string): SQL[] {
   return [
     eq(journalEntriesTable.userId, userId),
@@ -30,6 +32,7 @@ function eligible(userId: string): SQL[] {
     isNotNull(journalEntriesTable.entryDate),
     ne(journalEntriesTable.resurfacingPreference, "never"),
     sql`(${journalEntriesTable.resurfaceSafety} ->> 'safe') = 'true'`,
+    notMutedSql(userId),
   ];
 }
 
@@ -167,6 +170,34 @@ export async function favoritesForUser(
     .from(journalEntriesTable)
     .where(and(...eligible(userId), eq(journalEntriesTable.favorite, true)))
     .orderBy(desc(journalEntriesTable.entryDate))
+    .limit(limit);
+
+  return rows.map((r) => toBase(r, refYear));
+}
+
+// A page you haven't seen in a while: at least a year old AND never opened (or
+// not opened in over a year). Longest-unseen first. Recognition, not algorithmic
+// novelty — just an old page that's slipped out of view.
+export async function forgottenForUser(
+  userId: string,
+  limit = 5,
+): Promise<DateMemory[]> {
+  const refYear = new Date().getUTCFullYear();
+  const rows = await db
+    .select(SELECT_COLS)
+    .from(journalEntriesTable)
+    .where(
+      and(
+        ...eligible(userId),
+        sql`${journalEntriesTable.entryDate} < (current_date - interval '1 year')`,
+        sql`(${journalEntriesTable.lastOpenedAt} is null or ${journalEntriesTable.lastOpenedAt} < (now() - interval '1 year'))`,
+      ),
+    )
+    // Never-opened first, then longest-since-opened; oldest page breaks ties.
+    .orderBy(
+      sql`${journalEntriesTable.lastOpenedAt} asc nulls first`,
+      journalEntriesTable.entryDate,
+    )
     .limit(limit);
 
   return rows.map((r) => toBase(r, refYear));

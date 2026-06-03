@@ -9,4 +9,5 @@ export * from "./parsed-import-entries";
 export * from "./returned-memories";
 export * from "./reflections";
 export * from "./notification-preferences";
+export * from "./resurface-mutes";
 export * from "./still-results";

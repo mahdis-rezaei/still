@@ -756,6 +756,69 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /resurface-mutes:
+    get:
+      operationId: listResurfaceMutes
+      tags: [memories]
+      summary: The user's muted date ranges (pages that won't resurface)
+      responses:
+        "200":
+          description: Muted periods, newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ResurfaceMute"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: addResurfaceMute
+      tags: [memories]
+      summary: Mute a date range so its pages never resurface
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResurfaceMuteInput"
+      responses:
+        "201":
+          description: The created mute
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResurfaceMute"
+        "400":
+          description: Invalid range
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /resurface-mutes/{id}:
+    delete:
+      operationId: removeResurfaceMute
+      tags: [memories]
+      summary: Remove a mute (its pages can return again)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Removed
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /privacy/export:
     get:
       operationId: exportData
@@ -1392,10 +1455,42 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/DateMemory"
+        forgotten:
+          type: array
+          items:
+            $ref: "#/components/schemas/DateMemory"
       required:
         - onThisDay
         - aroundThisTime
         - favorites
+        - forgotten
+    ResurfaceMute:
+      type: object
+      properties:
+        id:
+          type: string
+        startDate:
+          type: string
+        endDate:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - startDate
+        - endDate
+        - createdAt
+    ResurfaceMuteInput:
+      type: object
+      properties:
+        startDate:
+          type: string
+        endDate:
+          type: string
+      required:
+        - startDate
+        - endDate
     MemoryRunInput:
       type: object
       properties:

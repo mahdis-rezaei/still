@@ -183,18 +183,21 @@ router.post("/entries/bulk-delete", async (req, res): Promise<void> => {
 });
 
 // GET /entries/:id — a single entry (must belong to the user, not deleted).
+// Opening the full page records last_opened_at (drives the "Forgotten Page"
+// surfacer), done in the same statement via UPDATE…RETURNING.
 router.get("/entries/:id", async (req, res): Promise<void> => {
   try {
     const [row] = await db
-      .select()
-      .from(journalEntriesTable)
+      .update(journalEntriesTable)
+      .set({ lastOpenedAt: new Date() })
       .where(
         and(
           eq(journalEntriesTable.id, req.params.id),
           eq(journalEntriesTable.userId, req.userId!),
           isNull(journalEntriesTable.deletedAt),
         ),
-      );
+      )
+      .returning();
     if (!row) {
       res.status(404).json({ error: "Entry not found" });
       return;

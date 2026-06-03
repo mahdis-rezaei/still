@@ -13,6 +13,7 @@ import {
   onThisDayForUser,
   aroundThisTimeForUser,
   favoritesForUser,
+  forgottenForUser,
 } from "../lib/on-this-day";
 
 const router = Router();
@@ -126,17 +127,22 @@ router.get("/memories/look-back", async (req, res): Promise<void> => {
     return;
   }
   try {
-    const [onThisDay, aroundThisTime, favoritesRaw] = await Promise.all([
-      onThisDayForUser(req.userId!, target),
-      aroundThisTimeForUser(req.userId!, target),
-      favoritesForUser(req.userId!),
-    ]);
+    const [onThisDay, aroundThisTime, favoritesRaw, forgottenRaw] =
+      await Promise.all([
+        onThisDayForUser(req.userId!, target),
+        aroundThisTimeForUser(req.userId!, target),
+        favoritesForUser(req.userId!),
+        forgottenForUser(req.userId!),
+      ]);
+    // De-dupe across buckets so a page never appears twice.
     const shown = new Set([
       ...onThisDay.map((m) => m.entryId),
       ...aroundThisTime.map((m) => m.entryId),
     ]);
     const favorites = favoritesRaw.filter((m) => !shown.has(m.entryId));
-    res.json({ onThisDay, aroundThisTime, favorites });
+    favorites.forEach((m) => shown.add(m.entryId));
+    const forgotten = forgottenRaw.filter((m) => !shown.has(m.entryId));
+    res.json({ onThisDay, aroundThisTime, favorites, forgotten });
   } catch (err) {
     req.log.error({ err }, "Look back error");
     res.status(500).json({ error: "Failed to load look-back memories" });

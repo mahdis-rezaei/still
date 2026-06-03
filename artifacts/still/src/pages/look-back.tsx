@@ -35,11 +35,13 @@ export default function LookBack() {
   const onThisDay = data?.onThisDay ?? [];
   const aroundThisTime = data?.aroundThisTime ?? [];
   const favorites = data?.favorites ?? [];
+  const forgotten = data?.forgotten ?? [];
   const nothing =
     !isLoading &&
     onThisDay.length === 0 &&
     aroundThisTime.length === 0 &&
-    favorites.length === 0;
+    favorites.length === 0 &&
+    forgotten.length === 0;
 
   return (
     <div className="min-h-[100dvh] flex flex-col">
@@ -103,6 +105,19 @@ export default function LookBack() {
                   <DateMemoryCard
                     key={m.entryId}
                     heading="You marked this as important"
+                    memory={m}
+                    onChanged={refresh}
+                  />
+                ))}
+              </Section>
+            )}
+
+            {forgotten.length > 0 && (
+              <Section title="A page you haven't seen in a while">
+                {forgotten.map((m) => (
+                  <DateMemoryCard
+                    key={m.entryId}
+                    heading="A page you haven't seen in a while"
                     memory={m}
                     onChanged={refresh}
                   />

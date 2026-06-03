@@ -56,6 +56,9 @@ export const journalEntriesTable = pgTable("journal_entries", {
   // Date-based-resurfacing safety verdict; NULL until the classifier cron tags
   // it. See ResurfaceSafety above. Reset to NULL whenever the body changes.
   resurfaceSafety: jsonb("resurface_safety").$type<ResurfaceSafety>(),
+  // When the full page was last opened/read. NULL = never opened. Drives the
+  // "Forgotten Page" surfacer (a page you haven't seen in a long while).
+  lastOpenedAt: timestamp("last_opened_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
