@@ -125,93 +125,95 @@ export default function Today() {
     <div className="min-h-[100dvh] flex flex-col">
       <AppNav />
 
-      <main className="flex-1 w-full max-w-[680px] mx-auto px-6 py-12 md:py-16 flex flex-col">
-        <div className="flex items-baseline justify-between mb-8">
+      <main className="flex-1 w-full max-w-[680px] mx-auto px-6 py-12 md:py-16">
+        {/* Header: the day on the left, the (secondary) memory affordance right. */}
+        <div className="flex items-end justify-between mb-6">
           <div>
             <h1 className="font-display text-4xl text-deep-brown">Today</h1>
             <p className="font-sans text-sm text-faint-ink mt-1">
               {todayLong()}
             </p>
           </div>
-          <span
-            className="font-sans text-xs text-faint-ink transition-opacity"
-            data-testid="text-savestate"
+          <button
+            onClick={bringPageBack}
+            disabled={runMemory.isPending}
+            className="font-sans text-sm text-soft-ink hover:text-ink border border-border hover:border-accent-sepia rounded-full px-4 py-2 transition-colors disabled:opacity-50"
+            data-testid="button-bring-page-back"
           >
-            {status === "saving" ? "saving…" : status === "kept" ? "kept" : ""}
-          </span>
+            {runMemory.isPending ? "reading…" : "✦ Bring a page back"}
+          </button>
         </div>
 
-        {/* Bring a page back — the engine, surfaced gently and on request. */}
-        <section className="mb-10">
-          {runMemory.isPending ? (
-            <p className="font-body text-soft-ink animate-pulse">
-              Yadegar is reading across your pages…
-            </p>
-          ) : run && run.surfaced && run.memory ? (
-            <div className="space-y-3">
-              <MemoryCard memory={run.memory} />
-              <button
-                onClick={() => setRun(null)}
-                className="font-sans text-xs text-faint-ink hover:text-soft-ink transition-colors"
-              >
-                close
-              </button>
-            </div>
-          ) : run && !run.surfaced ? (
-            <div className="border border-border/70 rounded-2xl bg-surface/40 p-6">
-              <p className="font-body text-soft-ink leading-relaxed">
-                {run.reason === "crisis"
-                  ? run.supportMessage
-                  : run.reason === "not_enough"
-                    ? "Write or bring in a few pages first, and Yadegar will have something to return."
-                    : run.reason === "error"
-                      ? "Something interrupted the reading. Try again in a moment."
-                      : "Nothing honest surfaced this time. That is okay — Yadegar is better quiet than false."}
-              </p>
-              <button
-                onClick={bringPageBack}
-                className="mt-4 font-sans text-sm text-accent-sepia hover:text-deep-brown transition-colors"
-              >
-                Try again
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={bringPageBack}
-              className="font-sans text-sm text-soft-ink hover:text-ink border border-border hover:border-accent-sepia rounded-full px-5 py-2.5 transition-colors"
-              data-testid="button-bring-page-back"
+        {/* A returned page (or honest silence), shown only after asking. */}
+        {run && (
+          <section className="mb-8">
+            {run.surfaced && run.memory ? (
+              <div className="space-y-3">
+                <MemoryCard memory={run.memory} />
+                <button
+                  onClick={() => setRun(null)}
+                  className="font-sans text-xs text-faint-ink hover:text-soft-ink transition-colors"
+                >
+                  close
+                </button>
+              </div>
+            ) : (
+              <div className="border border-border/70 rounded-2xl bg-surface/50 p-6">
+                <p className="font-body text-soft-ink leading-relaxed">
+                  {run.reason === "crisis"
+                    ? run.supportMessage
+                    : run.reason === "not_enough"
+                      ? "Write or bring in a few pages first, and Yadegar will have something to return."
+                      : run.reason === "error"
+                        ? "Something interrupted the reading. Try again in a moment."
+                        : "Nothing honest surfaced this time. That's okay — Yadegar is better quiet than false."}
+                </p>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Today's page — a real writing surface, anchored like a sheet. */}
+        <div className="rounded-2xl border border-border bg-surface/80 shadow-sm p-6 md:p-8 min-h-[56vh] flex flex-col">
+          <textarea
+            value={body}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={prompt}
+            autoFocus
+            className="flex-1 w-full bg-transparent text-xl md:text-2xl text-ink font-body leading-relaxed placeholder:text-faint-ink/80 focus:outline-none resize-none"
+            data-testid="input-entry"
+          />
+          <div className="flex items-center justify-between pt-4 mt-4 border-t border-border/60">
+            <span
+              className="font-sans text-xs text-faint-ink"
+              data-testid="text-savestate"
             >
-              Bring a page back
-            </button>
-          )}
-        </section>
+              {status === "saving"
+                ? "saving…"
+                : status === "kept"
+                  ? "kept"
+                  : ""}
+            </span>
+            {(body.trim() || entryIdRef.current) && (
+              <button
+                onClick={newPage}
+                className="font-sans text-xs text-soft-ink hover:text-ink transition-colors"
+                data-testid="button-newpage"
+              >
+                Begin a new page
+              </button>
+            )}
+          </div>
+        </div>
 
-        <textarea
-          value={body}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={prompt}
-          autoFocus
-          className="flex-1 min-h-[55vh] w-full bg-transparent text-xl md:text-2xl text-ink font-body leading-relaxed placeholder:text-faint-ink focus:outline-none resize-none"
-          data-testid="input-entry"
-        />
-
-        <div className="flex items-center justify-between pt-6 mt-6 border-t border-border/60">
+        <p className="text-center mt-6">
           <Link
             href="/library"
             className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"
           >
             Your pages live in your Library →
           </Link>
-          {(body.trim() || entryIdRef.current) && (
-            <button
-              onClick={newPage}
-              className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"
-              data-testid="button-newpage"
-            >
-              Begin a new page
-            </button>
-          )}
-        </div>
+        </p>
       </main>
     </div>
   );
