@@ -19,6 +19,20 @@ export type EntrySource =
 
 export type ResurfacingPreference = "normal" | "more_often" | "never";
 
+// Per-entry safety verdict for DATE-BASED resurfacing ("On this day", etc.).
+// Computed once by the engine (POST /still/classify) and stored, so the
+// date-based surfacer is a pure DB query and never makes a live model call.
+// NULL = not yet classified → treated as NOT eligible (fail-safe). Only
+// `safe === true` is ever surfaced. `version` is the engine PROMPT_VERSION the
+// verdict was computed under, so a policy change can null these out and re-tag.
+export type ResurfaceSafetyReason = "crisis" | "hard_floor";
+export interface ResurfaceSafety {
+  safe: boolean;
+  reason: ResurfaceSafetyReason | null;
+  version: string;
+  classifiedAt: string;
+}
+
 // Every journal page. entry_date is intentionally NULLABLE: real lifelong
 // archives contain genuinely undated pages, which live in an "undated" group
 // rather than being forced a false date. The engine reads dates as
@@ -39,6 +53,9 @@ export const journalEntriesTable = pgTable("journal_entries", {
     .$type<ResurfacingPreference>()
     .notNull()
     .default("normal"),
+  // Date-based-resurfacing safety verdict; NULL until the classifier cron tags
+  // it. See ResurfaceSafety above. Reset to NULL whenever the body changes.
+  resurfaceSafety: jsonb("resurface_safety").$type<ResurfaceSafety>(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

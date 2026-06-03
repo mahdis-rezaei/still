@@ -18,6 +18,8 @@ const MAX_TOKENS_PASS1 = 3000;
 const MAX_TOKENS_PASS2 = 8000;
 // The crisis safety check only returns a tiny {crisis, reason} JSON.
 const MAX_TOKENS_CRISIS = 600;
+// The whole-entry hard-floor check returns a tiny {hard_floor, reason} JSON.
+const MAX_TOKENS_HARD_FLOOR = 200;
 
 // Server-authored so the care message is consistent and safe — the model only
 // classifies whether crisis is present; it never writes the support copy. Warm,
@@ -60,6 +62,30 @@ PROTOTYPE SAFEGUARD: when you are genuinely UNCERTAIN whether something is activ
 
 Output ONLY valid JSON, no preamble, no markdown fences, no reasoning. The first character must be "{":
 {"crisis": true, "reason": "one short phrase"}`;
+
+// A focused whole-entry hard-floor classifier for DATE-BASED resurfacing. The §3
+// hard floor is absolute: body weight, eating, dieting, physical appearance, or
+// self-image content is never surfaced. The engine's line-level gate handles this
+// for engine-selected lines; this answers the whole-entry question the date-based
+// surfacer needs: "would resurfacing THIS entire page put body/appearance/eating
+// material in front of the writer?" If yes, the page is never resurfaced by date.
+const PASS_HARD_FLOOR_SYSTEM = `You are a safety check for a private journaling tool that sometimes resurfaces a whole past entry ("on this day a few years ago"). Your ONLY job is to decide whether resurfacing this entire entry would put BODY/APPEARANCE/EATING material in front of the writer. You are NOT a clinician. Do NOT diagnose, analyze, interpret, or explain. You output a single yes/no.
+
+Answer hard_floor=true if the entry is CENTRALLY or SUBSTANTIALLY about any of:
+- body weight, the number on a scale, gaining or losing weight;
+- eating, dieting, restricting, bingeing, purging, calories, or food guilt;
+- physical appearance, body size/shape, or how the writer's body looks;
+- self-image tied to the body ("I hate how I look", "I feel disgusting in my body").
+
+Answer hard_floor=false when:
+- the body is mentioned only in passing and is not what the entry is about;
+- the entry is about ordinary life, feelings, events, relationships, work, meaning — even if it is sad or hard;
+- a meal or the body appears incidentally (e.g. "we cooked dinner together", "I went for a run and felt alive") without focus on weight/appearance/eating control.
+
+When genuinely UNCERTAIN whether the entry is substantially about these, choose hard_floor=true — it is better to withhold a page unnecessarily than to surface one that violates the floor.
+
+Output ONLY valid JSON, no preamble, no markdown fences, no reasoning. The first character must be "{":
+{"hard_floor": false, "reason": "one short phrase"}`;
 
 const PASS1_SYSTEM = `You are reading personal journal entries to find things worth returning to today. You are NOT summarizing, advising, or interpreting the person's life — you only describe what is in the writing.
 
@@ -418,6 +444,31 @@ async function detectCrisis(
   } catch (err) {
     log.error({ err }, "Crisis detection failed — falling through to normal extraction");
     return false;
+  }
+}
+
+// Whole-entry hard-floor check for date-based resurfacing (see
+// PASS_HARD_FLOOR_SYSTEM). Fails CLOSED: any technical error returns true so an
+// unclassifiable entry is withheld rather than risk surfacing floor content.
+async function detectHardFloor(
+  text: string,
+  log: { error: (obj: unknown, msg: string) => void },
+): Promise<boolean> {
+  try {
+    const message = await client.messages.create({
+      model: MODEL,
+      max_tokens: MAX_TOKENS_HARD_FLOOR,
+      temperature: 0,
+      system: PASS_HARD_FLOOR_SYSTEM,
+      messages: [{ role: "user", content: text }],
+    });
+    const block = message.content[0];
+    if (block.type !== "text") return true;
+    const parsed = JSON.parse(extractJson(block.text)) as { hard_floor?: unknown };
+    return parsed?.hard_floor === true;
+  } catch (err) {
+    log.error({ err }, "Hard-floor detection failed — withholding entry from date resurfacing");
+    return true;
   }
 }
 
@@ -1212,6 +1263,49 @@ router.post("/still/score", async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Score route error");
     res.status(500).json({ error: "Failed to score candidates" });
+  }
+});
+
+const ClassifyInputSchema = z.object({
+  text: z.string().min(1),
+});
+
+// POST /still/classify — per-entry safety verdict for DATE-BASED resurfacing.
+// Returns { crisis, hardFloor, version } for ONE entry's text: crisis reuses the
+// canonical §3.1 check; hardFloor is the whole-entry §3 floor check. Cached in
+// still_results (keyed on text + PROMPT_VERSION) so re-tagging is free and a
+// PROMPT_VERSION bump recomputes. The app stores the verdict on the entry and
+// never calls a model at view time. Internal route; not called by the browser.
+router.post("/still/classify", async (req, res) => {
+  const parsed = ClassifyInputSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid input: text required" });
+    return;
+  }
+
+  const key = cacheKey("classify", normalizeForCacheKey(parsed.data.text));
+  const fresh = isFreshRequested(req.query);
+
+  try {
+    if (!fresh) {
+      const cached = await readCachedResult(key);
+      if (cached) {
+        res.json(cached);
+        return;
+      }
+    }
+
+    const [crisis, hardFloor] = await Promise.all([
+      detectCrisis(parsed.data.text, req.log),
+      detectHardFloor(parsed.data.text, req.log),
+    ]);
+
+    const result = { crisis, hardFloor, version: PROMPT_VERSION };
+    await writeCachedResult(key, result);
+    res.json(result);
+  } catch (err) {
+    req.log.error({ err }, "Classify route error");
+    res.status(500).json({ error: "Failed to classify entry" });
   }
 });
 

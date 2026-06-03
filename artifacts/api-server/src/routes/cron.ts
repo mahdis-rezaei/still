@@ -12,8 +12,19 @@ import {
   memoryNudgeEmail,
 } from "../lib/email";
 import { runMemoryForUser } from "../lib/memory-engine";
+import { tagPendingEntries } from "../lib/resurface-safety";
 
 const router = Router();
+
+function requireCronSecret(req: {
+  header: (name: string) => string | undefined;
+}): { ok: true } | { ok: false; status: number; error: string } {
+  const secret = process.env.CRON_SECRET;
+  if (!secret) return { ok: false, status: 503, error: "CRON_SECRET not configured" };
+  if (req.header("x-cron-secret") !== secret)
+    return { ok: false, status: 401, error: "Unauthorized" };
+  return { ok: true };
+}
 
 function appUrl(): string {
   return (process.env.APP_URL ?? "http://localhost:5173").replace(/\/+$/, "");
@@ -126,6 +137,31 @@ router.post("/cron/run-nudges", async (req, res): Promise<void> => {
   } catch (err) {
     req.log.error({ err }, "Cron run-nudges error");
     res.status(500).json({ error: "Failed to run nudges", ...summary });
+  }
+});
+
+// POST /cron/tag-resurface-safety — machine-triggered (e.g. a Scheduled
+// Deployment every few minutes). Authenticated by x-cron-secret == CRON_SECRET.
+// Classifies a batch of entries that still need a date-resurfacing safety verdict
+// (resurface_safety IS NULL), so the date-based surfacer stays a pure DB query.
+// Optional ?limit=N bounds the batch. Idempotent; the backlog drains over ticks.
+router.post("/cron/tag-resurface-safety", async (req, res): Promise<void> => {
+  const auth = requireCronSecret(req);
+  if (!auth.ok) {
+    res.status(auth.status).json({ error: auth.error });
+    return;
+  }
+
+  const limitRaw = Number((req.query as { limit?: string }).limit);
+  const limit =
+    Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 500) : undefined;
+
+  try {
+    const summary = await tagPendingEntries(req.log, limit);
+    res.json(summary);
+  } catch (err) {
+    req.log.error({ err }, "Cron tag-resurface-safety error");
+    res.status(500).json({ error: "Failed to tag entries" });
   }
 });
 

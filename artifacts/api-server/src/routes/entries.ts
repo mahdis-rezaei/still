@@ -216,7 +216,13 @@ router.patch("/entries/:id", async (req, res): Promise<void> => {
 
   const updates: Record<string, unknown> = { updatedAt: new Date() };
   if (parsed.data.title !== undefined) updates.title = parsed.data.title;
-  if (parsed.data.body !== undefined) updates.body = parsed.data.body;
+  if (parsed.data.body !== undefined) {
+    updates.body = parsed.data.body;
+    // The stored safety verdict was computed for the old text; invalidate it so
+    // the entry isn't date-resurfaced under a stale verdict. The classifier cron
+    // re-tags it once the new text settles.
+    updates.resurfaceSafety = null;
+  }
   if (parsed.data.entryDate !== undefined)
     updates.entryDate = parsed.data.entryDate;
   if (parsed.data.favorite !== undefined)
