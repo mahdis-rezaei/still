@@ -33,6 +33,7 @@ export default function Import() {
   const [review, setReview] = useState<ImportReview | null>(null);
   const [done, setDone] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
 
   async function doPaste() {
     if (!raw.trim()) return;
@@ -44,23 +45,40 @@ export default function Import() {
     }
   }
 
-  function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
+    // Reset the input so picking the same file again still fires onChange.
+    e.target.value = "";
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async () => {
-      setBusy(true);
-      try {
-        setReview(
-          await importFile.mutateAsync({
-            data: { filename: file.name, rawText: String(reader.result ?? "") },
-          }),
-        );
-      } finally {
-        setBusy(false);
+    setFileError(null);
+    setBusy(true);
+    try {
+      const name = file.name.toLowerCase();
+      let rawText: string;
+      if (name.endsWith(".pdf") || name.endsWith(".docx")) {
+        // Load the heavy parsers (pdf.js / mammoth) only when actually needed.
+        const { extractText } = await import("@/lib/extract-text");
+        rawText = await extractText(file);
+      } else {
+        rawText = await file.text();
+        if (!rawText.trim()) {
+          throw new Error("That file looks empty.");
+        }
       }
-    };
-    reader.readAsText(file);
+      setReview(
+        await importFile.mutateAsync({
+          data: { filename: file.name, rawText },
+        }),
+      );
+    } catch (err) {
+      setFileError(
+        err instanceof Error
+          ? err.message
+          : "Couldn't read that file. Try pasting the words instead.",
+      );
+    } finally {
+      setBusy(false);
+    }
   }
 
   function patchLocal(updated: ParsedEntry) {
@@ -201,7 +219,8 @@ export default function Import() {
               Bring old pages into Yadegar
             </h1>
             <p className="font-body text-soft-ink mb-8">
-              Paste a journal archive or upload a .txt or .md file. You can review
+              Paste a journal archive, or upload a file — plain text (.txt, .md),
+              a PDF, or a Word/Google Doc export (.docx). You can review
               everything before saving.
             </p>
 
@@ -230,12 +249,24 @@ export default function Import() {
                 or upload a file
                 <input
                   type="file"
-                  accept=".txt,.md,text/plain,text/markdown"
+                  accept=".txt,.md,.pdf,.docx,text/plain,text/markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                   onChange={onFile}
                   className="hidden"
                 />
               </label>
             </div>
+
+            {fileError && (
+              <p className="font-body text-sm text-red-700/80 mt-4">
+                {fileError}
+              </p>
+            )}
+
+            <p className="font-sans text-xs text-faint-ink mt-6 leading-relaxed">
+              Have a Google Doc? In Google Docs choose File → Download →
+              Microsoft Word (.docx), then upload that here. Scanned images and
+              photos of handwriting can't be read yet — paste the words instead.
+            </p>
           </>
         )}
       </main>
