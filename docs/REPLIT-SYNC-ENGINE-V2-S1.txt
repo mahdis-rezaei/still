@@ -1,0 +1,41 @@
+Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
+(head 0b9f792), same method as before. Requires ONE additive migration (two
+columns) AND a re-tag pass. No new secrets.
+
+What lands — Engine V2, slice 1 (theme tagging + diversity rotation):
+  - The engine's /still/classify now also returns a topical "theme" (a neutral
+    shelf label, never a judgment). PROMPT_VERSION bumped to 2026-06-03.2.
+  - journal_entries.theme + returned_memories.theme columns.
+  - The resurface-safety tagging cron now ALSO tags theme (it picks rows missing
+    either tag), so your existing schedule backfills themes automatically.
+  - Memory selection now rotates: it won't re-surface the same page within 6
+    months or repeat a theme shown in the last 90 days (it relaxes before ever
+    returning nothing). The calibrated selection prompt is UNCHANGED.
+
+Steps:
+1. SYNC the code to origin (head 0b9f792). Do not edit app code or prompts.
+2. pnpm install — no-op.
+3. DB MIGRATION — additive, non-destructive. Run:
+     pnpm --filter @workspace/db exec drizzle-kit push
+   Apply: ADD COLUMN journal_entries.theme (text, nullable) and
+          ADD COLUMN returned_memories.theme (text, nullable).
+4. RE-PUBLISH the deployment.
+5. BACKFILL THEMES (uses the cron you already scheduled): the tagging cron now
+   also fills theme. Trigger it until considered=0 to tag the existing archive:
+     curl -X POST "https://yadegarjournal.com/api/cron/tag-resurface-safety?limit=500" \
+       -H "x-cron-secret: $CRON_SECRET"
+   (The PROMPT_VERSION bump means classify recomputes with the theme; the cron
+   re-picks every entry whose theme is still NULL.)
+
+Verify:
+  - DB spot-check after the cron: themes populate, e.g.
+      SELECT entry_date, theme, resurface_safety->>'safe'
+      FROM journal_entries WHERE theme IS NOT NULL LIMIT 20;
+  - Run "Bring a page back" repeatedly on an account with varied entries: it
+    should stop repeating the same page, and avoid stacking the same theme run
+    after run (e.g. not five "grief" pages in a row).
+
+NOTE: this slice does NOT change which single line the engine considers most
+meaningful (PASS2 is untouched) — it changes the POOL the engine chooses from
+(rotation) and records each return's theme. The deeper "why today?" relevance
+tiebreak is a later, separately-verified step.
