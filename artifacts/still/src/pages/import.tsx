@@ -35,11 +35,23 @@ export default function Import() {
   const [busy, setBusy] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
 
+  // Turn a raw fetch/HTTP error into something a person can act on.
+  function friendlyImportError(err: unknown): string {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/413|too large|payload/i.test(msg)) {
+      return "That's a lot of journal at once. Try bringing it in a few chunks — a year or two at a time — or upload it as a .txt file instead.";
+    }
+    return "Couldn't read that. Please try again, or paste the text instead.";
+  }
+
   async function doPaste() {
     if (!raw.trim()) return;
+    setFileError(null);
     setBusy(true);
     try {
       setReview(await importPaste.mutateAsync({ data: { rawText: raw } }));
+    } catch (err) {
+      setFileError(friendlyImportError(err));
     } finally {
       setBusy(false);
     }
@@ -71,10 +83,13 @@ export default function Import() {
         }),
       );
     } catch (err) {
+      // Keep our own friendly extraction messages (e.g. "no text in that
+      // file"); only rewrite raw HTTP/size errors into something actionable.
+      const msg = err instanceof Error ? err.message : "";
       setFileError(
-        err instanceof Error
-          ? err.message
-          : "Couldn't read that file. Try pasting the words instead.",
+        /413|too large|payload|HTTP \d/i.test(msg)
+          ? friendlyImportError(err)
+          : msg || "Couldn't read that file. Try pasting the words instead.",
       );
     } finally {
       setBusy(false);
