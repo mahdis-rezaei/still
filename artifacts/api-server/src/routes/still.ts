@@ -35,7 +35,7 @@ const CRISIS_SUPPORT_MESSAGE =
 // resolution penalty, the voice block, or the why field changes — bumping it
 // automatically invalidates the result cache so you never serve stale results
 // while tuning.
-const PROMPT_VERSION = "2026-06-03.1";
+const PROMPT_VERSION = "2026-06-03.2";
 
 // A focused, sensitivity-biased safety classifier run BEFORE extraction. It only
 // answers "is the writer in active, present-tense crisis right now?" — distinct
@@ -469,6 +469,48 @@ async function detectHardFloor(
   } catch (err) {
     log.error({ err }, "Hard-floor detection failed — withholding entry from date resurfacing");
     return true;
+  }
+}
+
+// Engine V2: a topical theme tag for an entry — a shelf label for grouping
+// (powers diversity rotation), NEVER a judgment about the person. Additive; does
+// not touch selection. Falls back to "other" on any error/invalid output.
+const THEME_VOCAB = [
+  "home", "family", "friendship", "love", "work", "identity", "hope", "grief",
+  "loneliness", "belonging", "courage", "creativity", "wonder", "change",
+  "faith", "health", "money", "travel", "parenting", "other",
+] as const;
+
+const PASS_THEME_SYSTEM = `You sort a journal entry onto ONE topical shelf so a person can browse their life by subject. This is a neutral LIBRARY label — NOT a judgment, diagnosis, mood, or score. Do not interpret the person.
+
+Pick the SINGLE dominant topic of the entry from exactly this list:
+${THEME_VOCAB.join(", ")}
+
+Choose the one a reader would most likely file this page under. If none fit, use "other".
+
+Output ONLY valid JSON, no preamble, no markdown fences. The first character must be "{":
+{"theme": "home"}`;
+
+async function detectTheme(
+  text: string,
+  log: { error: (obj: unknown, msg: string) => void },
+): Promise<string> {
+  try {
+    const message = await client.messages.create({
+      model: MODEL,
+      max_tokens: 60,
+      temperature: 0,
+      system: PASS_THEME_SYSTEM,
+      messages: [{ role: "user", content: text }],
+    });
+    const block = message.content[0];
+    if (block.type !== "text") return "other";
+    const parsed = JSON.parse(extractJson(block.text)) as { theme?: unknown };
+    const theme = typeof parsed?.theme === "string" ? parsed.theme.toLowerCase().trim() : "";
+    return (THEME_VOCAB as readonly string[]).includes(theme) ? theme : "other";
+  } catch (err) {
+    log.error({ err }, "Theme detection failed — defaulting to 'other'");
+    return "other";
   }
 }
 
@@ -1295,12 +1337,13 @@ router.post("/still/classify", async (req, res) => {
       }
     }
 
-    const [crisis, hardFloor] = await Promise.all([
+    const [crisis, hardFloor, theme] = await Promise.all([
       detectCrisis(parsed.data.text, req.log),
       detectHardFloor(parsed.data.text, req.log),
+      detectTheme(parsed.data.text, req.log),
     ]);
 
-    const result = { crisis, hardFloor, version: PROMPT_VERSION };
+    const result = { crisis, hardFloor, theme, version: PROMPT_VERSION };
     await writeCachedResult(key, result);
     res.json(result);
   } catch (err) {

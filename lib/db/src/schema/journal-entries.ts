@@ -59,6 +59,10 @@ export const journalEntriesTable = pgTable("journal_entries", {
   // When the full page was last opened/read. NULL = never opened. Drives the
   // "Forgotten Page" surfacer (a page you haven't seen in a long while).
   lastOpenedAt: timestamp("last_opened_at", { withTimezone: true }),
+  // Engine V2: a topical theme tag (home, family, grief, work…) — a shelf label,
+  // NEVER a judgment. Tagged once by the classifier cron (NULL until tagged).
+  // Powers diversity rotation in selection. See lib/themes.
+  theme: text("theme"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

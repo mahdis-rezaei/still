@@ -38,6 +38,10 @@ export const returnedMemoriesTable = pgTable("returned_memories", {
   quote: encryptedText("quote"),
   quoteDate: date("quote_date"),
   lens: text("lens").$type<MemoryLens>(),
+  // Engine V2: the surfaced page's topical theme (a shelf label, never a
+  // judgment) — copied from the entry's theme at surface time. Powers diversity
+  // rotation (don't over-surface one theme). Nullable for legacy rows.
+  theme: text("theme"),
   fullEngineResponse: jsonb("full_engine_response"),
   dismissed: boolean("dismissed").notNull().default(false),
   favorite: boolean("favorite").notNull().default(false),

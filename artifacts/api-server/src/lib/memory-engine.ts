@@ -15,6 +15,7 @@ import {
   type ReturnedMemory,
 } from "@workspace/db";
 import { notMutedSql } from "./resurface-mutes";
+import { diversifiedPoolIds } from "./diversity";
 
 const ENGINE_BASE = `http://127.0.0.1:${process.env.PORT}/api`;
 
@@ -96,7 +97,29 @@ export async function runMemoryForUser(
 
   if (eligible.length === 0) return { surfaced: false, reason: "not_enough" };
 
-  const entriesStr = eligible
+  // Diversity / rotation (Engine V2): unless the caller named specific entries,
+  // narrow the pool to avoid re-surfacing the same page within 6 months or
+  // repeating a theme shown in the last 90 days. Relaxes before ever emptying.
+  let pool = eligible;
+  if (!opts.entryIds || opts.entryIds.length === 0) {
+    const recent = await db
+      .select({
+        journalEntryId: returnedMemoriesTable.journalEntryId,
+        theme: returnedMemoriesTable.theme,
+        createdAt: returnedMemoriesTable.createdAt,
+      })
+      .from(returnedMemoriesTable)
+      .where(eq(returnedMemoriesTable.userId, userId));
+    const keep = new Set(
+      diversifiedPoolIds(
+        eligible.map((e) => ({ id: e.id, theme: e.theme })),
+        recent,
+      ),
+    );
+    pool = eligible.filter((e) => keep.has(e.id));
+  }
+
+  const entriesStr = pool
     .map((e) => `[${e.entryDate}]\n${e.body}`)
     .join("\n\n");
 
@@ -122,13 +145,15 @@ export async function runMemoryForUser(
   const quoteDate = firstQuote?.date ?? null;
 
   let journalEntryId: string | null = null;
+  let theme: string | null = null;
   if (quoteDate) {
-    const onDate = eligible.filter((e) => e.entryDate === quoteDate);
+    const onDate = pool.filter((e) => e.entryDate === quoteDate);
     const match =
       onDate.find(
         (e) => quote && e.body.toLowerCase().includes(quote.toLowerCase()),
       ) ?? onDate[0];
     journalEntryId = match?.id ?? null;
+    theme = match?.theme ?? null;
   }
 
   const [row] = await db
@@ -143,6 +168,7 @@ export async function runMemoryForUser(
       quote,
       quoteDate,
       lens: mode as never,
+      theme,
       fullEngineResponse: score,
     })
     .returning();
