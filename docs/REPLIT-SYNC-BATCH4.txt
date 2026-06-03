@@ -1,0 +1,41 @@
+Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
+(head 0f9921d), same method as before. This sync requires ONE additive migration
+(capsules table). No new secrets.
+
+This is the Batch 4 Tier A superset (sync to 0f9921d brings all three):
+
+  1. Philosophy page (/philosophy) — content only; the values behind Yadegar,
+     linked from Settings. (no migration)
+  2. Extended Export — Markdown + plain text exports (+ scope=all|favorites),
+     beside the existing JSON archive. GET /api/privacy/export/markdown and
+     /text. The Privacy page now offers all three formats. (no migration)
+  3. Memory Capsule — a sealed letter to a future self. New `capsules` table;
+     POST/GET/PATCH /api/capsules; a /capsules page in the Explore menu. The
+     body stays sealed (withheld by the API) until its delivery date.
+
+Steps:
+1. SYNC the code to origin (head 0f9921d). Do not edit app code or prompts.
+2. pnpm install — no-op.
+3. DB MIGRATION — additive, non-destructive. Run:
+     pnpm --filter @workspace/db exec drizzle-kit push
+   Apply: CREATE TABLE capsules (id, user_id, body, deliver_at, delivered_at,
+   opened_at, created_at). No existing data touched.
+4. RE-PUBLISH the deployment.
+
+IMPORTANT — capsule delivery depends on the run-nudges cron:
+   Capsules are delivered (unsealed + emailed "a page from your past arrived")
+   by POST /api/cron/run-nudges. If you have NOT scheduled that cron yet (it also
+   sends the optional nudges), capsules will stay sealed forever. Schedule a
+   DAILY job, same pattern as the tagging cron:
+     curl -X POST "https://yadegarjournal.com/api/cron/run-nudges" \
+       -H "x-cron-secret: $CRON_SECRET"
+   (Daily is enough — capsule delivery + per-user nudge cadence are date-driven.)
+
+Verify:
+  - /philosophy renders; Settings → "The Yadegar philosophy" links to it.
+  - Settings → Privacy: Export offers Markdown / Plain text / JSON; Markdown
+    downloads a readable .md with pages + reflections.
+  - Explore → Capsules: write one, deliver "On a date…" set to tomorrow, "Seal
+    it" → it lists as "Sealed · opens <date>". (To test delivery now, you can
+    temporarily set deliver_at in the past in the DB, then fire /cron/run-nudges
+    and confirm it flips to "arrived".)
