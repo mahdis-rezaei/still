@@ -1,5 +1,5 @@
 Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
-(head 79d8bfb), same method as before (native GitHub pull / Contents API). Two
+(head f85e24e), same method as before (native GitHub pull / Contents API). Three
 things land here:
 
   (A) Engine fix: the §3.1 crisis check is now scoped to the writer's PRESENT
@@ -7,8 +7,12 @@ things land here:
       back" stops returning a support card on every run over a long history.
   (B) 6b foundation: per-entry "resurface safety" tagging — the groundwork for
       date-based resurfacing ("On this day"). Each entry is classified once
-      (crisis? body/appearance/eating?) and the verdict is stored, so the future
+      (crisis? body/appearance/eating?) and the verdict is stored, so the
       date-based surfacer is a pure DB query with no live model call.
+  (C) On This Day (live): a new section on the Today page showing pages from this
+      same calendar day (±3 days) in prior years. It only shows entries the
+      safety pass (B) has CLEARED — so it appears empty until the tagging cron
+      has classified the archive. Run the cron (step 6) before expecting cards.
 
 This sync requires a DB migration and one new scheduled trigger. CRON_SECRET is
 already configured (from the nudges sync) and is reused here.
@@ -56,6 +60,18 @@ already configured (from the nudges sync) and is reused here.
      Most ordinary pages should be safe=true; any active-crisis or
      body/appearance/eating page should be safe=false with a reason.
    - Confirm there are no errors in the cron summary.
+
+8. ON THIS DAY — once the cron has tagged some entries, open /today on an account
+   that has dated pages from prior years near today's date; an "On this day"
+   section should appear above the writing area. It stays silent (no empty box)
+   when there's nothing from this day in years past. "not this one" on a card
+   sets that entry's resurfacing preference to never (it won't return again).
+
+   OPTIONAL — official client hook: the frontend currently calls the new
+   GET /memories/on-this-day via a small hand-written hook. The endpoint is in
+   the OpenAPI contract, so if you want the generated react-query hook, run:
+     pnpm --filter @workspace/api-spec run codegen
+   (Not required for the feature to work.)
 
 FUTURE NOTE — re-tagging after a prompt/policy change: when PROMPT_VERSION is
 bumped in a way that should re-classify safety, NULL out the stale verdicts at
