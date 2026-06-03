@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -34,6 +34,11 @@ export default function Import() {
   const [done, setDone] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
+  // Which year is being viewed in the review (a scan/navigation filter, NOT a
+  // selection — "Keep" always keeps every checked page across all years).
+  const [yearTab, setYearTab] = useState<string>("all");
+  // Ids of pages expanded to their full text in the review.
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   // Turn a raw fetch/HTTP error into something a person can act on.
   function friendlyImportError(err: unknown): string {
@@ -128,6 +133,12 @@ export default function Import() {
 
   const includedCount = review?.entries.filter((e) => e.include).length ?? 0;
 
+  // A fresh import: start back at "all years" with everything collapsed.
+  useEffect(() => {
+    setYearTab("all");
+    setExpanded(new Set());
+  }, [review?.id]);
+
   // For big imports: the span of years found, so the scope is legible at a glance.
   const yearSpan = useMemo(() => {
     const years = (review?.entries ?? [])
@@ -139,6 +150,38 @@ export default function Import() {
     const hi = years[years.length - 1];
     return lo === hi ? lo : `${lo}–${hi}`;
   }, [review]);
+
+  // The distinct years present (newest first), plus whether any page is undated,
+  // to build the year navigation. Each year also carries its page count.
+  const yearTabs = useMemo(() => {
+    const counts = new Map<string, number>();
+    let undated = 0;
+    for (const e of review?.entries ?? []) {
+      const y = e.detectedDate?.slice(0, 4);
+      if (y) counts.set(y, (counts.get(y) ?? 0) + 1);
+      else undated += 1;
+    }
+    const years = [...counts.entries()].sort((a, b) => (a[0] < b[0] ? 1 : -1));
+    return { years, undated };
+  }, [review]);
+
+  // The pages shown for the current year filter (a view only — selection is
+  // tracked per page via the checkboxes and is unaffected by this filter).
+  const visibleEntries = useMemo(() => {
+    const all = review?.entries ?? [];
+    if (yearTab === "all") return all;
+    if (yearTab === "undated") return all.filter((e) => !e.detectedDate);
+    return all.filter((e) => e.detectedDate?.slice(0, 4) === yearTab);
+  }, [review, yearTab]);
+
+  function toggleExpanded(id: string) {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   return (
     <div className="min-h-[100dvh] flex flex-col">
@@ -195,15 +238,50 @@ export default function Import() {
               </div>
             )}
 
+            {/* Year navigation — a way to scan a long archive one year at a time. */}
+            {yearTabs.years.length > 1 && (
+              <div className="flex flex-wrap gap-2 mb-8">
+                {(
+                  [
+                    ["all", "All", review.parsedCount] as const,
+                    ...yearTabs.years.map(
+                      ([y, n]) => [y, y, n] as const,
+                    ),
+                    ...(yearTabs.undated
+                      ? [["undated", "Undated", yearTabs.undated] as const]
+                      : []),
+                  ]
+                ).map(([key, label, count]) => (
+                  <button
+                    key={key}
+                    onClick={() => setYearTab(key)}
+                    className={
+                      "rounded-full border px-3 py-1 font-sans text-sm transition-colors " +
+                      (yearTab === key
+                        ? "border-accent-sepia text-ink bg-surface"
+                        : "border-border text-soft-ink hover:text-ink")
+                    }
+                    data-testid={`year-tab-${key}`}
+                  >
+                    {label}{" "}
+                    <span className="text-faint-ink">{count}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
             <div className="space-y-4">
-              {review.entries.map((entry, i) => {
+              {visibleEntries.map((entry, i) => {
                 const hint = CONFIDENCE_HINT[entry.dateConfidence];
                 const year = entry.detectedDate?.slice(0, 4) ?? null;
                 const prevYear =
                   i > 0
-                    ? (review.entries[i - 1].detectedDate?.slice(0, 4) ?? null)
+                    ? (visibleEntries[i - 1].detectedDate?.slice(0, 4) ?? null)
                     : null;
-                const showYear = year && year !== prevYear;
+                // Year headers only matter in the combined "all" view.
+                const showYear = yearTab === "all" && year && year !== prevYear;
+                const isOpen = expanded.has(entry.id);
+                const isLong = entry.body.trim().length > 220;
                 return (
                   <Fragment key={entry.id}>
                     {showYear && (
@@ -219,33 +297,52 @@ export default function Import() {
                           : "border-border/60 bg-transparent opacity-50")
                       }
                     >
-                    <div className="flex items-center gap-3 mb-3">
-                      <input
-                        type="checkbox"
-                        checked={entry.include}
-                        onChange={(e) =>
-                          patch(entry, { include: e.target.checked })
-                        }
-                        className="accent-[var(--color-accent-sepia)]"
-                        aria-label="Include this page"
-                      />
-                      <input
-                        type="date"
-                        value={entry.detectedDate ?? ""}
-                        onChange={(e) =>
-                          patch(entry, { detectedDate: e.target.value || null })
-                        }
-                        className="bg-background border border-border rounded-lg px-3 py-1.5 text-sm text-soft-ink font-sans focus:outline-none focus:border-accent-sepia"
-                      />
-                      {hint && (
-                        <span className="font-sans text-xs text-accent-sepia">
-                          {hint}
-                        </span>
+                      <div className="flex items-center gap-3 mb-3">
+                        <input
+                          type="checkbox"
+                          checked={entry.include}
+                          onChange={(e) =>
+                            patch(entry, { include: e.target.checked })
+                          }
+                          className="accent-[var(--color-accent-sepia)]"
+                          aria-label="Include this page"
+                        />
+                        <input
+                          type="date"
+                          value={entry.detectedDate ?? ""}
+                          onChange={(e) =>
+                            patch(entry, {
+                              detectedDate: e.target.value || null,
+                            })
+                          }
+                          className="bg-background border border-border rounded-lg px-3 py-1.5 text-sm text-soft-ink font-sans focus:outline-none focus:border-accent-sepia"
+                        />
+                        {hint && (
+                          <span className="font-sans text-xs text-accent-sepia">
+                            {hint}
+                          </span>
+                        )}
+                      </div>
+                      {isOpen ? (
+                        // Full text, line breaks preserved; capped so a giant
+                        // entry scrolls within its card instead of the page.
+                        <p className="font-body text-soft-ink leading-relaxed whitespace-pre-wrap max-h-[60vh] overflow-y-auto">
+                          {entry.body.trim()}
+                        </p>
+                      ) : (
+                        <p className="font-body text-soft-ink leading-relaxed">
+                          {excerpt(entry.body)}
+                        </p>
                       )}
-                    </div>
-                      <p className="font-body text-soft-ink leading-relaxed">
-                        {excerpt(entry.body)}
-                      </p>
+                      {isLong && (
+                        <button
+                          onClick={() => toggleExpanded(entry.id)}
+                          className="mt-3 font-sans text-sm text-accent-sepia hover:text-deep-brown transition-colors"
+                          data-testid="button-expand-entry"
+                        >
+                          {isOpen ? "Show less" : "Read full page"}
+                        </button>
+                      )}
                     </div>
                   </Fragment>
                 );
