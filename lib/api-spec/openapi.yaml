@@ -651,6 +651,33 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /memories/on-this-day:
+    get:
+      operationId: getOnThisDay
+      tags: [memories]
+      summary: Date-based returns — pages from this calendar day (±3 days) in prior years
+      parameters:
+        - name: date
+          in: query
+          required: false
+          description: Target date (YYYY-MM-DD); defaults to the server's today.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Eligible past pages, most recent year first (may be empty)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OnThisDayMemory"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /memories/{id}:
     get:
       operationId: getMemory
@@ -1280,6 +1307,30 @@ components:
         - dismissed
         - favorite
         - createdAt
+    OnThisDayMemory:
+      type: object
+      properties:
+        entryId:
+          type: string
+        title:
+          type: ["string", "null"]
+        excerpt:
+          type: string
+        entryDate:
+          type: string
+        favorite:
+          type: boolean
+        yearsAgo:
+          type: integer
+        onThisExactDay:
+          type: boolean
+      required:
+        - entryId
+        - excerpt
+        - entryDate
+        - favorite
+        - yearsAgo
+        - onThisExactDay
     MemoryRunInput:
       type: object
       properties:

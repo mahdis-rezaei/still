@@ -10,6 +10,7 @@ import {
 } from "@workspace/api-client-react";
 import { AppNav } from "@/components/app-nav";
 import { MemoryCard } from "@/components/memory-card";
+import { OnThisDay } from "@/components/on-this-day";
 
 const PROMPTS = [
   "What wants to be written today?",
@@ -172,6 +173,9 @@ export default function Today() {
             )}
           </section>
         )}
+
+        {/* Date-based returns from this day in years past — quiet when empty. */}
+        <OnThisDay />
 
         {/* Today's page — a real writing surface, anchored like a sheet. */}
         <div className="rounded-2xl border border-border bg-surface/80 shadow-sm p-6 md:p-8 min-h-[56vh] flex flex-col">
