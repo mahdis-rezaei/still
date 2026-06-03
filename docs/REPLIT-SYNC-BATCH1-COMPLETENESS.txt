@@ -1,5 +1,5 @@
 Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
-(head 6306011), same method as before (native GitHub pull / Contents API).
+(head cbb06b7), same method as before (native GitHub pull / Contents API).
 
 NOTE: this range still includes the api-server change (request body-size limit),
 so the SERVER process must be restarted/redeployed — a client-only rebuild is not
@@ -45,7 +45,11 @@ What's in this publish:
     full page" / "Show less"), and year tabs (All / 2026 / … / Undated) filter
     the review to one year at a time. The year filter is a view only — "Keep"
     still keeps every checked page across all years.
-11. Regenerated lib/api-zod + lib/api-client-react from lib/api-spec/openapi.yaml.
+11. Library bulk delete: a "Select" mode (per-page checkboxes + "Select all"
+    respecting the active filters) with a two-step confirm, backed by a new
+    endpoint POST /api/entries/bulk-delete { ids } that soft-deletes the user's
+    matching pages in one request.
+12. Regenerated lib/api-zod + lib/api-client-react from lib/api-spec/openapi.yaml.
 
 Steps:
 1. SYNC the code to origin (head 51e8f62). Do not edit app code.
@@ -64,6 +68,7 @@ Steps:
        POST   /api/entries/samples  -> 200, JSON array of ~5 sample entries
        (call again -> same ones, no duplicates)
        DELETE /api/entries/samples  -> 204
+       POST   /api/entries/bulk-delete  { "ids": [] }  -> 200 {"deletedCount":0}
    - Library shows the "Showing … from … " filter line; picking a source/year/
      month narrows the shelf; "clear" resets.
    - Open any entry -> "Export" downloads a .txt of the page.
@@ -80,6 +85,9 @@ Steps:
      api-server restarted with the new 10mb body limit.)
    - In the review: click "Read full page" on an entry -> it expands to the full
      text; the year tabs along the top switch which year you're scanning.
+   - Library "Select": click Select -> rows show checkboxes; "Select all" then
+     "Delete N pages" -> two-step confirm -> the pages disappear and the count
+     drops. (Confirms the new bulk-delete route is live.)
 
 Report what you ran and anything that looked off. Do not change application code
 or prompts. No DB migration, no secrets, no cron changes for this publish.
