@@ -1,0 +1,19 @@
+Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
+(head 408e691), same method as before. CODE-ONLY (frontend) — NO migration, NO
+new endpoints, NO new secrets.
+
+What lands:
+  - A calm "Explore" dropdown in the top nav, grouping Search · Timeline · Look
+    back (instead of three separate top-level links). Click-toggle, closes on
+    outside click, works on touch; highlights when you're on one of those pages.
+    Top nav is now: Today · Library · Explore · Returns · Settings.
+
+Steps:
+1. SYNC the code to origin (head 408e691). Do not edit app code or prompts.
+2. pnpm install — no-op.
+3. NO drizzle-kit push (no schema change).
+4. RE-PUBLISH the deployment.
+
+Verify:
+  - The top bar shows "Explore"; clicking it reveals Search / Timeline / Look
+    back; choosing one navigates and closes the menu; tapping elsewhere closes it.
