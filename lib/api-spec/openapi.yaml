@@ -756,6 +756,24 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /continuity:
+    get:
+      operationId: getContinuity
+      tags: [memories]
+      summary: Archival continuity metrics (the anti-streak) + gentle milestones
+      responses:
+        "200":
+          description: Continuity metrics for the user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Continuity"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /resurface-mutes:
     get:
       operationId: listResurfaceMutes
@@ -1491,6 +1509,27 @@ components:
       required:
         - startDate
         - endDate
+    Continuity:
+      type: object
+      properties:
+        pageCount:
+          type: integer
+        writingSinceYear:
+          type: ["integer", "null"]
+        spanYears:
+          type: ["integer", "null"]
+        oldestPageAgeYears:
+          type: ["integer", "null"]
+        reflectionCount:
+          type: integer
+        oldestImportedAgeYears:
+          type: ["integer", "null"]
+        wroteFirstReflectionToday:
+          type: boolean
+      required:
+        - pageCount
+        - reflectionCount
+        - wroteFirstReflectionToday
     MemoryRunInput:
       type: object
       properties:
