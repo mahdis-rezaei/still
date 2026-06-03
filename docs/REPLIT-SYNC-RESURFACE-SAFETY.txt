@@ -1,0 +1,68 @@
+Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
+(head 79d8bfb), same method as before (native GitHub pull / Contents API). Two
+things land here:
+
+  (A) Engine fix: the §3.1 crisis check is now scoped to the writer's PRESENT
+      state (most recent entry) instead of the whole archive, so "Bring a page
+      back" stops returning a support card on every run over a long history.
+  (B) 6b foundation: per-entry "resurface safety" tagging — the groundwork for
+      date-based resurfacing ("On this day"). Each entry is classified once
+      (crisis? body/appearance/eating?) and the verdict is stored, so the future
+      date-based surfacer is a pure DB query with no live model call.
+
+This sync requires a DB migration and one new scheduled trigger. CRON_SECRET is
+already configured (from the nudges sync) and is reused here.
+
+1. SYNC the code to origin (head 79d8bfb). Do not edit app code or prompts.
+
+2. pnpm install (no-op; no new deps).
+
+3. DB MIGRATION — adds one nullable column, journal_entries.resurface_safety
+   (jsonb). This is additive and non-destructive (existing rows get NULL). Run:
+     pnpm --filter @workspace/db exec drizzle-kit push
+   (Apply the add-column to journal_entries.)
+
+4. PROMPT_VERSION bumped to 2026-06-03.1 — the result cache auto-recomputes on
+   next use. No manual cache action needed.
+
+5. RE-PUBLISH the deployment so the live app has the new /still/classify and
+   /cron/tag-resurface-safety endpoints and the scoped crisis check.
+
+6. SCHEDULED TRIGGER — add a job that drains the tagging backlog. Every ~5-15
+   minutes is ideal (it is cheap and idempotent); even hourly is fine. Use
+   Replit Scheduled Deployments (or any cron). The job runs:
+     curl -X POST "https://yadegarjournal.com/api/cron/tag-resurface-safety" \
+       -H "x-cron-secret: $CRON_SECRET"
+   It classifies up to 50 unclassified entries per tick (override with
+   ?limit=N, max 500) and returns {considered, tagged, errors}. Run it
+   repeatedly until considered=0 to clear the existing backlog the first time;
+   after that it just picks up new/edited entries as they settle.
+
+   COST NOTE: tagging makes up to 2 small LLM calls per entry, ONCE, then caches
+   forever (keyed on text + PROMPT_VERSION). A one-time backfill of an existing
+   archive is the only burst; steady state is a trickle.
+
+7. VERIFY and report:
+   - Crisis-scope fix: on an account with a long, mixed history, run "Bring a
+     page back" — it should now surface a memory (or honest silence), NOT a
+     support card, unless the MOST RECENT entry is itself an active crisis.
+   - Tagging: after the cron has run, spot-check the DB:
+       SELECT entry_date,
+              resurface_safety->>'safe'   AS safe,
+              resurface_safety->>'reason' AS reason
+       FROM journal_entries
+       WHERE resurface_safety IS NOT NULL
+       LIMIT 20;
+     Most ordinary pages should be safe=true; any active-crisis or
+     body/appearance/eating page should be safe=false with a reason.
+   - Confirm there are no errors in the cron summary.
+
+FUTURE NOTE — re-tagging after a prompt/policy change: when PROMPT_VERSION is
+bumped in a way that should re-classify safety, NULL out the stale verdicts at
+deploy time and let the cron re-tag them:
+   UPDATE journal_entries
+   SET resurface_safety = NULL
+   WHERE resurface_safety->>'version' <> '<new PROMPT_VERSION>';
+
+Report what you ran and any errors. Do not change application code or prompts.
+</content>
