@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import {
   and,
+  desc,
   eq,
   inArray,
   isNotNull,
@@ -23,10 +24,14 @@ export const CRISIS_FALLBACK =
   "It sounds like you're carrying something heavy right now. You don't have to hold it alone — if you're in danger or thinking about harming yourself, please reach out to someone you trust or a crisis line in your country. You matter.";
 
 // Call the two-pass engine as an internal service (extract → score). Crisis is
-// caught at extraction and never reaches scoring.
+// caught at extraction and never reaches scoring. `context` (today + the
+// writer's recent themes) is forwarded to scoring for the optional why-today
+// tiebreak; the engine only acts on it when its WHY_TODAY_TIEBREAK flag is on,
+// so this is inert (and cache-identical) until that flag is enabled.
 async function callEngine(
   entries: string,
   fresh: boolean,
+  context?: { today: string; recentThemes: string[] },
 ): Promise<
   { crisis: { supportMessage?: string } } | { score: Record<string, unknown> }
 > {
@@ -46,7 +51,7 @@ async function callEngine(
   const scRes = await fetch(`${ENGINE_BASE}/still/score${q}`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ candidates: extract.candidates ?? [] }),
+    body: JSON.stringify({ candidates: extract.candidates ?? [], context }),
   });
   if (!scRes.ok) throw new Error(`score HTTP ${scRes.status}`);
   return { score: (await scRes.json()) as Record<string, unknown> };
@@ -123,7 +128,30 @@ export async function runMemoryForUser(
     .map((e) => `[${e.entryDate}]\n${e.body}`)
     .join("\n\n");
 
-  const out = await callEngine(entriesStr, opts.fresh === true);
+  // Why-today context: today + the themes the writer has centered on lately
+  // (her most recent tagged entries). Forwarded to scoring as an optional
+  // tiebreak; inert until the engine's WHY_TODAY_TIEBREAK flag is enabled.
+  const recentRows = await db
+    .select({ theme: journalEntriesTable.theme })
+    .from(journalEntriesTable)
+    .where(
+      and(
+        eq(journalEntriesTable.userId, userId),
+        isNull(journalEntriesTable.deletedAt),
+        isNotNull(journalEntriesTable.theme),
+      ),
+    )
+    .orderBy(desc(journalEntriesTable.entryDate))
+    .limit(15);
+  const recentThemes = [
+    ...new Set(recentRows.map((r) => r.theme).filter((t): t is string => !!t)),
+  ];
+  const context = {
+    today: new Date().toISOString().slice(0, 10),
+    recentThemes,
+  };
+
+  const out = await callEngine(entriesStr, opts.fresh === true, context);
 
   if ("crisis" in out) {
     return {

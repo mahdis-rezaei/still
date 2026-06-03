@@ -100,6 +100,13 @@ export interface Fixture {
    * absent. Checked regardless of `expect`.
    */
   hardFloor?: string[];
+  /**
+   * Optional why-today context, forwarded to POST /still/score (http mode only).
+   * Lets a case exercise the dark-shipped why-today tiebreak: set `today` /
+   * `recentThemes` so a temporally- or thematically-resonant target wins a
+   * near-tie. Inert unless the engine's WHY_TODAY_TIEBREAK flag is on.
+   */
+  context?: { today?: string; recentThemes?: string[] };
   /** Why this case exists / what it guards against. */
   note?: string;
 }

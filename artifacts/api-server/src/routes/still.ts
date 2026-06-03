@@ -795,7 +795,32 @@ const CandidateSchema = z.object({
 
 const ScoreInputSchema = z.object({
   candidates: z.array(CandidateSchema),
+  // Optional why-today context (today + the writer's recent themes). Used ONLY
+  // when WHY_TODAY_TIEBREAK is enabled; otherwise ignored and excluded from the
+  // cache key, so the default path is byte-for-byte unchanged.
+  context: z
+    .object({
+      today: z.string().optional(),
+      recentThemes: z.array(z.string()).optional(),
+    })
+    .optional(),
 });
+
+// Dark-shipped flag for the why-today selection tiebreak. Default OFF: the score
+// path is identical to today (same prompt, same cache key). Enable in Replit
+// (WHY_TODAY_TIEBREAK=on) only AFTER a live harness run confirms no regression.
+function whyTodayEnabled(): boolean {
+  return process.env.WHY_TODAY_TIEBREAK === "on";
+}
+
+// The why-today clause — a THIRD soft tiebreak in the exact idiom of CROSS-TIME
+// and FRESH-GRIEF above: subordinate to emotional_center, breaks near-ties only,
+// never lowers the silence bar. Appended to PASS2_SYSTEM only when enabled AND
+// context is present.
+function whyTodayClause(today: string | undefined, themes: string[]): string {
+  const themeStr = themes.length > 0 ? themes.join(", ") : "none recorded";
+  return `WHY-TODAY PREFERENCE (a SOFT TIEBREAK only, among already-surfaceable candidates — the LAST tiebreak, applied after every tiebreak above). Today is ${today ?? "unknown"}; the writer's recent entries have centered on these themes: ${themeStr}. emotional_center stays the master axis and still decides any clear winner. ONLY when two candidates are of COMPARABLE strength (they tie on emotional_center, or are within one point with neither clearly ahead down the remaining axes) you MAY prefer the one that resonates with today — written in the same calendar season, or near this date in an earlier year (an anniversary), or echoing one of today's recent themes. This NEVER overrides a candidate that is clearly stronger on the axes, NEVER lowers the bar for silence (if nothing honest surfaces, still return mode="nothing"), and NEVER manufactures a resonance that isn't there. It is the gentlest nudge between two lines that have each already earned their place — meaning first, the moment only to break a tie.`;
+}
 
 // --- Result cache ---
 // Same entry → same surfaced line. temperature:0 reduces run-to-run drift but
@@ -1253,7 +1278,23 @@ router.post("/still/score", async (req, res) => {
   // form so cache-served candidates — whose key order is changed by jsonb
   // round-tripping — still hash to the same value as the cold run.
   const payload = JSON.stringify({ candidates: annotated });
-  const key = cacheKey("score", canonicalize({ candidates: annotated }));
+
+  // Why-today: only when the flag is ON and context was sent do we (a) append
+  // the tiebreak clause and (b) fold the context into the cache key. When OFF
+  // (or no context), system + key are exactly as before — no cache churn.
+  const wtActive = whyTodayEnabled() && !!parsed.data.context;
+  const systemPrompt = wtActive
+    ? `${PASS2_SYSTEM}\n\n${whyTodayClause(
+        parsed.data.context?.today,
+        parsed.data.context?.recentThemes ?? [],
+      )}`
+    : PASS2_SYSTEM;
+  const key = cacheKey(
+    "score",
+    wtActive
+      ? canonicalize({ candidates: annotated, whyToday: parsed.data.context })
+      : canonicalize({ candidates: annotated }),
+  );
   const fresh = isFreshRequested(req.query);
 
   try {
@@ -1270,7 +1311,7 @@ router.post("/still/score", async (req, res) => {
       model: MODEL,
       max_tokens: MAX_TOKENS_PASS2,
       temperature: 0,
-      system: PASS2_SYSTEM,
+      system: systemPrompt,
       messages: [{ role: "user", content: payload }],
     });
 
