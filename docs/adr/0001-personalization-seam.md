@@ -96,11 +96,27 @@ call.
   Wired in `/still/score` in LOG-ONLY mode behind the flag: when on + context, it
   logs the would-be override; the surfaced `result` is unchanged, so enabling the
   flag is still behaviorally inert. Offline board unchanged (Selection 3/3).
-- **S2c — then:** voice-only pass that writes the override winner's
-  observation/quotes/label (reusing the PASS2 VOICE rules); apply the override;
-  cache the override result keyed on `(winner candidate id + context)` so daily
-  re-runs are stable. Replit live-verifies (axis stability + behavior A/B), then
-  the flag is enabled in production.
+- **S2c — DONE:** the seam now APPLIES the override (still flag-gated).
+  - Voice pass (`surfaceOverrideCandidate` in `still.ts`): re-runs PASS2 on the
+    SINGLE chosen candidate, so the surfaced voice/quotes/label come from the same
+    calibrated scorer — no separate voice prompt to drift. If the re-run declines
+    (`mode:"nothing"`) or anything throws, the blind winner is kept. The swapped
+    fields are mode/label/observation/quotes/why + `winning_tiebreak_level:
+    "why_today"` + an audit `why_today_override` block; the blind `scores` and
+    `secondaryThread` are preserved.
+  - Resonance bar raised: `MIN_OVERRIDE_RESONANCE = 2` — a bare same-season
+    coincidence (weight 1) can no longer fire; only a real anniversary (3), a
+    theme echo (2), or season+theme (3) does. Keeps fires rare and meaningful.
+  - Cache: when the flag is active the (possibly overridden) result is cached
+    under a separate key carrying COARSENED context (month + sorted themes), so it
+    never pollutes the flag-off cache and is stable within a month rather than
+    re-rolling the noisy decision daily. Flag-off key unchanged (pure candidates).
+  - Accepted limitation (per the DEV reconfirm): pass-2 `emotional_center` jitters
+    ±1, so which near-tie freezes is probabilistic — but always SAFE (only swaps
+    among co-equal, surfaceable, gated candidates; never breaks silence) and, once
+    computed, frozen per (pool, month, themes) by the cache.
+  - 16 unit tests; offline board unchanged (flag-off identical). NEXT: Replit live
+    A/B on the dev engine (applied output + axis stability), then enable in prod.
 
 ## Rollback
 

@@ -169,3 +169,12 @@ test("override: no decision when no comparable candidate resonates", () => {
   const d = chooseWhyTodayOverride(result, candidates, { today: "2026-01-03" }); // winter, no match
   assert.equal(d, null);
 });
+
+test("override: a bare same-season coincidence is too weak to fire", () => {
+  const { result, candidates } = scenario();
+  // Resonant candidate now only shares the SEASON (Oct vs today Sep = fall), not
+  // the month (no anniversary) and no theme → resonance 1 < MIN_OVERRIDE_RESONANCE.
+  candidates[1].evidence = [{ date: "2016-10-06", fragment: "I am tired" }];
+  const d = chooseWhyTodayOverride(result, candidates, { today: "2026-09-03" });
+  assert.equal(d, null);
+});

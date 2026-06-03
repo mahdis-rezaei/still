@@ -92,6 +92,11 @@ const W_ANNIVERSARY = 3; // same month, an earlier year — strongest
 const W_THEME = 2; // echoes a recent theme
 const W_SEASON = 1; // same time of year (but not an anniversary)
 
+// A bare same-season coincidence (W_SEASON alone) is too weak to override the
+// model's winner — it would fire too often and too thinly. Require a REAL signal:
+// an anniversary (3), a theme echo (2), or season stacked with a theme (1+2).
+export const MIN_OVERRIDE_RESONANCE = 2;
+
 function normalize(s: string): string {
   return s.toLowerCase().replace(/\s+/g, " ").trim();
 }
@@ -280,7 +285,7 @@ export function chooseWhyTodayOverride(
       const r = cand ? resonance(cand, context) : { score: 0, reasons: [] };
       return { entry, ...r };
     })
-    .filter((x) => x.score > 0);
+    .filter((x) => x.score >= MIN_OVERRIDE_RESONANCE);
   if (resonant.length === 0) return null;
 
   resonant.sort(

@@ -1251,6 +1251,42 @@ router.post("/still/extract", async (req, res) => {
   }
 });
 
+// Voice pass for a why-today override (ADR 0001 S2c). Re-runs PASS2 on the SINGLE
+// chosen candidate so the surfaced voice/quotes/label come from the same
+// calibrated scorer — no separate voice prompt to drift from PASS2. The candidate
+// already cleared its gates in the full run; if the re-run declines (mode
+// "nothing") or anything fails, returns null and the caller keeps the blind
+// winner. Runs only when an override actually fires, so the extra call is rare.
+async function surfaceOverrideCandidate(
+  candidate: z.infer<typeof CandidateSchema>,
+): Promise<Record<string, unknown> | null> {
+  const annotated = {
+    ...candidate,
+    evidence_metadata: computeEvidenceMetadata(candidate.evidence),
+  };
+  const message = await client.messages.create({
+    model: MODEL,
+    max_tokens: MAX_TOKENS_PASS2,
+    temperature: 0,
+    system: PASS2_SYSTEM,
+    messages: [{ role: "user", content: JSON.stringify({ candidates: [annotated] }) }],
+  });
+  const block = message.content[0];
+  if (block.type !== "text") return null;
+  let r: unknown;
+  try {
+    r = JSON.parse(extractJson(block.text));
+  } catch {
+    return null;
+  }
+  reattributeQuoteDates(r, [candidate]);
+  sanitizeSecondaryThread(r);
+  enforceCoherenceInvariant(r);
+  const rr = r as { mode?: string };
+  if (!rr.mode || rr.mode === "nothing") return null;
+  return r as Record<string, unknown>;
+}
+
 router.post("/still/score", async (req, res) => {
   const parsed = ScoreInputSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -1278,7 +1314,32 @@ router.post("/still/score", async (req, res) => {
   // why-today.ts and docs/adr/0001-personalization-seam.md). The cache key is
   // therefore pure candidates — shared with the flag-off path, no churn.
   const payload = JSON.stringify({ candidates: annotated });
-  const key = cacheKey("score", canonicalize({ candidates: annotated }));
+
+  // Why-today (ADR 0001) caches the POSSIBLY-OVERRIDDEN result under a separate,
+  // context-bearing key so it never pollutes the flag-off cache. The context is
+  // COARSENED to month + sorted themes: resonance only depends on today's month
+  // (anniversary), its season (derived), and recent themes — never the exact day
+  // — so month granularity keeps the surfaced result (and the noisy override
+  // decision frozen into it) stable within a month instead of re-rolling daily.
+  const wtActive = whyTodayEnabled() && !!parsed.data.context;
+  const coarseContext = wtActive
+    ? {
+        month: parseDateParts(parsed.data.context!.today ?? "")?.month ?? null,
+        themes: [
+          ...new Set(
+            (parsed.data.context!.recentThemes ?? [])
+              .map((t) => t.toLowerCase().trim())
+              .filter(Boolean),
+          ),
+        ].sort(),
+      }
+    : null;
+  const key = cacheKey(
+    "score",
+    wtActive
+      ? canonicalize({ candidates: annotated, whyToday: coarseContext })
+      : canonicalize({ candidates: annotated }),
+  );
   const fresh = isFreshRequested(req.query);
 
   try {
@@ -1325,26 +1386,48 @@ router.post("/still/score", async (req, res) => {
       );
     }
 
-    // Why-today seam (ADR 0001), LOG-ONLY for now. When the flag is on and the
-    // app sent context, compute — over the model's PURE scores — whether a
-    // near-tie resonant candidate would be preferred. S2b only LOGS this; the
-    // surfaced `result` is unchanged, so enabling the flag is still behaviorally
-    // inert. S2c will add the voice pass that actually applies the override.
-    if (whyTodayEnabled() && parsed.data.context) {
+    // Why-today seam (ADR 0001 S2c). When the flag is on and the app sent
+    // context, decide — over the model's PURE (context-blind) scores — whether a
+    // near-tie resonant candidate should be preferred; if so, re-voice that
+    // candidate and swap it into the surfaced result. The scorer never sees
+    // context, so axis scores are never inflated; the swap only ever happens
+    // among co-equal, fully-surfaceable candidates. Any failure is caught and
+    // leaves the blind winner untouched.
+    if (wtActive && parsed.data.context) {
       try {
         const decision = chooseWhyTodayOverride(
           result as Parameters<typeof chooseWhyTodayOverride>[0],
           parsed.data.candidates,
           parsed.data.context,
         );
-        if (decision) {
-          req.log.info(
-            { whyToday: decision },
-            "why-today: would override winner (LOG-ONLY; surfaced result unchanged)",
+        if (decision?.toTitle) {
+          const chosen = parsed.data.candidates.find(
+            (c) => (c.candidate_title ?? "") === decision.toTitle,
           );
+          const voiced = chosen ? await surfaceOverrideCandidate(chosen) : null;
+          if (voiced) {
+            const r = result as Record<string, unknown>;
+            r.mode = voiced.mode;
+            r.label = voiced.label;
+            r.observation = voiced.observation;
+            r.quotes = voiced.quotes;
+            r.why = voiced.why;
+            r.winning_tiebreak_level = "why_today";
+            r.why_today_override = {
+              fromTitle: decision.fromTitle,
+              toTitle: decision.toTitle,
+              reasons: decision.reasons,
+            };
+            req.log.info({ whyToday: decision }, "why-today: applied override");
+          } else {
+            req.log.info(
+              { whyToday: decision },
+              "why-today: override declined (voice pass returned nothing); blind winner kept",
+            );
+          }
         }
       } catch (err) {
-        req.log.warn({ err }, "why-today seam error (ignored; surfaced result unchanged)");
+        req.log.warn({ err }, "why-today seam error (ignored; blind winner kept)");
       }
     }
 
