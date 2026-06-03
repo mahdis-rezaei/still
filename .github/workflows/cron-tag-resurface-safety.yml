@@ -1,0 +1,60 @@
+# Resurface-safety tagging cron (durable, version-controlled backup for the
+# cron-job.org schedule). Hits POST /api/cron/tag-resurface-safety so new/edited
+# journal entries get their date-resurfacing safety verdict.
+#
+# IMPORTANT:
+# - Scheduled workflows only run from the repository's DEFAULT branch (main).
+#   This file does nothing until it is merged to main; after that it runs on the
+#   schedule below. Use the "Run workflow" button (workflow_dispatch) to test it
+#   from any branch.
+# - Requires a repository secret CRON_SECRET (Settings → Secrets and variables →
+#   Actions → New repository secret) matching the live app's CRON_SECRET.
+# - Optional repository variable APP_BASE_URL overrides the target origin
+#   (defaults to https://yadegarjournal.com).
+name: cron-tag-resurface-safety
+
+on:
+  schedule:
+    # Every 10 minutes (UTC). GitHub may delay scheduled runs under load; that's
+    # fine — the endpoint is idempotent and only drains whatever is pending.
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Entries to tag this run (use up to 500 to backfill a big archive)"
+        required: false
+        default: "50"
+
+# Don't let a delayed run overlap the next tick.
+concurrency:
+  group: cron-tag-resurface-safety
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST /api/cron/tag-resurface-safety
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          BASE_URL: ${{ vars.APP_BASE_URL || 'https://yadegarjournal.com' }}
+          LIMIT: ${{ github.event.inputs.limit || '50' }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CRON_SECRET}" ]; then
+            echo "::error::CRON_SECRET repository secret is not set"
+            exit 1
+          fi
+          url="${BASE_URL%/}/api/cron/tag-resurface-safety?limit=${LIMIT}"
+          echo "POST ${url}"
+          # Capture body + HTTP code without ever printing the secret.
+          resp=$(curl -sS -m 60 -w $'\n%{http_code}' -X POST "${url}" \
+            -H "x-cron-secret: ${CRON_SECRET}")
+          code=$(printf '%s' "${resp}" | tail -n1)
+          body=$(printf '%s' "${resp}" | sed '$d')
+          echo "HTTP ${code}"
+          echo "${body}"
+          if [ "${code}" -lt 200 ] || [ "${code}" -ge 300 ]; then
+            echo "::error::tagging cron returned HTTP ${code}"
+            exit 1
+          fi
