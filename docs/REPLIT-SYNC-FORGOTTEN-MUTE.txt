@@ -1,0 +1,40 @@
+Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
+(head 7b303bd), same method as before. This sync DOES require a DB migration
+(additive/non-destructive). No new secrets.
+
+NOTE: do this AFTER (or together with) the code-only On This Day / Look Back sync
+(REPLIT-SYNC-ONTHISDAY.txt). This one is the superset — syncing to 7b303bd brings
+everything, you just also run the migration below.
+
+What lands (on top of On This Day / Look Back):
+  - Forgotten Page: a "A page you haven't seen in a while" section in Look Back.
+    Driven by a new journal_entries.last_opened_at column, which is set whenever
+    a full page is opened (GET /entries/:id).
+  - Date-range mute: a /settings/resurfacing page where the user mutes a month
+    range (e.g. a grief season) so its pages never resurface — by any date
+    surfacer OR the engine — without deleting anything. New resurface_mutes table
+    + GET/POST/DELETE /api/resurface-mutes.
+
+Steps:
+1. SYNC the code to origin (head 7b303bd). Do not edit app code or prompts.
+2. pnpm install — no-op (no new deps).
+3. DB MIGRATION — additive, non-destructive. Run:
+     pnpm --filter @workspace/db exec drizzle-kit push
+   Apply:
+     - ADD COLUMN journal_entries.last_opened_at (timestamptz, nullable)
+     - CREATE TABLE resurface_mutes (id, user_id, start_date, end_date, created_at)
+   Existing rows get last_opened_at = NULL (fine — they read as "not seen
+   recently", which is what Forgotten Page wants). No data is dropped.
+4. RE-PUBLISH the deployment.
+
+Verify:
+  - GET https://yadegarjournal.com/api/memories/look-back returns JSON with four
+    keys: onThisDay, aroundThisTime, favorites, forgotten (any may be empty).
+  - Open a full page (/library/:id), then check the DB: that entry's
+    last_opened_at is now set.
+  - In the app: Settings → "Muted periods" (/settings/resurfacing). Add a range
+    (e.g. From 2019-01 To 2019-12), confirm it lists; pages dated in that range
+    no longer appear in Look Back / On This Day / engine returns. Remove it and
+    they can return again.
+
+The tagging cron keeps running as before — no change there.
