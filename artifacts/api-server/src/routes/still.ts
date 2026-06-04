@@ -20,7 +20,13 @@ const MODEL = "claude-sonnet-4-6";
 // stop_reason "max_tokens" → invalid JSON → 500). 8192 gives ample headroom for
 // the bounded pool (MAX_EXTRACTION_ENTRIES) without risking truncation.
 const MAX_TOKENS_PASS1 = 8192;
-const MAX_TOKENS_PASS2 = 8000;
+// PASS2 (scoring) output budget. The scores array is verbose — one object per
+// candidate, echoing displayable quote text + gates + axes + why — so a large
+// candidate set overran 8000 and truncated the JSON (→ 500). 16000 gives ample
+// headroom for the bounded candidate set; the model only emits what it needs, so
+// raising the ceiling costs nothing when output is small. (A leaner output schema
+// — indices instead of echoed quote text — is the durable efficiency fix later.)
+const MAX_TOKENS_PASS2 = 16000;
 // The crisis safety check only returns a tiny {crisis, reason} JSON.
 const MAX_TOKENS_CRISIS = 600;
 // The whole-entry hard-floor check returns a tiny {hard_floor, reason} JSON.
@@ -1417,6 +1423,16 @@ router.post("/still/score", async (req, res) => {
     if (block.type !== "text") {
       res.status(500).json({ error: "Unexpected response from AI" });
       return;
+    }
+
+    // A truncated response (hit the output cap) yields invalid JSON. PASS2's
+    // output is one verbose object per candidate (echoing quote text + gates +
+    // axes), so a large candidate set can overrun the cap — surface it distinctly.
+    if (message.stop_reason === "max_tokens") {
+      req.log.error(
+        { stop_reason: message.stop_reason },
+        "Scoring hit max_tokens — candidate set too large; scores JSON truncated",
+      );
     }
 
     let result: unknown;
