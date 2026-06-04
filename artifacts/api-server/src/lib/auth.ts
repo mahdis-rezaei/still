@@ -255,9 +255,17 @@ export async function exchangeGoogleCode(
   const info = (await infoRes.json()) as {
     sub: string;
     email: string;
+    email_verified?: boolean | string;
     name?: string;
     picture?: string;
   };
+  // Enforce Google's verified-email claim. Without this, a Google identity
+  // asserting an address it does not own (email_verified=false) could link to or
+  // take over an existing account that shares that email. The OIDC userinfo
+  // endpoint returns a JSON boolean; tolerate the string form defensively.
+  if (info.email_verified !== true && info.email_verified !== "true") {
+    throw new Error("Google account email is not verified");
+  }
   return {
     googleId: info.sub,
     email: info.email,
