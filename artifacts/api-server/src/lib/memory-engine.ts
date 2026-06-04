@@ -41,7 +41,7 @@ async function callEngine(
   // affinity can match the TRUE source theme (not the model gloss). The entries
   // are fed with `[entryDate]` headers, so extract's evidence dates equal these
   // keys exactly.
-  dateThemes?: Record<string, string>,
+  dateThemes?: Record<string, string[]>,
 ): Promise<
   { crisis: { supportMessage?: string } } | { score: Record<string, unknown> }
 > {
@@ -65,9 +65,9 @@ async function callEngine(
     if (!dateThemes) return c;
     const themes = [
       ...new Set(
-        (c.evidence ?? [])
-          .map((e) => (e.date ? dateThemes[e.date] : undefined))
-          .filter((t): t is string => !!t),
+        (c.evidence ?? []).flatMap((e) =>
+          e.date ? (dateThemes[e.date] ?? []) : [],
+        ),
       ),
     ];
     return themes.length > 0 ? { ...c, themes } : c;
@@ -206,12 +206,13 @@ export async function runMemoryForUser(
     affinityProfile,
   };
 
-  // entryDate → theme for the pool, keyed exactly as the `[${e.entryDate}]`
-  // headers fed to extract, so candidate evidence dates map back to the true
-  // source-entry theme tag for soft affinity.
-  const dateThemes: Record<string, string> = {};
+  // entryDate → theme(s) for the pool, keyed exactly as the `[${e.entryDate}]`
+  // headers fed to extract. An array per date so a date with MULTIPLE entries
+  // (different themes) keeps them all, rather than one arbitrarily winning.
+  const dateThemes: Record<string, string[]> = {};
   for (const e of pool) {
-    if (e.theme) dateThemes[String(e.entryDate)] = e.theme;
+    if (!e.theme) continue;
+    (dateThemes[String(e.entryDate)] ??= []).push(e.theme);
   }
 
   const out = await callEngine(
