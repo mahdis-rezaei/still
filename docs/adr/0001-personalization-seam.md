@@ -129,7 +129,33 @@ call.
     duplicating the primary (mirrors PASS2). NEXT: enable in prod, watch
     `why_today_override` frequency/quality, keep the flag as instant rollback.
 
+### Soft affinity (#34) — the seam's second signal
+
+Same seam, second signal. NOT pool-level favorite-weighting (that already ships
+at the pool stage, batch-2) — this is a *selection-level* nudge among candidates
+the model itself scored co-equal. Product rule (engine-v2-build-plan Phase 3):
+"gently boost themes the writer favorites/opens; gently down-weight a just-
+dismissed theme. Never punish; never visible." Anti-horoscope: optimize for
+RECOGNITION, not engagement/intensity. Own flag (`SOFT_AFFINITY`), independent of
+`WHY_TODAY_TIEBREAK`.
+
+Signals (all already stored): `favorite` + recent `lastOpenedAt` → favored
+themes; `resurfacing_preference = "never"` → dismissed themes. A theme both
+treasured and dismissed is dropped from favored (never punish, never boost).
+
+- **A1 — DONE (this commit):** `artifacts/api-server/src/lib/affinity.ts` — pure
+  `buildAffinityProfile(entries, now)` (favored / dismissed theme sets) and
+  `affinityScore(candidate, profile)` (+favored / −dismissed, text-matched like
+  why-today's theme echo). 11 unit tests in `affinity.test.ts`. Wired into
+  NOTHING yet — fully inert; offline board + why-today untouched.
+- **A2 — next:** compose into the seam as a combined preference over
+  `comparableSet` (`whyTodayResonance + affinityScore`), each behind its own flag;
+  app computes the profile (from favorite/open/dismiss themes) and passes it in
+  `context`; wire LOG-ONLY behind `SOFT_AFFINITY`. Deterministic composition
+  tests. Then A3: apply via the same voice pass + dev A/B, then enable in prod.
+
 ## Rollback
 
-The flag (`WHY_TODAY_TIEBREAK`) gates the entire seam. Off → pure engine, exactly
-as today. Unsetting it is a complete, instant rollback at every stage.
+Each flag (`WHY_TODAY_TIEBREAK`, `SOFT_AFFINITY`) independently gates its signal.
+Off → pure engine, exactly as today. Unsetting is a complete, instant rollback at
+every stage.
