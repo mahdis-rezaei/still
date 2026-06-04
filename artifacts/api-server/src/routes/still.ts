@@ -4,7 +4,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { db, stillResultsTable } from "@workspace/db";
-import { chooseWhyTodayOverride } from "../lib/why-today";
+import { chooseWhyTodayOverride, chooseSeamOverride } from "../lib/why-today";
 
 const router = Router();
 
@@ -803,15 +803,27 @@ const ScoreInputSchema = z.object({
     .object({
       today: z.string().optional(),
       recentThemes: z.array(z.string()).optional(),
+      // Soft-affinity profile (favored / dismissed themes). Used ONLY when
+      // SOFT_AFFINITY is enabled; otherwise ignored. Scoring stays context-blind.
+      affinityProfile: z
+        .object({
+          favored: z.array(z.string()),
+          dismissed: z.array(z.string()),
+        })
+        .optional(),
     })
     .optional(),
 });
 
-// Dark-shipped flag for the why-today preference. Default OFF. When ON, scoring
-// is STILL context-blind (above); the flag only enables the post-score code seam
-// in why-today.ts, which re-ranks among near-ties using the model's pure scores.
+// Dark-shipped flags for the post-score seam. Default OFF. When ON, scoring is
+// STILL context-blind (above); the flags only enable the code seam in
+// why-today.ts, which re-ranks among near-ties using the model's pure scores.
 function whyTodayEnabled(): boolean {
   return process.env.WHY_TODAY_TIEBREAK === "on";
+}
+
+function softAffinityEnabled(): boolean {
+  return process.env.SOFT_AFFINITY === "on";
 }
 
 // --- Result cache ---
@@ -1384,6 +1396,33 @@ router.post("/still/score", async (req, res) => {
         { reason: guarded.invariant_guard_reason },
         "Coherence invariant guard fired — downgraded surfaced result to nothing",
       );
+    }
+
+    // Soft affinity (ADR 0001 A2), LOG-ONLY. Computed on the BLIND result (before
+    // the why-today apply below can mutate it). When SOFT_AFFINITY is on and the
+    // app sent an affinity profile, log what the COMBINED seam (why-today +
+    // affinity) would surface — so affinity decisions can be observed on real data
+    // before A3 applies them. The surfaced result is NOT changed here.
+    if (softAffinityEnabled() && parsed.data.context?.affinityProfile) {
+      try {
+        const seam = chooseSeamOverride(
+          result as Parameters<typeof chooseSeamOverride>[0],
+          parsed.data.candidates,
+          parsed.data.context,
+          {
+            whyToday: whyTodayEnabled(),
+            profile: parsed.data.context.affinityProfile,
+          },
+        );
+        if (seam) {
+          req.log.info(
+            { softAffinity: seam },
+            "soft-affinity: combined seam would surface (LOG-ONLY; surfaced result unchanged)",
+          );
+        }
+      } catch (err) {
+        req.log.warn({ err }, "soft-affinity seam error (ignored; surfaced result unchanged)");
+      }
     }
 
     // Why-today seam (ADR 0001 S2c). When the flag is on and the app sent

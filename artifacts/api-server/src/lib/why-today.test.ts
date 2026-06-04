@@ -7,6 +7,7 @@ import {
   comparableSet,
   identifyWinner,
   chooseWhyTodayOverride,
+  chooseSeamOverride,
   type ScoreEntry,
   type SeamCandidate,
   type ScoreResult,
@@ -177,4 +178,60 @@ test("override: a bare same-season coincidence is too weak to fire", () => {
   candidates[1].evidence = [{ date: "2016-10-06", fragment: "I am tired" }];
   const d = chooseWhyTodayOverride(result, candidates, { today: "2026-09-03" });
   assert.equal(d, null);
+});
+
+// --- chooseSeamOverride (composition of why-today + soft affinity) ---
+test("seam: affinity OFF (no profile) is byte-identical to chooseWhyTodayOverride", () => {
+  const { result, candidates } = scenario();
+  const ctx = { today: "2026-09-03" };
+  assert.deepEqual(
+    chooseSeamOverride(result, candidates, ctx, { whyToday: true }),
+    chooseWhyTodayOverride(result, candidates, ctx),
+  );
+});
+
+test("seam: both signals off → null", () => {
+  const { result, candidates } = scenario();
+  assert.equal(
+    chooseSeamOverride(result, candidates, { today: "2026-09-03" }, { whyToday: false }),
+    null,
+  );
+});
+
+test("seam: affinity boosts a favored-theme comparable even with no today resonance", () => {
+  const { result, candidates } = scenario();
+  candidates[1].function = "the exhaustion of pretending"; // favored theme in text
+  const d = chooseSeamOverride(
+    result,
+    candidates,
+    { today: "2026-01-03" }, // winter → no why-today resonance for either
+    { whyToday: true, profile: { favored: ["exhaustion"], dismissed: [] } },
+  );
+  assert.ok(d, "favored comparable should fire on affinity alone");
+  assert.equal(d!.toTitle, "Happiest Mask");
+});
+
+test("seam: a dismissed-theme comparable is never promoted", () => {
+  const { result, candidates } = scenario();
+  candidates[1].function = "the grief of that winter";
+  const d = chooseSeamOverride(
+    result,
+    candidates,
+    { today: "2026-01-03" },
+    { whyToday: true, profile: { favored: [], dismissed: ["grief"] } },
+  );
+  assert.equal(d, null);
+});
+
+test("seam: a favored-theme WINNER is never overridden by an equally-favored neighbour", () => {
+  const { result, candidates } = scenario();
+  candidates[0].function = "exhaustion again"; // winner favored
+  candidates[1].function = "exhaustion too"; // comparable favored
+  const d = chooseSeamOverride(
+    result,
+    candidates,
+    { today: "2026-01-03" },
+    { whyToday: true, profile: { favored: ["exhaustion"], dismissed: [] } },
+  );
+  assert.equal(d, null); // comparable pref not strictly greater than winner pref
 });

@@ -9,6 +9,8 @@
 // S2b wires this LOG-ONLY (decision logged, surfaced result unchanged). S2c adds
 // the voice pass that actually applies an override.
 
+import { affinityScore, type AffinityProfile } from "./affinity";
+
 export interface WhyTodayContext {
   today?: string; // "YYYY-MM-DD"
   recentThemes?: string[];
@@ -293,6 +295,55 @@ export function chooseWhyTodayOverride(
   );
   const choice = resonant[0];
 
+  return {
+    fromTitle: titleOf(winner) || null,
+    toTitle: titleOf(choice.entry) || null,
+    reasons: choice.reasons,
+    winnerEc: ec(winner),
+    toEc: ec(choice.entry),
+  };
+}
+
+// The COMPOSED seam decision (ADR 0001): why-today + soft affinity as one
+// preference over the same comparable set. Each signal is independently gated.
+//
+// CRITICAL GUARANTEE: when affinity is off (`profile` absent) this delegates to
+// the untouched `chooseWhyTodayOverride` — so the live why-today path is provably
+// identical. Only when a profile is supplied does the combined-preference path
+// run (resonance counted only if `whyToday` is on, plus affinityScore), still
+// confined to ec-tied / surfaceable / non-penalized candidates and still
+// requiring a real signal (>= MIN_OVERRIDE_RESONANCE) that beats the winner's own
+// preference — so a favored-theme winner is never overridden, and a dismissed
+// winner can be gently passed over for a co-equal neighbour.
+export function chooseSeamOverride(
+  result: ScoreResult,
+  candidates: SeamCandidate[],
+  context: WhyTodayContext,
+  opts: { whyToday: boolean; profile?: AffinityProfile },
+): WhyTodayDecision | null {
+  if (!opts.profile) {
+    return opts.whyToday ? chooseWhyTodayOverride(result, candidates, context) : null;
+  }
+  if (!result || result.mode === "nothing") return null;
+  const winner = identifyWinner(result);
+  if (!winner) return null;
+
+  const prefOf = (entry: ScoreEntry): { score: number; reasons: string[] } => {
+    const cand = joinCandidate(entry, candidates);
+    if (!cand) return { score: 0, reasons: [] };
+    const r = opts.whyToday ? resonance(cand, context) : { score: 0, reasons: [] };
+    const a = affinityScore(cand, opts.profile!);
+    return { score: r.score + a.score, reasons: [...r.reasons, ...a.reasons] };
+  };
+
+  const winnerPref = prefOf(winner).score;
+  const scored = comparableSet(winner, result.scores ?? [])
+    .map((entry) => ({ entry, ...prefOf(entry) }))
+    .filter((x) => x.score >= MIN_OVERRIDE_RESONANCE && x.score > winnerPref);
+  if (scored.length === 0) return null;
+
+  scored.sort((a, b) => b.score - a.score || lexCompare(a.entry, b.entry));
+  const choice = scored[0];
   return {
     fromTitle: titleOf(winner) || null,
     toTitle: titleOf(choice.entry) || null,

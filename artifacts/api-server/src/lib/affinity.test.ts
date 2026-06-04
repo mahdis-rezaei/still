@@ -14,6 +14,7 @@ const daysAgo = (n: number) => new Date(NOW.getTime() - n * 86_400_000);
 const e = (over: Partial<AffinityEntry> = {}): AffinityEntry => ({
   theme: null,
   favorite: false,
+  moreOften: false,
   lastOpenedAt: null,
   dismissed: false,
   ...over,
@@ -35,6 +36,11 @@ test("recently-opened counts; long-ago-opened does not", () => {
     NOW,
   );
   assert.deepEqual(p.favored, ["career"]);
+});
+
+test("'more_often' preference counts as favored", () => {
+  const p = buildAffinityProfile([e({ theme: "family", moreOften: true })], NOW);
+  assert.deepEqual(p.favored, ["family"]);
 });
 
 test("never-resurface entries become dismissed", () => {

@@ -27,6 +27,7 @@ export interface AffinityProfile {
 export interface AffinityEntry {
   theme: string | null;
   favorite: boolean;
+  moreOften: boolean; // resurfacing_preference === "more_often" — explicit "show this more"
   lastOpenedAt: Date | null;
   dismissed: boolean;
 }
@@ -63,7 +64,7 @@ export function buildAffinityProfile(
     const openedRecently =
       e.lastOpenedAt != null &&
       t - e.lastOpenedAt.getTime() <= OPEN_WINDOW_DAYS * DAY;
-    if (e.favorite || openedRecently) favored.add(theme);
+    if (e.favorite || e.moreOften || openedRecently) favored.add(theme);
   }
 
   for (const d of dismissed) favored.delete(d);

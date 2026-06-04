@@ -148,11 +148,22 @@ treasured and dismissed is dropped from favored (never punish, never boost).
   `affinityScore(candidate, profile)` (+favored / −dismissed, text-matched like
   why-today's theme echo). 11 unit tests in `affinity.test.ts`. Wired into
   NOTHING yet — fully inert; offline board + why-today untouched.
-- **A2 — next:** compose into the seam as a combined preference over
-  `comparableSet` (`whyTodayResonance + affinityScore`), each behind its own flag;
-  app computes the profile (from favorite/open/dismiss themes) and passes it in
-  `context`; wire LOG-ONLY behind `SOFT_AFFINITY`. Deterministic composition
-  tests. Then A3: apply via the same voice pass + dev A/B, then enable in prod.
+- **A2 — DONE:** composed into the seam as one preference over `comparableSet`.
+  - `chooseSeamOverride(result, candidates, context, { whyToday, profile })` in
+    why-today.ts: preference = (`whyToday` ? `resonance` : 0) + `affinityScore`,
+    confined to ec-tied / surfaceable / non-penalized candidates, requiring
+    `>= MIN_OVERRIDE_RESONANCE` AND strictly beating the winner's own preference
+    (so a favored winner is never overridden; a dismissed winner can be passed
+    over). **Affinity-off (no profile) DELEGATES to the untouched
+    `chooseWhyTodayOverride`** — live why-today is provably identical (locked by a
+    test). Favorite / `more_often` / recent-open → favored; `never` → dismissed.
+  - App: `runMemoryForUser` builds the profile (`buildAffinityProfile`) and passes
+    it in `context.affinityProfile`; `/still/score` schema accepts it.
+  - Wired **LOG-ONLY** behind `SOFT_AFFINITY`, computed on the BLIND result before
+    the why-today apply can mutate it — logs the combined seam decision; surfaced
+    result unchanged. 33 engine unit tests; offline board unchanged (3/3).
+  - **NEXT (A3):** apply the combined decision via the same voice pass (extend the
+    cache key with the affinity profile), dev A/B, then enable in prod.
 
 ## Rollback
 

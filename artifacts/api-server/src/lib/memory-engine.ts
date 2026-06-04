@@ -17,6 +17,7 @@ import {
 } from "@workspace/db";
 import { notMutedSql } from "./resurface-mutes";
 import { diversifiedPoolIds } from "./diversity";
+import { buildAffinityProfile } from "./affinity";
 
 const ENGINE_BASE = `http://127.0.0.1:${process.env.PORT}/api`;
 
@@ -31,7 +32,11 @@ export const CRISIS_FALLBACK =
 async function callEngine(
   entries: string,
   fresh: boolean,
-  context?: { today: string; recentThemes: string[] },
+  context?: {
+    today: string;
+    recentThemes: string[];
+    affinityProfile?: { favored: string[]; dismissed: string[] };
+  },
 ): Promise<
   { crisis: { supportMessage?: string } } | { score: Record<string, unknown> }
 > {
@@ -146,9 +151,39 @@ export async function runMemoryForUser(
   const recentThemes = [
     ...new Set(recentRows.map((r) => r.theme).filter((t): t is string => !!t)),
   ];
+
+  // Soft-affinity profile: the writer's favored vs dismissed themes, derived from
+  // favorite / "more often" / recently-opened entries (favored) and never-resurface
+  // entries (dismissed). Forwarded to scoring; inert until SOFT_AFFINITY is on.
+  const affinityRows = await db
+    .select({
+      theme: journalEntriesTable.theme,
+      favorite: journalEntriesTable.favorite,
+      resurfacingPreference: journalEntriesTable.resurfacingPreference,
+      lastOpenedAt: journalEntriesTable.lastOpenedAt,
+    })
+    .from(journalEntriesTable)
+    .where(
+      and(
+        eq(journalEntriesTable.userId, userId),
+        isNull(journalEntriesTable.deletedAt),
+        isNotNull(journalEntriesTable.theme),
+      ),
+    );
+  const affinityProfile = buildAffinityProfile(
+    affinityRows.map((r) => ({
+      theme: r.theme,
+      favorite: r.favorite,
+      moreOften: r.resurfacingPreference === "more_often",
+      lastOpenedAt: r.lastOpenedAt,
+      dismissed: r.resurfacingPreference === "never",
+    })),
+  );
+
   const context = {
     today: new Date().toISOString().slice(0, 10),
     recentThemes,
+    affinityProfile,
   };
 
   const out = await callEngine(entriesStr, opts.fresh === true, context);
