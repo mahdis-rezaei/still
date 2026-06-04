@@ -50,6 +50,20 @@ export default function Today() {
   const runMemory = useRunMemory();
   const [run, setRun] = useState<MemoryRunResult | null>(null);
 
+  // Reading a large archive is a two-pass model read and can take a couple of
+  // minutes. Without feedback that long wait reads as "broken," so we show calm,
+  // time-aware reassurance while the run is pending (no raw stopwatch — that
+  // makes the wait feel anxious).
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    if (!runMemory.isPending) {
+      setElapsed(0);
+      return;
+    }
+    const t = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [runMemory.isPending]);
+
   async function bringPageBack() {
     setRun(null);
     try {
@@ -144,6 +158,24 @@ export default function Today() {
             {runMemory.isPending ? "reading…" : "✦ Bring a page back"}
           </button>
         </div>
+
+        {/* While reading, calm time-aware reassurance so the long two-pass read
+            never reads as a failure. */}
+        {runMemory.isPending && (
+          <section className="mb-8">
+            <div className="border border-border/70 rounded-2xl bg-surface/50 p-6">
+              <p className="font-body text-soft-ink leading-relaxed">
+                {elapsed < 10
+                  ? "Reading through your pages…"
+                  : elapsed < 35
+                    ? "Still reading — looking across the years…"
+                    : elapsed < 90
+                      ? "Your archive is large, so this takes a moment. Hang tight — Yadegar is still reading."
+                      : "Almost there — a long archive takes a little longer to read."}
+              </p>
+            </div>
+          </section>
+        )}
 
         {/* A returned page (or honest silence), shown only after asking. */}
         {run && (
