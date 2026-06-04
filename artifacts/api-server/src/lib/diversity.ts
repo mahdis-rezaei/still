@@ -49,3 +49,27 @@ export function diversifiedPoolIds(
   if (noRepeatPage.length > 0) return noRepeatPage.map((p) => p.id);
   return pool.map((p) => p.id);
 }
+
+// Bound how many entries feed the extraction model call. PASS1 has a fixed output
+// budget, so an unbounded pool (e.g. a 445-entry bulk import) overflows it and the
+// candidate JSON is truncated → parse failure → the user sees "Something
+// interrupted the reading." Given a DATE-SORTED pool, pick at most `cap` entries
+// evenly spaced across the whole range (always including the oldest and newest),
+// so cross-time coverage — what thread/distance modes need — is preserved rather
+// than collapsing to one end. Deterministic: same pool in → same sample out (so
+// the score cache stays stable). Returns the pool unchanged when already <= cap.
+export function capPoolByTimeSpread<T>(pool: T[], cap: number): T[] {
+  if (cap <= 0 || pool.length <= cap) return pool;
+  if (cap === 1) return [pool[pool.length - 1]]; // most recent
+  const step = (pool.length - 1) / (cap - 1);
+  const out: T[] = [];
+  const seen = new Set<number>();
+  for (let i = 0; i < cap; i++) {
+    const idx = Math.round(i * step);
+    if (!seen.has(idx)) {
+      seen.add(idx);
+      out.push(pool[idx]);
+    }
+  }
+  return out;
+}

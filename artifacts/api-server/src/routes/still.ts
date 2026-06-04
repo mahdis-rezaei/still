@@ -15,7 +15,7 @@ const client = new Anthropic({
 // Pinned to an exact version (never a floating alias) so a model auto-upgrade
 // can't silently change results.
 const MODEL = "claude-sonnet-4-6";
-const MAX_TOKENS_PASS1 = 3000;
+const MAX_TOKENS_PASS1 = 4096;
 const MAX_TOKENS_PASS2 = 8000;
 // The crisis safety check only returns a tiny {crisis, reason} JSON.
 const MAX_TOKENS_CRISIS = 600;
@@ -1244,6 +1244,17 @@ router.post("/still/extract", async (req, res) => {
     if (block.type !== "text") {
       res.status(500).json({ error: "Unexpected response from AI" });
       return;
+    }
+
+    // A truncated response (hit the output cap) yields invalid JSON. Surface it
+    // distinctly so the cause is obvious in logs — the pool feeding extraction is
+    // bounded app-side (MAX_EXTRACTION_ENTRIES), so this should not happen in
+    // normal operation.
+    if (message.stop_reason === "max_tokens") {
+      req.log.error(
+        { stop_reason: message.stop_reason },
+        "Extraction hit max_tokens — input pool too large; candidate JSON truncated",
+      );
     }
 
     let raw: unknown;

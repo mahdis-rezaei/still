@@ -16,10 +16,15 @@ import {
   type ReturnedMemory,
 } from "@workspace/db";
 import { notMutedSql } from "./resurface-mutes";
-import { diversifiedPoolIds } from "./diversity";
+import { diversifiedPoolIds, capPoolByTimeSpread } from "./diversity";
 import { buildAffinityProfile } from "./affinity";
 
 const ENGINE_BASE = `http://127.0.0.1:${process.env.PORT}/api`;
+
+// Most entries to feed one extraction call. Bounds PASS1 so a large archive can't
+// overflow its output budget (which truncates the candidate JSON → 500). Tuned to
+// the known-good range; a time-spread sample of this size still spans the archive.
+const MAX_EXTRACTION_ENTRIES = 50;
 
 export const CRISIS_FALLBACK =
   "It sounds like you're carrying something heavy right now. You don't have to hold it alone — if you're in danger or thinking about harming yourself, please reach out to someone you trust or a crisis line in your country. You matter.";
@@ -148,6 +153,14 @@ export async function runMemoryForUser(
     );
     pool = eligible.filter((e) => keep.has(e.id));
   }
+
+  // Bound the pool fed into extraction. PASS1 has a fixed output budget, so a
+  // large archive (e.g. a multi-hundred-entry import) overflows it and the
+  // candidate JSON truncates → 500 ("Something interrupted the reading"). Cap to
+  // a time-spread sample so a big archive still surfaces — and still spans years
+  // for thread/distance — instead of erroring. Diversity rotation keeps the
+  // sample moving across runs.
+  pool = capPoolByTimeSpread(pool, MAX_EXTRACTION_ENTRIES);
 
   const entriesStr = pool
     .map((e) => `[${e.entryDate}]\n${e.body}`)
