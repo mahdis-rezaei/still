@@ -37,6 +37,11 @@ async function callEngine(
     recentThemes: string[];
     affinityProfile?: { favored: string[]; dismissed: string[] };
   },
+  // entryDate → source-entry theme tag, used to annotate candidates so soft
+  // affinity can match the TRUE source theme (not the model gloss). The entries
+  // are fed with `[entryDate]` headers, so extract's evidence dates equal these
+  // keys exactly.
+  dateThemes?: Record<string, string>,
 ): Promise<
   { crisis: { supportMessage?: string } } | { score: Record<string, unknown> }
 > {
@@ -48,15 +53,30 @@ async function callEngine(
   });
   if (!exRes.ok) throw new Error(`extract HTTP ${exRes.status}`);
   const extract = (await exRes.json()) as {
-    candidates?: unknown[];
+    candidates?: {
+      evidence?: { date?: string }[];
+      [k: string]: unknown;
+    }[];
     crisis?: { supportMessage?: string } | null;
   };
   if (extract.crisis) return { crisis: extract.crisis };
 
+  const candidates = (extract.candidates ?? []).map((c) => {
+    if (!dateThemes) return c;
+    const themes = [
+      ...new Set(
+        (c.evidence ?? [])
+          .map((e) => (e.date ? dateThemes[e.date] : undefined))
+          .filter((t): t is string => !!t),
+      ),
+    ];
+    return themes.length > 0 ? { ...c, themes } : c;
+  });
+
   const scRes = await fetch(`${ENGINE_BASE}/still/score${q}`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ candidates: extract.candidates ?? [], context }),
+    body: JSON.stringify({ candidates, context }),
   });
   if (!scRes.ok) throw new Error(`score HTTP ${scRes.status}`);
   return { score: (await scRes.json()) as Record<string, unknown> };
@@ -186,7 +206,20 @@ export async function runMemoryForUser(
     affinityProfile,
   };
 
-  const out = await callEngine(entriesStr, opts.fresh === true, context);
+  // entryDate → theme for the pool, keyed exactly as the `[${e.entryDate}]`
+  // headers fed to extract, so candidate evidence dates map back to the true
+  // source-entry theme tag for soft affinity.
+  const dateThemes: Record<string, string> = {};
+  for (const e of pool) {
+    if (e.theme) dateThemes[String(e.entryDate)] = e.theme;
+  }
+
+  const out = await callEngine(
+    entriesStr,
+    opts.fresh === true,
+    context,
+    dateThemes,
+  );
 
   if ("crisis" in out) {
     return {

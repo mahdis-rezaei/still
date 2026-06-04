@@ -792,6 +792,10 @@ const CandidateSchema = z.object({
   description: z.string(),
   evidence: z.array(QuoteSchema),
   why_it_matters: z.string(),
+  // Source-entry theme tag(s), annotated app-side from evidence dates. Soft
+  // affinity reads these; they are STRIPPED from the model scoring payload below
+  // so the calibrated scorer's input stays byte-identical.
+  themes: z.array(z.string()).optional(),
 });
 
 const ScoreInputSchema = z.object({
@@ -1272,8 +1276,9 @@ router.post("/still/extract", async (req, res) => {
 async function surfaceOverrideCandidate(
   candidate: z.infer<typeof CandidateSchema>,
 ): Promise<Record<string, unknown> | null> {
+  const { themes: _themes, ...rest } = candidate;
   const annotated = {
-    ...candidate,
+    ...rest,
     evidence_metadata: computeEvidenceMetadata(candidate.evidence),
   };
   const message = await client.messages.create({
@@ -1306,8 +1311,10 @@ router.post("/still/score", async (req, res) => {
     return;
   }
 
-  // Annotate each candidate with pre-computed evidence metadata
-  const annotated = parsed.data.candidates.map((c) => ({
+  // Annotate each candidate with pre-computed evidence metadata. `themes` (used
+  // only by soft affinity) is stripped here so the model scoring payload and the
+  // cache key stay byte-identical regardless of personalization.
+  const annotated = parsed.data.candidates.map(({ themes: _themes, ...c }) => ({
     ...c,
     evidence_metadata: computeEvidenceMetadata(c.evidence),
   }));

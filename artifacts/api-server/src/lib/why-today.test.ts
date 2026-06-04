@@ -198,9 +198,9 @@ test("seam: both signals off → null", () => {
   );
 });
 
-test("seam: affinity boosts a favored-theme comparable even with no today resonance", () => {
+test("seam: affinity boosts a favored-tag comparable even with no today resonance", () => {
   const { result, candidates } = scenario();
-  candidates[1].function = "the exhaustion of pretending"; // favored theme in text
+  candidates[1].themes = ["exhaustion"]; // favored source-entry tag
   const d = chooseSeamOverride(
     result,
     candidates,
@@ -211,9 +211,9 @@ test("seam: affinity boosts a favored-theme comparable even with no today resona
   assert.equal(d!.toTitle, "Happiest Mask");
 });
 
-test("seam: a dismissed-theme comparable is never promoted", () => {
+test("seam: a dismissed-tag comparable is never promoted", () => {
   const { result, candidates } = scenario();
-  candidates[1].function = "the grief of that winter";
+  candidates[1].themes = ["grief"];
   const d = chooseSeamOverride(
     result,
     candidates,
@@ -223,10 +223,10 @@ test("seam: a dismissed-theme comparable is never promoted", () => {
   assert.equal(d, null);
 });
 
-test("seam: a favored-theme WINNER is never overridden by an equally-favored neighbour", () => {
+test("seam: a favored-tag WINNER is never overridden by an equally-favored neighbour", () => {
   const { result, candidates } = scenario();
-  candidates[0].function = "exhaustion again"; // winner favored
-  candidates[1].function = "exhaustion too"; // comparable favored
+  candidates[0].themes = ["exhaustion"]; // winner favored
+  candidates[1].themes = ["exhaustion"]; // comparable favored
   const d = chooseSeamOverride(
     result,
     candidates,
@@ -234,4 +234,22 @@ test("seam: a favored-theme WINNER is never overridden by an equally-favored nei
     { whyToday: true, profile: { favored: ["exhaustion"], dismissed: [] } },
   );
   assert.equal(d, null); // comparable pref not strictly greater than winner pref
+});
+
+test("seam: a today-resonant WINNER is not overridden by an affinity-favored peer", () => {
+  // Architect caveat: the combined path drops why-today's winner-resonance
+  // short-circuit, but the winner's resonance still counts in ITS preference —
+  // so a peer favored on affinity alone (max +2) cannot beat a winner resonating
+  // at 3 (anniversary). Locks in that a resonant winner stays.
+  const { result, candidates } = scenario();
+  candidates[0].evidence = [{ date: "2015-09-10", fragment: "the long way" }]; // winner anniversary → resonance 3
+  candidates[1].evidence = [{ date: "2016-03-01", fragment: "I am tired" }]; // peer NOT resonant (March)
+  candidates[1].themes = ["exhaustion"]; // peer favored on affinity alone (+2)
+  const d = chooseSeamOverride(
+    result,
+    candidates,
+    { today: "2026-09-03" },
+    { whyToday: true, profile: { favored: ["exhaustion"], dismissed: [] } },
+  );
+  assert.equal(d, null); // winnerPref 3 (resonance) > peer 2 (affinity only)
 });

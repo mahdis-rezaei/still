@@ -97,38 +97,48 @@ const profile = (over: Partial<AffinityProfile> = {}): AffinityProfile => ({
   ...over,
 });
 
-test("favored-theme match boosts; reason recorded", () => {
+test("favored source-entry theme tag boosts; reason recorded", () => {
   const r = affinityScore(
-    cand({ function: "recurring homesickness far from family" }),
+    cand({ themes: ["homesickness"] }),
     profile({ favored: ["homesickness"] }),
   );
   assert.equal(r.score, 2);
   assert.match(r.reasons[0], /favored/);
 });
 
-test("dismissed-theme match soft-penalizes", () => {
+test("dismissed theme tag soft-penalizes", () => {
   const r = affinityScore(
-    cand({ description: "the grief of that winter" }),
+    cand({ themes: ["grief"] }),
     profile({ dismissed: ["grief"] }),
   );
   assert.equal(r.score, -2);
   assert.match(r.reasons[0], /dismissed/);
 });
 
-test("favored + dismissed both present nets to zero", () => {
+test("favored + dismissed tags both present nets to zero", () => {
   const r = affinityScore(
-    cand({ function: "homesickness", description: "grief" }),
+    cand({ themes: ["homesickness", "grief"] }),
     profile({ favored: ["homesickness"], dismissed: ["grief"] }),
   );
   assert.equal(r.score, 0);
 });
 
-test("no theme match → zero, no reasons", () => {
-  const r = affinityScore(cand({ function: "a quiet morning" }), profile({ favored: ["career"] }));
+test("exact-tag matching: a gloss word is NOT a match without the tag", () => {
+  // The candidate's gloss mentions "career" but its source-entry tag is "travel"
+  // — tag matching must NOT fire on the gloss coincidence.
+  const r = affinityScore(
+    cand({ function: "a career thought on the road", themes: ["travel"] }),
+    profile({ favored: ["career"] }),
+  );
+  assert.equal(r.score, 0);
+});
+
+test("no tag match → zero, no reasons", () => {
+  const r = affinityScore(cand({ themes: ["solitude"] }), profile({ favored: ["career"] }));
   assert.equal(r.score, 0);
   assert.deepEqual(r.reasons, []);
 });
 
-test("empty profile → zero", () => {
-  assert.equal(affinityScore(cand({ function: "anything" }), profile()).score, 0);
+test("no themes on candidate → zero", () => {
+  assert.equal(affinityScore(cand({}), profile({ favored: ["career"] })).score, 0);
 });

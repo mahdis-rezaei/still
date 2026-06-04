@@ -173,11 +173,27 @@ treasured and dismissed is dropped from favored (never punish, never boost).
     dismissed sets (plus the why-today coarse context if on); the why-today-only
     and flag-off keys are left byte-identical, so the live why-today cache never
     churns.
-  - 33 engine unit tests; offline board unchanged (3/3) with all flags off.
-  - **NEXT:** dev A/B with a SEEDED test account (real favorites / opens /
-    never-resurface) so affinity actually fires — judge whether matches read as
-    recognition (anti-horoscope) and confirm `SOFT_AFFINITY` off is identical to
-    live why-today; then enable in prod.
+  - **A3 DEV A/B (flag on, seeded profile) — done; two findings addressed below.**
+    Apply/no-leak/cache/gate-safety all passed; the one failure was QUALITY:
+    affinity matched the favored *word* against the model GLOSS, which is brittle
+    (coincidental hits + missed the true center, e.g. an "exhaustion" page titled
+    "Exhausted" fired nothing).
+  - **FIX — tag matching (post-A/B):** affinity now matches the candidate's
+    SOURCE-ENTRY theme TAG (exact membership in favored/dismissed), not the gloss.
+    The app annotates each candidate with `themes` from its evidence dates (the
+    `[entryDate]` headers make evidence dates equal pool `entryDate`s exactly);
+    `themes` is STRIPPED from the model scoring payload + cache key, so scoring
+    stays byte-identical. why-today's own theme echo is unchanged (date signals
+    are its primary axis).
+  - **Architect caveat (resolved):** the combined path drops why-today's binary
+    winner-resonance short-circuit, but the winner's resonance still counts in ITS
+    preference — a peer favored on affinity alone (max +2) cannot beat a winner
+    resonating at 3. Locked by a test (`a today-resonant WINNER is not overridden
+    by an affinity-favored peer`).
+  - 35 engine unit tests; offline board unchanged (3/3) with all flags off.
+  - **NEXT:** re-run the dev A/B with the tag-matching fix + a seeded account —
+    confirm favored matches now track the true source theme and read as
+    recognition; then enable `SOFT_AFFINITY` in prod.
 
 ## Rollback
 

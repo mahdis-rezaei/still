@@ -37,6 +37,9 @@ export interface SeamCandidate {
   function?: string;
   description?: string;
   evidence?: { date?: string; fragment?: string }[];
+  // Source-entry theme tag(s) — annotated app-side from the candidate's evidence
+  // dates. Used by soft affinity only; kept out of the model scoring payload.
+  themes?: string[];
 }
 
 export interface ScoreResult {

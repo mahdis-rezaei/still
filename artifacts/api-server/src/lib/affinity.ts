@@ -74,29 +74,32 @@ export function buildAffinityProfile(
 const W_FAVORED = 2; // a real signal — same weight as why-today's theme echo
 const W_DISMISSED = 2; // symmetric soft down-weight
 
-// How much a candidate aligns with the writer's affinity profile. Mirrors
-// why-today's theme matching: the candidate's title/function/description text is
-// checked against the profile's theme strings. Positive for a favored theme,
-// negative (soft) for a dismissed one, zero when neither — a gentle thumb on the
-// scale among already-co-equal candidates, never a gate.
+// How much a candidate aligns with the writer's affinity profile, matched on the
+// candidate's SOURCE-ENTRY theme TAG (the resurface-safety `theme`), NOT the
+// model-written gloss — the DEV A/B showed gloss substring-matching is brittle
+// (coincidental hits + misses the true center). Exact tag membership: positive
+// for a favored theme, negative (soft) for a dismissed one, zero otherwise — a
+// gentle thumb on the scale among co-equal candidates, never a gate.
 export function affinityScore(
   candidate: SeamCandidate,
   profile: AffinityProfile,
 ): { score: number; reasons: string[] } {
-  const hay = norm(
-    [candidate.candidate_title, candidate.function, candidate.description]
-      .filter(Boolean)
-      .join(" "),
-  );
+  const themes = [
+    ...new Set((candidate.themes ?? []).map(norm).filter(Boolean)),
+  ];
+  if (themes.length === 0) return { score: 0, reasons: [] };
+
+  const favored = new Set(profile.favored.map(norm));
+  const dismissed = new Set(profile.dismissed.map(norm));
   const reasons: string[] = [];
   let score = 0;
 
-  const favs = profile.favored.filter((th) => th.length >= 3 && hay.includes(th));
+  const favs = themes.filter((t) => favored.has(t));
   if (favs.length > 0) {
     score += W_FAVORED;
     reasons.push(`favored theme(s): ${favs.join(", ")}`);
   }
-  const dis = profile.dismissed.filter((th) => th.length >= 3 && hay.includes(th));
+  const dis = themes.filter((t) => dismissed.has(t));
   if (dis.length > 0) {
     score -= W_DISMISSED;
     reasons.push(`dismissed theme(s): ${dis.join(", ")}`);
