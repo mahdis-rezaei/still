@@ -15,7 +15,11 @@ const client = new Anthropic({
 // Pinned to an exact version (never a floating alias) so a model auto-upgrade
 // can't silently change results.
 const MODEL = "claude-sonnet-4-6";
-const MAX_TOKENS_PASS1 = 4096;
+// PASS1 (extraction) output budget. A rich, time-spread pool produces a verbose
+// candidate list; 4096 still truncated it on a multi-hundred-entry archive (→
+// stop_reason "max_tokens" → invalid JSON → 500). 8192 gives ample headroom for
+// the bounded pool (MAX_EXTRACTION_ENTRIES) without risking truncation.
+const MAX_TOKENS_PASS1 = 8192;
 const MAX_TOKENS_PASS2 = 8000;
 // The crisis safety check only returns a tiny {crisis, reason} JSON.
 const MAX_TOKENS_CRISIS = 600;

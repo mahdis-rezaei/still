@@ -21,10 +21,11 @@ import { buildAffinityProfile } from "./affinity";
 
 const ENGINE_BASE = `http://127.0.0.1:${process.env.PORT}/api`;
 
-// Most entries to feed one extraction call. Bounds PASS1 so a large archive can't
-// overflow its output budget (which truncates the candidate JSON → 500). Tuned to
-// the known-good range; a time-spread sample of this size still spans the archive.
-const MAX_EXTRACTION_ENTRIES = 50;
+// Most entries to feed one extraction call. Bounds PASS1 output AND latency: a
+// time-spread sample of RICH entries (spanning years) yields many verbose
+// candidates, so 50 still overflowed the output budget and ran ~85s. 25 keeps the
+// candidate list and runtime well within bounds while still spanning the archive.
+const MAX_EXTRACTION_ENTRIES = 25;
 
 export const CRISIS_FALLBACK =
   "It sounds like you're carrying something heavy right now. You don't have to hold it alone — if you're in danger or thinking about harming yourself, please reach out to someone you trust or a crisis line in your country. You matter.";
