@@ -4,7 +4,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { db, stillResultsTable } from "@workspace/db";
-import { chooseWhyTodayOverride, chooseSeamOverride } from "../lib/why-today";
+import { chooseSeamOverride } from "../lib/why-today";
 
 const router = Router();
 
@@ -1334,6 +1334,8 @@ router.post("/still/score", async (req, res) => {
   // — so month granularity keeps the surfaced result (and the noisy override
   // decision frozen into it) stable within a month instead of re-rolling daily.
   const wtActive = whyTodayEnabled() && !!parsed.data.context;
+  const affActive =
+    softAffinityEnabled() && !!parsed.data.context?.affinityProfile;
   const coarseContext = wtActive
     ? {
         month: parseDateParts(parsed.data.context!.today ?? "")?.month ?? null,
@@ -1346,11 +1348,28 @@ router.post("/still/score", async (req, res) => {
         ].sort(),
       }
     : null;
+  // When affinity is active the surfaced result also depends on the favored /
+  // dismissed theme sets, so the cache key must carry them. The why-today-only
+  // and flag-off keys below are left BYTE-IDENTICAL to before, so the live
+  // why-today cache never churns.
+  const norm = (xs: string[]) =>
+    [...new Set(xs.map((t) => t.toLowerCase().trim()).filter(Boolean))].sort();
+  const affKey = affActive
+    ? {
+        favored: norm(parsed.data.context!.affinityProfile!.favored),
+        dismissed: norm(parsed.data.context!.affinityProfile!.dismissed),
+      }
+    : null;
   const key = cacheKey(
     "score",
-    wtActive
-      ? canonicalize({ candidates: annotated, whyToday: coarseContext })
-      : canonicalize({ candidates: annotated }),
+    affActive
+      ? canonicalize({
+          candidates: annotated,
+          seam: { ...(wtActive ? coarseContext : {}), affinity: affKey },
+        })
+      : wtActive
+        ? canonicalize({ candidates: annotated, whyToday: coarseContext })
+        : canonicalize({ candidates: annotated }),
   );
   const fresh = isFreshRequested(req.query);
 
@@ -1398,46 +1417,25 @@ router.post("/still/score", async (req, res) => {
       );
     }
 
-    // Soft affinity (ADR 0001 A2), LOG-ONLY. Computed on the BLIND result (before
-    // the why-today apply below can mutate it). When SOFT_AFFINITY is on and the
-    // app sent an affinity profile, log what the COMBINED seam (why-today +
-    // affinity) would surface — so affinity decisions can be observed on real data
-    // before A3 applies them. The surfaced result is NOT changed here.
-    if (softAffinityEnabled() && parsed.data.context?.affinityProfile) {
+    // Post-score personalization seam (ADR 0001). ONE combined decision over the
+    // model's PURE scores: why-today resonance + soft affinity, each independently
+    // flag-gated. The scorer never sees context, so axis scores are never
+    // inflated; the swap only ever happens among co-equal, surfaceable,
+    // non-penalized candidates, and is re-voiced by a single-candidate PASS2 pass.
+    // With SOFT_AFFINITY OFF this is byte-identical to the live why-today path
+    // (chooseSeamOverride delegates to chooseWhyTodayOverride and the audit/log
+    // contract below is preserved). Any failure is caught and leaves the blind
+    // winner untouched.
+    if ((wtActive || affActive) && parsed.data.context) {
       try {
-        const seam = chooseSeamOverride(
+        const decision = chooseSeamOverride(
           result as Parameters<typeof chooseSeamOverride>[0],
           parsed.data.candidates,
           parsed.data.context,
           {
-            whyToday: whyTodayEnabled(),
-            profile: parsed.data.context.affinityProfile,
+            whyToday: wtActive,
+            profile: affActive ? parsed.data.context.affinityProfile : undefined,
           },
-        );
-        if (seam) {
-          req.log.info(
-            { softAffinity: seam },
-            "soft-affinity: combined seam would surface (LOG-ONLY; surfaced result unchanged)",
-          );
-        }
-      } catch (err) {
-        req.log.warn({ err }, "soft-affinity seam error (ignored; surfaced result unchanged)");
-      }
-    }
-
-    // Why-today seam (ADR 0001 S2c). When the flag is on and the app sent
-    // context, decide — over the model's PURE (context-blind) scores — whether a
-    // near-tie resonant candidate should be preferred; if so, re-voice that
-    // candidate and swap it into the surfaced result. The scorer never sees
-    // context, so axis scores are never inflated; the swap only ever happens
-    // among co-equal, fully-surfaceable candidates. Any failure is caught and
-    // leaves the blind winner untouched.
-    if (wtActive && parsed.data.context) {
-      try {
-        const decision = chooseWhyTodayOverride(
-          result as Parameters<typeof chooseWhyTodayOverride>[0],
-          parsed.data.candidates,
-          parsed.data.context,
         );
         if (decision?.toTitle) {
           const chosen = parsed.data.candidates.find(
@@ -1451,12 +1449,20 @@ router.post("/still/score", async (req, res) => {
             r.observation = voiced.observation;
             r.quotes = voiced.quotes;
             r.why = voiced.why;
-            r.winning_tiebreak_level = "why_today";
-            r.why_today_override = {
+            const audit = {
               fromTitle: decision.fromTitle,
               toTitle: decision.toTitle,
               reasons: decision.reasons,
             };
+            // Preserve the live why-today audit + log contract when affinity is
+            // off; use a general seam audit once affinity can contribute.
+            if (affActive) {
+              r.winning_tiebreak_level = "seam";
+              r.seam_override = audit;
+            } else {
+              r.winning_tiebreak_level = "why_today";
+              r.why_today_override = audit;
+            }
             // If a cross-mode override makes the new primary itself a cross-time
             // thread/distance, drop the blind run's secondaryThread so it can't
             // duplicate the primary (mirrors PASS2's "primary is a thread →
@@ -1464,16 +1470,26 @@ router.post("/still/score", async (req, res) => {
             if (voiced.mode === "thread" || voiced.mode === "distance") {
               r.secondaryThread = null;
             }
-            req.log.info({ whyToday: decision }, "why-today: applied override");
+            req.log.info(
+              affActive ? { seam: decision } : { whyToday: decision },
+              affActive ? "seam: applied override" : "why-today: applied override",
+            );
           } else {
             req.log.info(
-              { whyToday: decision },
-              "why-today: override declined (voice pass returned nothing); blind winner kept",
+              affActive ? { seam: decision } : { whyToday: decision },
+              affActive
+                ? "seam: override declined (voice pass returned nothing); blind winner kept"
+                : "why-today: override declined (voice pass returned nothing); blind winner kept",
             );
           }
         }
       } catch (err) {
-        req.log.warn({ err }, "why-today seam error (ignored; blind winner kept)");
+        req.log.warn(
+          { err },
+          affActive
+            ? "seam error (ignored; blind winner kept)"
+            : "why-today seam error (ignored; blind winner kept)",
+        );
       }
     }
 

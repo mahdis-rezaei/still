@@ -162,8 +162,22 @@ treasured and dismissed is dropped from favored (never punish, never boost).
   - Wired **LOG-ONLY** behind `SOFT_AFFINITY`, computed on the BLIND result before
     the why-today apply can mutate it — logs the combined seam decision; surfaced
     result unchanged. 33 engine unit tests; offline board unchanged (3/3).
-  - **NEXT (A3):** apply the combined decision via the same voice pass (extend the
-    cache key with the affinity profile), dev A/B, then enable in prod.
+- **A3 — DONE:** the seam now APPLIES the combined decision (still flag-gated).
+  - `/still/score` runs ONE unified seam block: `chooseSeamOverride` with
+    `{ whyToday: wtActive, profile: affActive ? … : undefined }`, re-voiced by the
+    same single-candidate PASS2 pass. With `SOFT_AFFINITY` OFF it is byte-identical
+    to the live why-today path (delegation + the `why_today_override` audit and
+    `"why-today: applied override"` log line are preserved); with it ON the audit
+    is `seam_override` + `winning_tiebreak_level:"seam"` and the log says `seam:`.
+  - Cache: when affinity is active the key carries the normalized favored /
+    dismissed sets (plus the why-today coarse context if on); the why-today-only
+    and flag-off keys are left byte-identical, so the live why-today cache never
+    churns.
+  - 33 engine unit tests; offline board unchanged (3/3) with all flags off.
+  - **NEXT:** dev A/B with a SEEDED test account (real favorites / opens /
+    never-resurface) so affinity actually fires — judge whether matches read as
+    recognition (anti-horoscope) and confirm `SOFT_AFFINITY` off is identical to
+    live why-today; then enable in prod.
 
 ## Rollback
 
