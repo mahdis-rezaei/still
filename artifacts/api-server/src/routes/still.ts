@@ -1418,6 +1418,13 @@ router.post("/still/score", async (req, res) => {
               toTitle: decision.toTitle,
               reasons: decision.reasons,
             };
+            // If a cross-mode override makes the new primary itself a cross-time
+            // thread/distance, drop the blind run's secondaryThread so it can't
+            // duplicate the primary (mirrors PASS2's "primary is a thread →
+            // secondaryThread = null" rule).
+            if (voiced.mode === "thread" || voiced.mode === "distance") {
+              r.secondaryThread = null;
+            }
             req.log.info({ whyToday: decision }, "why-today: applied override");
           } else {
             req.log.info(

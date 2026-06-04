@@ -115,8 +115,19 @@ call.
     ±1, so which near-tie freezes is probabilistic — but always SAFE (only swaps
     among co-equal, surfaceable, gated candidates; never breaks silence) and, once
     computed, frozen per (pool, month, themes) by the cache.
-  - 16 unit tests; offline board unchanged (flag-off identical). NEXT: Replit live
-    A/B on the dev engine (applied output + axis stability), then enable in prod.
+  - 16 unit tests; offline board unchanged (flag-off identical).
+  - **Verified on the DEV engine (A/B, flag ON vs OFF):** catchup fired and
+    swapped the surfaced output ("Still at the Beginning" → "Happiest Girl
+    Exhausted") with a `why_today_override` audit and `winning_tiebreak_level:
+    "why_today"`; clear-winner + silence cases were ON==OFF; flag-off showed no
+    leak; the coarse cache held the frozen override across non-fresh re-reads; the
+    re-voiced observation read as a genuine turning line. Fires are rare (need a
+    true ec tie + resonance ≥2), as intended.
+  - Cross-mode override is intentional (comparability is ec + surfaceable +
+    non-penalized, NOT mode-gated); when an override makes the new primary a
+    thread/distance, the preserved `secondaryThread` is nulled to avoid
+    duplicating the primary (mirrors PASS2). NEXT: enable in prod, watch
+    `why_today_override` frequency/quality, keep the flag as instant rollback.
 
 ## Rollback
 
