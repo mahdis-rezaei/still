@@ -299,13 +299,15 @@ router.post("/cron/warm-on-this-day", async (req, res): Promise<void> => {
     for (const u of users) {
       if (u.memorySensitivity === "protected") continue;
       const target = localDayInTz(u.timezone);
-      const { years } = await onThisDayFramedSet(u.id, target);
+      const years = await onThisDayFramedSet(u.id, target);
       if (years.length === 0) continue;
       const date = target.toISOString().slice(0, 10);
       await enqueueMemoryJob(
         u.id,
         "on_this_day",
-        { entryIds: years.map((y) => y.entryId) },
+        // Warm the SAME single entry the framed endpoint voices (most recent
+        // year on this exact day) so the cache lines up.
+        { entryIds: [years[0].entryId] },
         `otd:${u.id}:${date}`,
         false, // enqueue only; the backstop drains the batch
       );

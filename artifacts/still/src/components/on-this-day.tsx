@@ -24,11 +24,14 @@ import { MemoryCard } from "@/components/memory-card";
 export function OnThisDay() {
   const queryClient = useQueryClient();
   const { data: prefs } = usePreferences();
-  const { data: years, isLoading } = useOnThisDay();
+  const { data: raw, isLoading } = useOnThisDay();
   const [showYears, setShowYears] = useState(false);
 
   const isProtected = prefs?.memorySensitivity === "protected";
-  const hasYears = !!years && years.length > 0;
+  // Strict "On this day": only pages from the EXACT calendar day in prior years.
+  // (Cross-year reflection lives in Then & Now on Look Back.) Silent otherwise.
+  const years = (raw ?? []).filter((m) => m.onThisExactDay);
+  const hasYears = years.length > 0;
 
   // Only run the (model-backed) voice pass when we'll actually show it.
   const framedQ = useOnThisDayFramed(!isProtected && hasYears);
@@ -37,7 +40,7 @@ export function OnThisDay() {
   if (isProtected) return null;
   if (isLoading || !hasYears) return null;
 
-  const lead = years![0];
+  const lead = years[0];
   const refresh = () =>
     queryClient.invalidateQueries({ queryKey: ["on-this-day"] });
 
@@ -72,7 +75,7 @@ export function OnThisDay() {
       )}
 
       {/* Year ladder — step through each year on this date. */}
-      {years!.length > 1 && (
+      {years.length > 1 && (
         <div className="mt-4">
           <button
             onClick={() => setShowYears((v) => !v)}
@@ -80,11 +83,11 @@ export function OnThisDay() {
           >
             {showYears
               ? "Hide other years"
-              : `See each year (${years!.length})`}
+              : `See each year (${years.length})`}
           </button>
           {showYears && (
             <div className="space-y-4 mt-4">
-              {years!.map((m) => (
+              {years.map((m) => (
                 <DateMemoryCard
                   key={m.entryId}
                   heading={onThisDayLabel(m)}

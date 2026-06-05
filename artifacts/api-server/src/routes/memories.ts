@@ -315,17 +315,19 @@ router.get("/memories/on-this-day/framed", async (req, res): Promise<void> => {
     return;
   }
   try {
-    const { exact, years } = await onThisDayFramedSet(req.userId!, target);
-
+    // EXACT calendar day in prior years only (cross-year arcs live in Then & Now).
+    const years = await onThisDayFramedSet(req.userId!, target);
     if (years.length === 0) {
-      res.json({ exact: false, years: [], framed: null });
+      res.json({ exact: true, years: [], framed: null });
       return;
     }
 
     let framed: ReturnType<typeof toMemory> | null = null;
     try {
+      // Voice a SINGLE dated page — the most recent year on this exact day — so
+      // the lead reads as "a page from then," never a cross-year pattern.
       const out = await runMemoryForUser(req.userId!, {
-        entryIds: years.map((y) => y.entryId),
+        entryIds: [years[0].entryId],
         preview: true,
       });
       if (out.surfaced && out.memory) framed = toMemory(out.memory);
@@ -335,7 +337,7 @@ router.get("/memories/on-this-day/framed", async (req, res): Promise<void> => {
       req.log.warn({ err }, "On-this-day framing failed; serving raw years");
     }
 
-    res.json({ exact, years, framed });
+    res.json({ exact: true, years, framed });
   } catch (err) {
     req.log.error({ err }, "On this day (framed) error");
     res.status(500).json({ error: "Failed to load on-this-day memories" });

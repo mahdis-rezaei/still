@@ -157,19 +157,17 @@ export async function aroundThisTimeForUser(
   return rows.map((r) => toBase(r, targetYear));
 }
 
-// The entry set the VOICED on-this-day surfaces over: the exact calendar day
-// (±3) in prior years, or — when there's nothing on the exact day — the same
-// MONTH in prior years. Shared by the framed endpoint AND the warm cron so both
-// use the IDENTICAL entry ids, which is what makes the warmed engine cache line
-// up with what the page later reads. Empty when this day has no past pages.
+// The voiced "On this day" surfaces ONLY pages from the EXACT calendar day in
+// prior years — cleaner than a window, and faithful to the name. Cross-year
+// reflection ("around this time", arcs) lives in Then & Now / Look Back, so this
+// stays a pure date-anchored page. Empty (→ the surface stays silent) when
+// nothing falls on today's exact date.
 export async function onThisDayFramedSet(
   userId: string,
   target: Date,
-): Promise<{ exact: boolean; years: DateMemory[] }> {
-  const exactItems = await onThisDayForUser(userId, target);
-  if (exactItems.length > 0) return { exact: true, years: exactItems };
-  const around = await aroundThisTimeForUser(userId, target);
-  return { exact: false, years: around };
+): Promise<DateMemory[]> {
+  const items = await onThisDayForUser(userId, target);
+  return items.filter((i) => i.onThisExactDay);
 }
 
 // Pages the user treasured: favorited entries that clear the same floor. Most
