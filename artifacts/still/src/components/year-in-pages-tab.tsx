@@ -19,7 +19,14 @@ export function YearInPagesTab() {
   }, [entries]);
 
   const [picked, setPicked] = useState("");
-  const year = picked || years[0] || String(new Date().getFullYear());
+  // Default to the most recent year that ISN'T in the future, so a stray
+  // future-dated entry can't hijack the default (it's still selectable below).
+  const currentYear = new Date().getFullYear();
+  const defaultYear =
+    years.find((y) => Number(y) <= currentYear) ??
+    years[0] ??
+    String(currentYear);
+  const year = picked || defaultYear;
 
   if (years.length === 0) {
     return (
