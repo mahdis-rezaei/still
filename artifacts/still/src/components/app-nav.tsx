@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useResendVerification } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
@@ -26,6 +26,41 @@ export function AppNav() {
   const { user, logout } = useAuth();
   const resend = useResendVerification();
   const [resent, setResent] = useState(false);
+
+  // Account menu — one dropdown on the right (Settings · About · Profile · Sign
+  // out) instead of scattering them across the top bar. Closes on outside click
+  // or Escape.
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen]);
+
+  const menuItem = (href: string, label: string) => (
+    <Link
+      href={href}
+      onClick={() => setMenuOpen(false)}
+      role="menuitem"
+      className="block px-4 py-2 font-sans text-sm text-soft-ink hover:text-ink hover:bg-background/70 transition-colors"
+      data-testid={`account-${label.toLowerCase().replace(/\s+/g, "-")}`}
+    >
+      {label}
+    </Link>
+  );
 
   const isActive = (href: string) =>
     location === href || location.startsWith(href + "/");
@@ -98,21 +133,45 @@ export function AppNav() {
             {navLink("/library", "Explore", exploreActive)}
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          {navLink("/settings", "Settings", isActive("/settings"))}
-          <span className="hidden sm:inline font-sans text-xs text-faint-ink">
-            {user?.name || user?.email}
-          </span>
+        <div className="relative" ref={menuRef}>
           <button
-            onClick={async () => {
-              await logout();
-              setLocation("/login");
-            }}
-            className="font-sans text-xs text-soft-ink hover:text-ink transition-colors"
-            data-testid="button-signout"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            className={
+              "flex items-center gap-1.5 font-sans text-sm transition-colors " +
+              (isActive("/settings") || menuOpen
+                ? "text-ink"
+                : "text-soft-ink hover:text-ink")
+            }
+            data-testid="account-menu-trigger"
           >
-            Sign out
+            {user?.name || user?.email || "Account"}
+            <span className="text-xs text-faint-ink">⌄</span>
           </button>
+          {menuOpen && (
+            <div
+              role="menu"
+              className="absolute right-0 mt-2 w-52 rounded-xl border border-border bg-surface shadow-lg py-1.5 z-50"
+            >
+              {menuItem("/settings", "Settings")}
+              {menuItem("/why", "About Yadegar")}
+              {menuItem("/settings", "My profile")}
+              <div className="my-1.5 border-t border-border/60" />
+              <button
+                onClick={async () => {
+                  setMenuOpen(false);
+                  await logout();
+                  setLocation("/login");
+                }}
+                role="menuitem"
+                className="w-full text-left px-4 py-2 font-sans text-sm text-soft-ink hover:text-ink hover:bg-background/70 transition-colors"
+                data-testid="button-signout"
+              >
+                Sign out
+              </button>
+            </div>
+          )}
         </div>
       </nav>
 
