@@ -1,0 +1,62 @@
+# Daily delivery cron (durable, version-controlled BACKUP for the cron-job.org
+# schedule). Hits POST /api/cron/run-nudges so due writing/memory nudges send and
+# Memory Capsules whose date has arrived get delivered.
+#
+# IMPORTANT:
+# - This is a BACKUP, not the primary scheduler. cron-job.org runs the real
+#   schedule; GitHub's scheduled runs are best-effort (delayed under load, and
+#   auto-disabled after 60 days of repo inactivity), so don't rely on this alone
+#   for delivery users depend on.
+# - Scheduled workflows only run from the repository's DEFAULT branch (main).
+#   This file does nothing until it is merged to main; after that it runs on the
+#   schedule below. Use the "Run workflow" button (workflow_dispatch) to test it
+#   from any branch.
+# - Requires a repository secret CRON_SECRET (Settings -> Secrets and variables ->
+#   Actions -> New repository secret) matching the live app's CRON_SECRET.
+# - Optional repository variable APP_BASE_URL overrides the target origin
+#   (defaults to https://yadegarjournal.com).
+# - Safe to run alongside cron-job.org: run-nudges is idempotent — it gates each
+#   nudge by elapsed time since the last one (already-nudged users are skipped)
+#   and marks capsules delivered once, so a second daily run is a no-op.
+name: cron-run-nudges
+
+on:
+  schedule:
+    # Once daily at 15:00 UTC (~7-8 AM US Pacific). GitHub may delay scheduled
+    # runs; that's fine — the endpoint only sends what's due.
+    - cron: "0 15 * * *"
+  workflow_dispatch:
+
+# Don't let a delayed run overlap the next one.
+concurrency:
+  group: cron-run-nudges
+  cancel-in-progress: false
+
+jobs:
+  deliver:
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST /api/cron/run-nudges
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          BASE_URL: ${{ vars.APP_BASE_URL || 'https://yadegarjournal.com' }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CRON_SECRET}" ]; then
+            echo "::error::CRON_SECRET repository secret is not set"
+            exit 1
+          fi
+          url="${BASE_URL%/}/api/cron/run-nudges"
+          echo "POST ${url}"
+          # Capture body + HTTP code without ever printing the secret. Generous
+          # timeout: run-nudges may run the engine per due user.
+          resp=$(curl -sS -m 120 -w $'\n%{http_code}' -X POST "${url}" \
+            -H "x-cron-secret: ${CRON_SECRET}")
+          code=$(printf '%s' "${resp}" | tail -n1)
+          body=$(printf '%s' "${resp}" | sed '$d')
+          echo "HTTP ${code}"
+          echo "${body}"
+          if [ "${code}" -lt 200 ] || [ "${code}" -ge 300 ]; then
+            echo "::error::run-nudges cron returned HTTP ${code}"
+            exit 1
+          fi

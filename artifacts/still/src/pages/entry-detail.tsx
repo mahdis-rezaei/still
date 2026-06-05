@@ -14,6 +14,8 @@ import {
   type EntryUpdateResurfacingPreference,
 } from "@workspace/api-client-react";
 import { AppNav } from "@/components/app-nav";
+import { ShelfToggle } from "@/components/shelf-toggle";
+import { CollectionPicker } from "@/components/collection-picker";
 
 const RESURFACING: {
   value: EntryUpdateResurfacingPreference;
@@ -153,19 +155,23 @@ export default function EntryDetail() {
               <h1 className="font-display text-3xl md:text-4xl text-deep-brown">
                 {longDate(entry.entryDate)}
               </h1>
-              <button
-                onClick={() => patch({ favorite: !entry.favorite })}
-                className={
-                  "text-2xl leading-none transition-colors " +
-                  (entry.favorite
-                    ? "text-accent-sepia"
-                    : "text-faint-ink hover:text-soft-ink")
-                }
-                aria-label={entry.favorite ? "Unfavorite" : "Favorite"}
-                data-testid="button-favorite"
-              >
-                {entry.favorite ? "★" : "☆"}
-              </button>
+              <div className="flex items-center gap-4 shrink-0">
+                <CollectionPicker entryId={id} />
+                <ShelfToggle entryId={id} />
+                <button
+                  onClick={() => patch({ favorite: !entry.favorite })}
+                  className={
+                    "text-2xl leading-none transition-colors " +
+                    (entry.favorite
+                      ? "text-accent-sepia"
+                      : "text-faint-ink hover:text-soft-ink")
+                  }
+                  aria-label={entry.favorite ? "Unfavorite" : "Favorite"}
+                  data-testid="button-favorite"
+                >
+                  {entry.favorite ? "★" : "☆"}
+                </button>
+              </div>
             </div>
 
             {editing ? (

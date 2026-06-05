@@ -1,0 +1,30 @@
+Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
+(head 5e776df), same method as before. This sync DOES require a DB migration
+(additive/non-destructive). No new secrets.
+
+This is the superset sync for Batch 3 Tier B — syncing to 5e776df brings the
+continuity card, timeline, search, Explore nav, annual letters, calendar, AND
+the shelf. The only migration in the whole batch is the one below.
+
+What lands (the new part — Memory Shelf):
+  - The Memory Shelf: a small, curated set of pages kept close (distinct from
+    Favorites). New shelf_items table.
+  - GET/POST/DELETE /api/shelf; an "Add to shelf / On your shelf" toggle on the
+    full page reader; a /shelf page in the Explore nav menu.
+
+Steps:
+1. SYNC the code to origin (head 5e776df). Do not edit app code or prompts.
+2. pnpm install — no-op.
+3. DB MIGRATION — additive, non-destructive. Run:
+     pnpm --filter @workspace/db exec drizzle-kit push
+   Apply:
+     - CREATE TABLE shelf_items (id, user_id, journal_entry_id, order_index,
+       created_at) + a unique index on (user_id, journal_entry_id).
+   No existing data is touched.
+4. RE-PUBLISH the deployment.
+
+Verify:
+  - Open any page in the reader: an "Add to shelf" link appears by the favorite
+    star; clicking it flips to "On your shelf · remove".
+  - Explore -> Shelf lists the shelved pages (newest-added in order), each with
+    a "remove" and "Read the full page". Empty shelf shows a gentle prompt.

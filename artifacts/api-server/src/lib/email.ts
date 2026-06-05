@@ -133,6 +133,23 @@ export function onThisDayNudgeEmail(opts: {
   };
 }
 
+// A Memory Capsule has reached its delivery date — a letter the user sealed for
+// a later self. Quiet and a little wondrous; the words wait behind a tap.
+export function capsuleEmail(link: string): {
+  subject: string;
+  html: string;
+  text: string;
+} {
+  return {
+    subject: "A page from your past arrived · Yadegar",
+    html: wrap(
+      "A page from your past arrived today.",
+      `<p>You sealed this for a later you — and that's today. It's waiting to be opened.</p>${button(link, "Open it")}`,
+    ),
+    text: `A page from your past arrived today. You sealed it for a later you. Open it: ${link}\n`,
+  };
+}
+
 export function passwordResetEmail(link: string): {
   subject: string;
   html: string;

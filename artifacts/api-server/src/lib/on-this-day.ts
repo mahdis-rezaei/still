@@ -157,6 +157,19 @@ export async function aroundThisTimeForUser(
   return rows.map((r) => toBase(r, targetYear));
 }
 
+// The voiced "On this day" surfaces ONLY pages from the EXACT calendar day in
+// prior years — cleaner than a window, and faithful to the name. Cross-year
+// reflection ("around this time", arcs) lives in Then & Now / Look Back, so this
+// stays a pure date-anchored page. Empty (→ the surface stays silent) when
+// nothing falls on today's exact date.
+export async function onThisDayFramedSet(
+  userId: string,
+  target: Date,
+): Promise<DateMemory[]> {
+  const items = await onThisDayForUser(userId, target);
+  return items.filter((i) => i.onThisExactDay);
+}
+
 // Pages the user treasured: favorited entries that clear the same floor. Most
 // recent first. (Library's Favorites filter shows ALL favorites unfiltered; this
 // is the resurfacing view, so it respects the safety floor like every surfacer.)

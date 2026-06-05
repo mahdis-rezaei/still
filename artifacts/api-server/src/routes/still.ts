@@ -4,6 +4,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { db, stillResultsTable } from "@workspace/db";
+import { chooseSeamOverride } from "../lib/why-today";
 
 const router = Router();
 
@@ -14,8 +15,18 @@ const client = new Anthropic({
 // Pinned to an exact version (never a floating alias) so a model auto-upgrade
 // can't silently change results.
 const MODEL = "claude-sonnet-4-6";
-const MAX_TOKENS_PASS1 = 3000;
-const MAX_TOKENS_PASS2 = 8000;
+// PASS1 (extraction) output budget. A rich, time-spread pool produces a verbose
+// candidate list; 4096 still truncated it on a multi-hundred-entry archive (→
+// stop_reason "max_tokens" → invalid JSON → 500). 8192 gives ample headroom for
+// the bounded pool (MAX_EXTRACTION_ENTRIES) without risking truncation.
+const MAX_TOKENS_PASS1 = 8192;
+// PASS2 (scoring) output budget. The scores array is verbose — one object per
+// candidate, echoing displayable quote text + gates + axes + why — so a large
+// candidate set overran 8000 and truncated the JSON (→ 500). 16000 gives ample
+// headroom for the bounded candidate set; the model only emits what it needs, so
+// raising the ceiling costs nothing when output is small. (A leaner output schema
+// — indices instead of echoed quote text — is the durable efficiency fix later.)
+const MAX_TOKENS_PASS2 = 16000;
 // The crisis safety check only returns a tiny {crisis, reason} JSON.
 const MAX_TOKENS_CRISIS = 600;
 // The whole-entry hard-floor check returns a tiny {hard_floor, reason} JSON.
@@ -35,7 +46,7 @@ const CRISIS_SUPPORT_MESSAGE =
 // resolution penalty, the voice block, or the why field changes — bumping it
 // automatically invalidates the result cache so you never serve stale results
 // while tuning.
-const PROMPT_VERSION = "2026-06-03.1";
+const PROMPT_VERSION = "2026-06-05.4";
 
 // A focused, sensitivity-biased safety classifier run BEFORE extraction. It only
 // answers "is the writer in active, present-tense crisis right now?" — distinct
@@ -171,7 +182,7 @@ Gates are pass/fail — NOT scored axes a strong line can outweigh. Apply them f
 - gate_hard_floors: FAIL if the line is about body weight, eating, dieting, physical appearance, or self-image — OR if it comes from an entry containing active, present-tense crisis or self-harm (that entire entry is excluded). Otherwise PASS.
 - gate_perspective_not_wound: This gate exists ONLY to prevent an AMBUSH — surfacing a line that would re-stage raw, ACTIVE distress on a random later day with no perspective. It does NOT require the line to resolve, steady, turn, or address itself. A line can be fully showable without containing its own internal turn.
   PASS any line offered at altitude: a discovery or surprising noticing (EVEN a flat one with no internal turn), a quiet self-correction, a reflection on a hard season the writer moved THROUGH, a value named, a younger self steadying herself, a hard thing met as something survived. Survived past difficulty and turn-less discoveries PASS — do NOT fail a line merely because it "lacks an internal turn" or "doesn't resolve itself."
-  FAIL only if surfacing the line would re-stage raw, ACTIVE overwhelm — a naked cry of acute distress that only voices the wound and reaches for nothing (e.g. "Until when should I live in another 6 bodies?", "I I I? what?!", a present-tense eruption of panic). Those stay gated.
+  FAIL only if surfacing the line would re-stage raw, ACTIVE overwhelm — a naked cry of acute distress that only voices the wound and reaches for nothing (e.g. "Until when should I live in another 6 bodies?", "I I I? what?!", "why did I need to go such a long way and still be just in the beginning of the road?", a present-tense eruption of panic). Those stay gated. NAMING THE ACT OF VENTING is NOT perspective, altitude, or escaped truth — labeling that you are offloading ("I'm venting because I had to put it somewhere", "I'm just venting", "I had to put it somewhere", "I needed to get this out", "Ugh") is the active wound merely described, not risen above; it FAILS this gate. A bare pileup of present-tense stressors with no discovery, contradiction, or survived distance ("everything piled up at once — work, the move, money", "I just don't have it in me to deal with any of it right now") is raw active distress and also FAILS.
   ARC EXCEPTION — for MULTI-FRAGMENT thread / distance candidates ONLY (the cross-time modes; NEVER single-entry memory/wisdom): evaluate the candidate as an ARC, not fragment-by-fragment. A raw "before" fragment PASSES this gate when the SAME candidate ALSO holds a LATER-DATED fragment showing that difficulty was survived, resolved, or transformed. The before+after pairing IS meaning-over-wound (the old state named, the change shown), so it is offered at altitude — not as a fresh wound. This NEVER lets the raw "before" surface alone: it is showable only paired with its resolving "after." If every fragment is raw and none later resolves it, the candidate stays gated exactly as above. Single-entry candidates are unchanged — a lone raw cry with no later-dated resolving counterpart in the same candidate still FAILS (e.g. a single page's "I feel numb" or "6 bodies" with nothing after it).
   (Active crisis / cessation framing is handled separately and unconditionally by gate_hard_floors — the arc exception does NOT reopen the body/appearance/eating or active-crisis floors.)
 - gate_textual_evidence: PASS only if the line is near-verbatim on the page — not paraphrased, inferred, or stretched. Otherwise FAIL.
@@ -189,7 +200,7 @@ STEP 2 — SCORE every surviving candidate (integer 1–5 on each axis). MANDATO
 
 - emotional_center (MASTER axis): does the page emotionally hang on this line — if it disappeared, would the page lose its meaning?
 - specificity: could ONLY this writer have written this? ("Until when should I live in another 6 bodies?" = 5; "trying to catch up with life" = 1 — anyone could write it.)
-- discovery: does it reveal something surprising — a truth that escaped, not a conclusion reached for? ("My unconscious brain thinks I am 26" = 5.)
+- discovery: does it reveal something surprising — a truth that escaped, not a conclusion reached for? ("My unconscious brain thinks I am 26" = 5.) A self-CAUGHT cognitive mismatch — the writer catching her own mind holding a false belief about herself ("my unconscious still thinks I am 26 when I am 36 — a 10-year gap between who I am and who I think I am") — is a HIGH-discovery escaped truth (score discovery >= 4), NOT a quirky aside; score it >=4 even when it reads light, offhand, or half-joking. This is exactly the kind of self-recognition the resolution penalty below then protects against a confident affirmation.
 - contradiction: does it hold two truths at once? (homesick in dream New York; excited after heartbreak; good life but unhappy; 36 but feels 26.) Score only what is genuinely on the page — never invent or stretch a contradiction that isn't there.
 - worth_returning_to: is this worth carrying back to today — would seeing it again land as recognition, not noise?
 
@@ -240,6 +251,8 @@ RULE 1 — THE QUOTE IS THE PAYOFF (80/20).
 - The observation must never contain more insight than the journal itself. If it feels smarter, deeper, or more quotable than the line it introduces, rewrite it down.
 - The most resonant sentence in the result must be one of the writer's quoted lines — never a sentence you wrote.
 - Walk the reader to the quote and stop. Never follow a quote with a sentence that tops or summarizes it. End on or near a quoted line.
+- FRAME THE LINE — DO NOT REPRODUCE IT. The card shows the chosen quote in full, large, directly above your observation. So NEVER quote it back: do not include the displayed line, or any long verbatim run of it, inside the observation. Echoing the shown words makes the reader see the same sentence twice — that redundancy is the failure. Point AT the line instead: name what it shifts, what it holds together, or why it still lands — in your own words, without echoing the shown text.
+- BANNED outright — any move whose payload is the displayed quote reproduced inside the observation: "…and suddenly this: '<line>'", "then, finally: '<line>'", "almost thrown away: '<line>'", "there's a line where she says '<line>'". (When the card shows more than one quote — e.g. the two ends of a cross-time thread — the ban covers EVERY displayed line: do not echo any of them. This is never a license to reference a line that is not among the displayed quotes.)
 
 RULE 2 — REACT TO ONE THING; DO NOT NARRATE THE PAGE.
 A friend reacts to a single moment; a friend does not recount the entry in order.
@@ -252,11 +265,11 @@ BANNED as openers and near-paraphrases (all are tics now):
 - "I kept coming back to…", "There's a line in here I keep stopping on…", "I had to stop on…", "The line that stayed with me…", "What stayed with me…"
 - "This is the line I would have circled.", "This sentence stayed with me.", "I stopped on this.", "Of everything here, this is what lingered.", "This felt like the center of the page."
 - Any "I [verb] [coming back / stopping / returning] to…" construction.
-Let the opening vary with the line — these show RANGE, do NOT reuse verbatim (they are not a new whitelist):
-- lead with the noticing: "You argue with yourself this whole page — and then, 'but can I please complain?'"
+Let the opening vary with the line — these show RANGE, do NOT reuse verbatim (they are not a new whitelist). NONE of them reproduces the displayed line; each points at it:
+- lead with the noticing: "You argue with yourself this whole page — and then, near the end, just ask to be allowed to complain."
 - lead with the contradiction: "Grief at the top of the page, and somehow it ends in hope."
-- lead with the strangeness: "Halfway down, almost thrown away: 'until when should I live in another 6 bodies?'"
-- lead plainly with the quote: "'My unconscious brain thinks I am 26.' After that, the page reads differently."
+- lead with the strangeness: "Halfway down, almost thrown away, is the strangest question on the page — about how many lives one person is supposed to hold."
+- lead with the frame: "After one mid-page line about her own age, the rest of the page reads differently."
 - sometimes no "I" at all — just point at what's there.
 
 RULE 4 — CUT THE LITERARY / INTERPRETIVE SENTENCE.
@@ -280,12 +293,12 @@ RULE 6 — LENGTH AND SHAPE.
 - A single em or en dash is fine — natural punctuation for a thought arriving mid-sentence.
 - Plain, warm, specific, a little informal — a close friend reacting, not a witness summarizing.
 
-CALIBRATE against these (target voice, assuming selection already picked the right line):
-- line "and I know how wrong that can be." → "The page opens in grief and somehow ends in heat and hope — and right in the middle of it: 'I know how wrong that can be.' Both at once."
-- line "My unconscious brain thinks I am 26." → "'My unconscious brain thinks I am 26.' She's 36, writing it mid-page. After that line the rest — the job, the house, the promises — reads like it's being asked by someone not sure how old she is."
-- line "But can I please complain?" → "The whole page argues with itself about whether you're even allowed to be sad. Then, finally: 'but can I please complain? I am human too.' It's the first line that stops making the case and just asks."
-- line "Until when I should live in another 6 bodies?" → "Mom, Pardis, Toktam, Shahab — the page is carrying all of them. And then this, almost thrown away: 'until when should I live in another 6 bodies?'"
-Across all four: varied openings, no stock formula, 1–3 plain sentences, no literary topper, no interior claims, no added pain — the writer's quoted line carries it.
+CALIBRATE against these (target voice, assuming selection already picked the right line). The chosen line is shown in full directly above each observation, so NONE of these reproduces it — they frame it:
+- line "and I know how wrong that can be." → "The page opens in grief and somehow ends in heat and hope — and right in the middle of it, you stop to admit how wrong all of it can be. Both at once."
+- line "My unconscious brain thinks I am 26." → "She's 36, writing mid-page — and then one line hands her sense of her own age over to her unconscious, a decade younger. After it, the rest — the job, the house, the promises — reads like it's being asked by someone not sure how old she is."
+- line "But can I please complain?" → "The whole page argues with itself about whether you're even allowed to be sad. Then, finally, it stops making the case and just asks to be allowed to complain — the first line that isn't an argument."
+- line "Until when I should live in another 6 bodies?" → "Mom, Pardis, Toktam, Shahab — the page is carrying all of them. And then, almost thrown away, the strangest question — how many lives one person is supposed to hold at once."
+Across all four: varied openings, no stock formula, 1–3 plain sentences, no literary topper, no interior claims, no added pain, AND never the displayed line quoted back — the writer's own line, shown above, carries it.
 
 WHEN THE RESULT IS mode="nothing": produce NO observation — do not narrate the absence or manufacture a gentle insight. Silence is silence.
 
@@ -300,12 +313,12 @@ QUOTE SELECTION — the quote-safety filter was ALREADY applied per-candidate at
   - The release valve / contradiction line a page builds TOWARD beats the decorative line dropped in the MIDDLE. Find the line where the truth slips out and surface that.
 
 - A CRY OF PAIN IS NOT A TURNING LINE. This is the most common mistake — do not make it. A raw, rhetorical expression of distress can feel "alive" and "real," but it is a wound, not a turn. These must NOT be surfaced as naked fragments:
-  - "But why am I not happy?!" / "Why is it so hard to live?" / "Until when must I live in 6 bodies?" / "I am very very tired" / "Am I depressed?"
+  - "But why am I not happy?!" / "Why is it so hard to live?" / "Until when must I live in 6 bodies?" / "I am very very tired" / "Am I depressed?" / "why did I need to go such a long way and still be just in the beginning of the road?" / "I'm venting because I had to put it somewhere"
   - The test is the AMBUSH test, NOT a "does it resolve itself" test: does the line only voice raw, ACTIVE hurt and reach for nothing? If so, leave it out. A flat discovery, a quiet noticing, or a reflection on something the writer moved THROUGH is NOT a wound — it stays in even if it never steadies, turns, or addresses itself.
 
 - When a page contains BOTH raw distress AND a line where the writing steadies, addresses itself, argues, or comes to something, surface ONLY the steadying/turning line:
   - Prefer: "Dear brain please relax", "Be patient. You will get what you want", "you will be fine girl… live love laugh", "Why not face it?!", "Fear just wants my attention", "Rumi says what you seek seeks you — he is wrong"
-  - Avoid: "the dream of having my brother here is gone", "why am I not happy?!", "I am very very tired" (raw active wounds that only voice the hurt)
+  - Avoid: "the dream of having my brother here is gone", "why am I not happy?!", "I am very very tired", "why did I need to go such a long way", "still be just in the beginning of the road", "I'm venting because I had to put it somewhere" (raw active wounds that only voice the hurt)
 
 - ARC EXCEPTION (cross-time thread / distance candidates ONLY): a raw "before" fragment MAY be surfaced when it is paired with a LATER-DATED "after" fragment from the SAME candidate that shows the difficulty was survived/resolved/transformed. Surface the before and after TOGETHER — the later fragment frames the earlier one as meaning-over-wound (the old state named, the change shown). NEVER surface the raw "before" without its resolving "after," and NEVER apply this to a single-entry candidate (a lone raw cry with no resolving counterpart stays out).
   - For a DISTANCE (arc) winner the CONTRAST across dates IS the payoff — here "fewer is better" yields to showing the span: PREFER surfacing BOTH the earlier "before" fragment and the later resolving "after" fragment, so the result visibly spans the two dates rather than collapsing to one. (Only collapse to a single later line when that line ALREADY names and contains the earlier state on its own AND surfacing the earlier raw fragment would add nothing but exposure.)
@@ -313,10 +326,10 @@ QUOTE SELECTION — the quote-safety filter was ALREADY applied per-candidate at
 - When in doubt about a fragment, leave it out. One safe, alive fragment beats three that re-expose pain.
 - The hard floors still apply: never include body/weight/appearance/eating lines; never include active-crisis lines.
 - For value_signal: mark source_type correctly — "saved_quote" or "copied_text".
-- The quotes are the emotional payoff. The observation sets them up without repeating them.
+- The quotes are the emotional payoff. The observation sets them up by pointing AT them — it must NEVER repeat them, or any long verbatim run of a displayed quote, back to the reader. The card already shows the quote in full above the observation; echoing it is the redundancy this rule exists to kill.
 
 COHERENCE INVARIANT — the observation and the displayed quotes must agree:
-- The observation may ONLY reference, embed, paraphrase, or build its reaction around fragments present in the final quotes list. It must NEVER point at, or react to, a fragment that was filtered out.
+- The observation may ONLY reference, paraphrase, or build its reaction around fragments present in the final quotes list — pointing at them in your own words, never reproducing a displayed fragment verbatim. It must NEVER point at, or react to, a fragment that was filtered out.
 - If the line the voice would most naturally react to is not displayable, react to a displayable fragment instead — or, if no displayable fragment can carry an honest observation, return mode="nothing".
 - For every surfaced result BOTH must hold: (a) every quoted snippet the observation references appears in the quotes list, and (b) every entry in the quotes list passed the safety filter. If both cannot hold at once, return mode="nothing" with no observation and an empty quotes list. Never surface a result whose observation points at an unshown quote, and never surface a result with an empty quote.
 
@@ -334,6 +347,7 @@ SELF-CHECK — before returning JSON, ask these questions. If any answer is bad,
 5. Is the most emotionally powerful moment a quoted line, or a sentence I wrote? If mine, rewrite until the writer's words carry the climax.
 6. Did I use analyst words like "internal voice", "pattern", "mechanism", "arc"?
 7. Would a close friend actually say this after reading your journal?
+8. Did I quote the displayed line back inside my observation, or reproduce a long verbatim run of it? The reader already sees that line in full above the observation — if yes, rewrite to point at it in my own words instead.
 
 LABEL MAP:
 - thread → "WHAT KEPT RETURNING"
@@ -469,6 +483,48 @@ async function detectHardFloor(
   } catch (err) {
     log.error({ err }, "Hard-floor detection failed — withholding entry from date resurfacing");
     return true;
+  }
+}
+
+// Engine V2: a topical theme tag for an entry — a shelf label for grouping
+// (powers diversity rotation), NEVER a judgment about the person. Additive; does
+// not touch selection. Falls back to "other" on any error/invalid output.
+const THEME_VOCAB = [
+  "home", "family", "friendship", "love", "work", "identity", "hope", "grief",
+  "loneliness", "belonging", "courage", "creativity", "wonder", "change",
+  "faith", "health", "money", "travel", "parenting", "other",
+] as const;
+
+const PASS_THEME_SYSTEM = `You sort a journal entry onto ONE topical shelf so a person can browse their life by subject. This is a neutral LIBRARY label — NOT a judgment, diagnosis, mood, or score. Do not interpret the person.
+
+Pick the SINGLE dominant topic of the entry from exactly this list:
+${THEME_VOCAB.join(", ")}
+
+Choose the one a reader would most likely file this page under. If none fit, use "other".
+
+Output ONLY valid JSON, no preamble, no markdown fences. The first character must be "{":
+{"theme": "home"}`;
+
+async function detectTheme(
+  text: string,
+  log: { error: (obj: unknown, msg: string) => void },
+): Promise<string> {
+  try {
+    const message = await client.messages.create({
+      model: MODEL,
+      max_tokens: 60,
+      temperature: 0,
+      system: PASS_THEME_SYSTEM,
+      messages: [{ role: "user", content: text }],
+    });
+    const block = message.content[0];
+    if (block.type !== "text") return "other";
+    const parsed = JSON.parse(extractJson(block.text)) as { theme?: unknown };
+    const theme = typeof parsed?.theme === "string" ? parsed.theme.toLowerCase().trim() : "";
+    return (THEME_VOCAB as readonly string[]).includes(theme) ? theme : "other";
+  } catch (err) {
+    log.error({ err }, "Theme detection failed — defaulting to 'other'");
+    return "other";
   }
 }
 
@@ -749,11 +805,43 @@ const CandidateSchema = z.object({
   description: z.string(),
   evidence: z.array(QuoteSchema),
   why_it_matters: z.string(),
+  // Source-entry theme tag(s), annotated app-side from evidence dates. Soft
+  // affinity reads these; they are STRIPPED from the model scoring payload below
+  // so the calibrated scorer's input stays byte-identical.
+  themes: z.array(z.string()).optional(),
 });
 
 const ScoreInputSchema = z.object({
   candidates: z.array(CandidateSchema),
+  // Optional why-today context (today + the writer's recent themes). Used ONLY
+  // when WHY_TODAY_TIEBREAK is enabled; otherwise ignored and excluded from the
+  // cache key, so the default path is byte-for-byte unchanged.
+  context: z
+    .object({
+      today: z.string().optional(),
+      recentThemes: z.array(z.string()).optional(),
+      // Soft-affinity profile (favored / dismissed themes). Used ONLY when
+      // SOFT_AFFINITY is enabled; otherwise ignored. Scoring stays context-blind.
+      affinityProfile: z
+        .object({
+          favored: z.array(z.string()),
+          dismissed: z.array(z.string()),
+        })
+        .optional(),
+    })
+    .optional(),
 });
+
+// Dark-shipped flags for the post-score seam. Default OFF. When ON, scoring is
+// STILL context-blind (above); the flags only enable the code seam in
+// why-today.ts, which re-ranks among near-ties using the model's pure scores.
+function whyTodayEnabled(): boolean {
+  return process.env.WHY_TODAY_TIEBREAK === "on";
+}
+
+function softAffinityEnabled(): boolean {
+  return process.env.SOFT_AFFINITY === "on";
+}
 
 // --- Result cache ---
 // Same entry → same surfaced line. temperature:0 reduces run-to-run drift but
@@ -1171,6 +1259,17 @@ router.post("/still/extract", async (req, res) => {
       return;
     }
 
+    // A truncated response (hit the output cap) yields invalid JSON. Surface it
+    // distinctly so the cause is obvious in logs — the pool feeding extraction is
+    // bounded app-side (MAX_EXTRACTION_ENTRIES), so this should not happen in
+    // normal operation.
+    if (message.stop_reason === "max_tokens") {
+      req.log.error(
+        { stop_reason: message.stop_reason },
+        "Extraction hit max_tokens — input pool too large; candidate JSON truncated",
+      );
+    }
+
     let raw: unknown;
     try {
       raw = JSON.parse(extractJson(block.text));
@@ -1192,6 +1291,43 @@ router.post("/still/extract", async (req, res) => {
   }
 });
 
+// Voice pass for a why-today override (ADR 0001 S2c). Re-runs PASS2 on the SINGLE
+// chosen candidate so the surfaced voice/quotes/label come from the same
+// calibrated scorer — no separate voice prompt to drift from PASS2. The candidate
+// already cleared its gates in the full run; if the re-run declines (mode
+// "nothing") or anything fails, returns null and the caller keeps the blind
+// winner. Runs only when an override actually fires, so the extra call is rare.
+async function surfaceOverrideCandidate(
+  candidate: z.infer<typeof CandidateSchema>,
+): Promise<Record<string, unknown> | null> {
+  const { themes: _themes, ...rest } = candidate;
+  const annotated = {
+    ...rest,
+    evidence_metadata: computeEvidenceMetadata(candidate.evidence),
+  };
+  const message = await client.messages.create({
+    model: MODEL,
+    max_tokens: MAX_TOKENS_PASS2,
+    temperature: 0,
+    system: PASS2_SYSTEM,
+    messages: [{ role: "user", content: JSON.stringify({ candidates: [annotated] }) }],
+  });
+  const block = message.content[0];
+  if (block.type !== "text") return null;
+  let r: unknown;
+  try {
+    r = JSON.parse(extractJson(block.text));
+  } catch {
+    return null;
+  }
+  reattributeQuoteDates(r, [candidate]);
+  sanitizeSecondaryThread(r);
+  enforceCoherenceInvariant(r);
+  const rr = r as { mode?: string };
+  if (!rr.mode || rr.mode === "nothing") return null;
+  return r as Record<string, unknown>;
+}
+
 router.post("/still/score", async (req, res) => {
   const parsed = ScoreInputSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -1199,8 +1335,10 @@ router.post("/still/score", async (req, res) => {
     return;
   }
 
-  // Annotate each candidate with pre-computed evidence metadata
-  const annotated = parsed.data.candidates.map((c) => ({
+  // Annotate each candidate with pre-computed evidence metadata. `themes` (used
+  // only by soft affinity) is stripped here so the model scoring payload and the
+  // cache key stay byte-identical regardless of personalization.
+  const annotated = parsed.data.candidates.map(({ themes: _themes, ...c }) => ({
     ...c,
     evidence_metadata: computeEvidenceMetadata(c.evidence),
   }));
@@ -1210,8 +1348,60 @@ router.post("/still/score", async (req, res) => {
   // from cache (zero model calls end-to-end). Key on a canonical (sorted-key)
   // form so cache-served candidates — whose key order is changed by jsonb
   // round-tripping — still hash to the same value as the cold run.
+  // Scoring is ALWAYS context-blind. A DEV-engine fixed-candidate-set control
+  // proved that putting today's context in the scoring prompt inflates axis
+  // scores (the resonant candidate's emotional_center rose a clean +1.0 and won
+  // on the MASTER axis rather than as a tiebreak) — so the calibrated scorer must
+  // never see personalization context. The why-today preference is applied AFTER
+  // scoring, deterministically in code, over the model's pure scores (see
+  // why-today.ts and docs/adr/0001-personalization-seam.md). The cache key is
+  // therefore pure candidates — shared with the flag-off path, no churn.
   const payload = JSON.stringify({ candidates: annotated });
-  const key = cacheKey("score", canonicalize({ candidates: annotated }));
+
+  // Why-today (ADR 0001) caches the POSSIBLY-OVERRIDDEN result under a separate,
+  // context-bearing key so it never pollutes the flag-off cache. The context is
+  // COARSENED to month + sorted themes: resonance only depends on today's month
+  // (anniversary), its season (derived), and recent themes — never the exact day
+  // — so month granularity keeps the surfaced result (and the noisy override
+  // decision frozen into it) stable within a month instead of re-rolling daily.
+  const wtActive = whyTodayEnabled() && !!parsed.data.context;
+  const affActive =
+    softAffinityEnabled() && !!parsed.data.context?.affinityProfile;
+  const coarseContext = wtActive
+    ? {
+        month: parseDateParts(parsed.data.context!.today ?? "")?.month ?? null,
+        themes: [
+          ...new Set(
+            (parsed.data.context!.recentThemes ?? [])
+              .map((t) => t.toLowerCase().trim())
+              .filter(Boolean),
+          ),
+        ].sort(),
+      }
+    : null;
+  // When affinity is active the surfaced result also depends on the favored /
+  // dismissed theme sets, so the cache key must carry them. The why-today-only
+  // and flag-off keys below are left BYTE-IDENTICAL to before, so the live
+  // why-today cache never churns.
+  const norm = (xs: string[]) =>
+    [...new Set(xs.map((t) => t.toLowerCase().trim()).filter(Boolean))].sort();
+  const affKey = affActive
+    ? {
+        favored: norm(parsed.data.context!.affinityProfile!.favored),
+        dismissed: norm(parsed.data.context!.affinityProfile!.dismissed),
+      }
+    : null;
+  const key = cacheKey(
+    "score",
+    affActive
+      ? canonicalize({
+          candidates: annotated,
+          seam: { ...(wtActive ? coarseContext : {}), affinity: affKey },
+        })
+      : wtActive
+        ? canonicalize({ candidates: annotated, whyToday: coarseContext })
+        : canonicalize({ candidates: annotated }),
+  );
   const fresh = isFreshRequested(req.query);
 
   try {
@@ -1238,6 +1428,16 @@ router.post("/still/score", async (req, res) => {
       return;
     }
 
+    // A truncated response (hit the output cap) yields invalid JSON. PASS2's
+    // output is one verbose object per candidate (echoing quote text + gates +
+    // axes), so a large candidate set can overrun the cap — surface it distinctly.
+    if (message.stop_reason === "max_tokens") {
+      req.log.error(
+        { stop_reason: message.stop_reason },
+        "Scoring hit max_tokens — candidate set too large; scores JSON truncated",
+      );
+    }
+
     let result: unknown;
     try {
       result = JSON.parse(extractJson(block.text));
@@ -1256,6 +1456,82 @@ router.post("/still/score", async (req, res) => {
         { reason: guarded.invariant_guard_reason },
         "Coherence invariant guard fired — downgraded surfaced result to nothing",
       );
+    }
+
+    // Post-score personalization seam (ADR 0001). ONE combined decision over the
+    // model's PURE scores: why-today resonance + soft affinity, each independently
+    // flag-gated. The scorer never sees context, so axis scores are never
+    // inflated; the swap only ever happens among co-equal, surfaceable,
+    // non-penalized candidates, and is re-voiced by a single-candidate PASS2 pass.
+    // With SOFT_AFFINITY OFF this is byte-identical to the live why-today path
+    // (chooseSeamOverride delegates to chooseWhyTodayOverride and the audit/log
+    // contract below is preserved). Any failure is caught and leaves the blind
+    // winner untouched.
+    if ((wtActive || affActive) && parsed.data.context) {
+      try {
+        const decision = chooseSeamOverride(
+          result as Parameters<typeof chooseSeamOverride>[0],
+          parsed.data.candidates,
+          parsed.data.context,
+          {
+            whyToday: wtActive,
+            profile: affActive ? parsed.data.context.affinityProfile : undefined,
+          },
+        );
+        if (decision?.toTitle) {
+          const chosen = parsed.data.candidates.find(
+            (c) => (c.candidate_title ?? "") === decision.toTitle,
+          );
+          const voiced = chosen ? await surfaceOverrideCandidate(chosen) : null;
+          if (voiced) {
+            const r = result as Record<string, unknown>;
+            r.mode = voiced.mode;
+            r.label = voiced.label;
+            r.observation = voiced.observation;
+            r.quotes = voiced.quotes;
+            r.why = voiced.why;
+            const audit = {
+              fromTitle: decision.fromTitle,
+              toTitle: decision.toTitle,
+              reasons: decision.reasons,
+            };
+            // Preserve the live why-today audit + log contract when affinity is
+            // off; use a general seam audit once affinity can contribute.
+            if (affActive) {
+              r.winning_tiebreak_level = "seam";
+              r.seam_override = audit;
+            } else {
+              r.winning_tiebreak_level = "why_today";
+              r.why_today_override = audit;
+            }
+            // If a cross-mode override makes the new primary itself a cross-time
+            // thread/distance, drop the blind run's secondaryThread so it can't
+            // duplicate the primary (mirrors PASS2's "primary is a thread →
+            // secondaryThread = null" rule).
+            if (voiced.mode === "thread" || voiced.mode === "distance") {
+              r.secondaryThread = null;
+            }
+            req.log.info(
+              affActive ? { seam: decision } : { whyToday: decision },
+              affActive ? "seam: applied override" : "why-today: applied override",
+            );
+          } else {
+            req.log.info(
+              affActive ? { seam: decision } : { whyToday: decision },
+              affActive
+                ? "seam: override declined (voice pass returned nothing); blind winner kept"
+                : "why-today: override declined (voice pass returned nothing); blind winner kept",
+            );
+          }
+        }
+      } catch (err) {
+        req.log.warn(
+          { err },
+          affActive
+            ? "seam error (ignored; blind winner kept)"
+            : "why-today seam error (ignored; blind winner kept)",
+        );
+      }
     }
 
     await writeCachedResult(key, result);
@@ -1295,12 +1571,13 @@ router.post("/still/classify", async (req, res) => {
       }
     }
 
-    const [crisis, hardFloor] = await Promise.all([
+    const [crisis, hardFloor, theme] = await Promise.all([
       detectCrisis(parsed.data.text, req.log),
       detectHardFloor(parsed.data.text, req.log),
+      detectTheme(parsed.data.text, req.log),
     ]);
 
-    const result = { crisis, hardFloor, version: PROMPT_VERSION };
+    const result = { crisis, hardFloor, theme, version: PROMPT_VERSION };
     await writeCachedResult(key, result);
     res.json(result);
   } catch (err) {

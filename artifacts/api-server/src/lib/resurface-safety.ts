@@ -13,23 +13,28 @@ const ENGINE_BASE = `http://127.0.0.1:${process.env.PORT}/api`;
 // sample / otherwise non-manual entries are already complete → no wait.
 const SETTLE_MS = 10 * 60 * 1000;
 
-// How many entries one cron tick will classify. Bounds per-tick cost/latency;
-// the backlog drains over successive ticks.
-const DEFAULT_BATCH = 50;
+// How many entries one cron tick will classify when no ?limit is given. Each
+// entry costs a classify call (crisis + hard-floor + theme), so this is tuned to
+// finish within a typical 30 s scheduler timeout (e.g. cron-job.org's free tier);
+// 50 overran it during re-tag backlogs. The backlog drains over successive ticks.
+// For a large one-off backfill, call from a terminal (no client timeout) with a
+// higher ?limit (capped at 500).
+const DEFAULT_BATCH = 10;
 
 interface ClassifyResponse {
   crisis?: boolean;
   hardFloor?: boolean;
+  theme?: string;
   version?: string;
 }
 
-// Ask the engine for a single entry's safety verdict (POST /still/classify) and
-// map it to the stored ResurfaceSafety shape. Throws on transport/HTTP failure
-// so the caller leaves the row NULL (unclassified → not eligible) and a later
-// tick retries — we never persist a guessed verdict.
-export async function classifyEntrySafety(
+// Ask the engine to classify ONE entry (POST /still/classify) → its safety
+// verdict + topical theme. Throws on transport/HTTP failure so the caller leaves
+// the row NULL (unclassified → not eligible) and a later tick retries — we never
+// persist a guessed verdict.
+export async function classifyEntry(
   text: string,
-): Promise<ResurfaceSafety> {
+): Promise<{ safety: ResurfaceSafety; theme: string }> {
   const res = await fetch(`${ENGINE_BASE}/still/classify`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -41,10 +46,13 @@ export async function classifyEntrySafety(
   const crisis = data.crisis === true;
   const hardFloor = data.hardFloor === true;
   return {
-    safe: !crisis && !hardFloor,
-    reason: crisis ? "crisis" : hardFloor ? "hard_floor" : null,
-    version: data.version ?? "unknown",
-    classifiedAt: new Date().toISOString(),
+    safety: {
+      safe: !crisis && !hardFloor,
+      reason: crisis ? "crisis" : hardFloor ? "hard_floor" : null,
+      version: data.version ?? "unknown",
+      classifiedAt: new Date().toISOString(),
+    },
+    theme: data.theme ?? "other",
   };
 }
 
@@ -74,7 +82,11 @@ export async function tagPendingEntries(
     .from(journalEntriesTable)
     .where(
       and(
-        isNull(journalEntriesTable.resurfaceSafety),
+        // Pending = missing either tag (safety or theme).
+        or(
+          isNull(journalEntriesTable.resurfaceSafety),
+          isNull(journalEntriesTable.theme),
+        ),
         isNull(journalEntriesTable.deletedAt),
         or(
           ne(journalEntriesTable.source, "manual"),
@@ -93,21 +105,24 @@ export async function tagPendingEntries(
 
   for (const entry of pending) {
     try {
-      const verdict = await classifyEntrySafety(entry.body);
-      // Only write if still unclassified — a concurrent edit may have reset it,
-      // or the row may have been re-tagged; never clobber a fresher state.
+      const { safety, theme } = await classifyEntry(entry.body);
+      // Only write to a row that still needs tagging — a concurrent edit may have
+      // reset it; never clobber a fresher state.
       await db
         .update(journalEntriesTable)
-        .set({ resurfaceSafety: verdict })
+        .set({ resurfaceSafety: safety, theme })
         .where(
           and(
             eq(journalEntriesTable.id, entry.id),
-            isNull(journalEntriesTable.resurfaceSafety),
+            or(
+              isNull(journalEntriesTable.resurfaceSafety),
+              isNull(journalEntriesTable.theme),
+            ),
           ),
         );
       summary.tagged++;
     } catch (err) {
-      log.error({ err, entryId: entry.id }, "Resurface-safety tagging failed");
+      log.error({ err, entryId: entry.id }, "Entry tagging failed");
       summary.errors++;
     }
   }

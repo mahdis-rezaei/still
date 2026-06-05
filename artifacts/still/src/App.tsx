@@ -19,6 +19,7 @@ import Result from "@/pages/result";
 import History from "@/pages/history";
 import Login from "@/pages/login";
 import Why from "@/pages/why";
+import Philosophy from "@/pages/philosophy";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import Terms from "@/pages/terms";
 import VerifyEmail from "@/pages/verify-email";
@@ -29,6 +30,14 @@ import Library from "@/pages/library";
 import EntryDetail from "@/pages/entry-detail";
 import Returns from "@/pages/returns";
 import LookBack from "@/pages/look-back";
+import Timeline from "@/pages/timeline";
+import Letter from "@/pages/letter";
+import Calendar from "@/pages/calendar";
+import Book from "@/pages/book";
+import Shelf from "@/pages/shelf";
+import Capsules from "@/pages/capsules";
+import CollectionsPage from "@/pages/collections";
+import CollectionDetail from "@/pages/collection-detail";
 import Import from "@/pages/import";
 import Settings from "@/pages/settings";
 import Privacy from "@/pages/privacy";
@@ -84,6 +93,19 @@ function ProtectedApp() {
       <Route path="/library/:entryId" component={EntryDetail} />
       <Route path="/returns" component={Returns} />
       <Route path="/look-back" component={LookBack} />
+      <Route path="/look-back/:lens" component={LookBack} />
+      <Route path="/timeline" component={Timeline} />
+      {/* Search merged into Library (its search box). Keep the path working. */}
+      <Route path="/search">
+        <Redirect to="/library" />
+      </Route>
+      <Route path="/letters/:year" component={Letter} />
+      <Route path="/calendar" component={Calendar} />
+      <Route path="/book" component={Book} />
+      <Route path="/shelf" component={Shelf} />
+      <Route path="/capsules" component={Capsules} />
+      <Route path="/collections" component={CollectionsPage} />
+      <Route path="/collections/:id" component={CollectionDetail} />
       <Route path="/import" component={Import} />
       <Route path="/settings" component={Settings} />
       <Route path="/settings/notifications" component={Notifications} />
@@ -120,6 +142,7 @@ function Router() {
     <Switch>
       <Route path="/login" component={LoginRoute} />
       <Route path="/why" component={Why} />
+      <Route path="/philosophy" component={Philosophy} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms" component={Terms} />
       <Route path="/verify-email" component={VerifyEmail} />

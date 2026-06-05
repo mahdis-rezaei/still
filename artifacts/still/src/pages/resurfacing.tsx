@@ -6,6 +6,33 @@ import {
   useAddResurfaceMute,
   useRemoveResurfaceMute,
 } from "@/lib/use-resurface-mutes";
+import {
+  usePreferences,
+  useSetMemorySensitivity,
+  type MemorySensitivity,
+} from "@/lib/use-preferences";
+
+const SENSITIVITY: {
+  value: MemorySensitivity;
+  title: string;
+  body: string;
+}[] = [
+  {
+    value: "open",
+    title: "Open",
+    body: "Yadegar may bring a page back on its own — a gentle nudge, and “on this day” pages when you visit.",
+  },
+  {
+    value: "gentle",
+    title: "Gentle",
+    body: "No memory nudges. Pages still appear quietly in the app when you're here, but Yadegar won't reach out.",
+  },
+  {
+    value: "protected",
+    title: "Protected",
+    body: "Nothing returns unbidden. Pages come back only when you go looking — Look back, Calendar, Search, or “Bring a page back.”",
+  },
+];
 
 // "YYYY-MM" → first day of the month.
 function monthToStart(m: string): string {
@@ -33,6 +60,9 @@ export default function Resurfacing() {
   const { data: mutes, isLoading } = useResurfaceMutes();
   const add = useAddResurfaceMute();
   const remove = useRemoveResurfaceMute();
+  const { data: prefs } = usePreferences();
+  const setSensitivity = useSetMemorySensitivity();
+  const sensitivity = prefs?.memorySensitivity ?? "open";
 
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -66,8 +96,49 @@ export default function Resurfacing() {
       <main className="flex-1 w-full max-w-[680px] mx-auto px-6 py-12 md:py-16">
         <PageHeader
           title="What returns"
-          subtitle="You decide what comes back. Mute a season you'd rather not meet again — the pages stay in your Library, they just won't resurface."
+          subtitle="You decide what comes back. Some seasons are harder to revisit than others — these are yours to set."
         />
+
+        {/* Memory sensitivity */}
+        <section className="mb-12">
+          <p className="font-sans text-xs uppercase tracking-[0.18em] text-faint-ink mb-3">
+            How memories return
+          </p>
+          <div className="space-y-3">
+            {SENSITIVITY.map((opt) => {
+              const active = sensitivity === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => setSensitivity.mutate(opt.value)}
+                  disabled={setSensitivity.isPending}
+                  className={
+                    "w-full text-left border rounded-xl px-5 py-4 transition-colors " +
+                    (active
+                      ? "border-accent-sepia bg-surface"
+                      : "border-border bg-surface/40 hover:border-accent-sepia/60")
+                  }
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-accent-sepia">
+                      {active ? "●" : "○"}
+                    </span>
+                    <span className="font-body text-lg text-ink">
+                      {opt.title}
+                    </span>
+                  </div>
+                  <p className="font-body text-sm text-soft-ink mt-1 ml-6">
+                    {opt.body}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+          <p className="font-body text-xs text-faint-ink mt-3 leading-relaxed">
+            Whatever you choose, body-image and active-crisis pages are never
+            resurfaced, and muted periods below are always respected.
+          </p>
+        </section>
 
         {/* Existing mutes */}
         <section className="mb-10">

@@ -1,9 +1,10 @@
 import { Router } from "express";
-import { and, eq, isNull, ne, or } from "drizzle-orm";
+import { and, eq, isNull, lte, ne, or } from "drizzle-orm";
 import {
   db,
   usersTable,
   notificationPreferencesTable,
+  capsulesTable,
   type NudgeFrequency,
 } from "@workspace/db";
 import {
@@ -11,10 +12,12 @@ import {
   writingNudgeEmail,
   memoryNudgeEmail,
   onThisDayNudgeEmail,
+  capsuleEmail,
 } from "../lib/email";
 import { runMemoryForUser } from "../lib/memory-engine";
 import { tagPendingEntries } from "../lib/resurface-safety";
-import { onThisDayForUser } from "../lib/on-this-day";
+import { onThisDayForUser, onThisDayFramedSet } from "../lib/on-this-day";
+import { sweepMemoryJobs, enqueueMemoryJob } from "../lib/memory-jobs";
 
 const router = Router();
 
@@ -84,6 +87,7 @@ router.post("/cron/run-nudges", async (req, res): Promise<void> => {
     writingSent: 0,
     memorySent: 0,
     memorySilent: 0,
+    capsulesDelivered: 0,
     errors: 0,
   };
 
@@ -128,8 +132,13 @@ router.post("/cron/run-nudges", async (req, res): Promise<void> => {
 
       // Memory nudge — DATE-FIRST: a free "on this day" return if one exists
       // today (no model call), else fall back to the engine for a deeper find.
-      // Either way, send only when a real page surfaces.
-      if (isDue(prefs.memoryFrequency, prefs.lastMemoryNudgeAt)) {
+      // Either way, send only when a real page surfaces. Gated by memory
+      // sensitivity: only "open" gets UNBIDDEN memory nudges (gentle/protected
+      // still receive writing nudges and can browse memories themselves).
+      if (
+        user.memorySensitivity === "open" &&
+        isDue(prefs.memoryFrequency, prefs.lastMemoryNudgeAt)
+      ) {
         try {
           const onThisDay = await onThisDayForUser(
             user.id,
@@ -179,6 +188,34 @@ router.post("/cron/run-nudges", async (req, res): Promise<void> => {
       }
     }
 
+    // Deliver any Memory Capsules whose date has arrived (independent of nudge
+    // prefs — a sealed letter is delivered regardless). Marking delivered
+    // unseals it in-app even if the courtesy email fails.
+    const dueCapsules = await db
+      .select({ id: capsulesTable.id, email: usersTable.email })
+      .from(capsulesTable)
+      .innerJoin(usersTable, eq(capsulesTable.userId, usersTable.id))
+      .where(
+        and(
+          isNull(capsulesTable.deliveredAt),
+          isNull(usersTable.deletedAt),
+          lte(capsulesTable.deliverAt, new Date()),
+        ),
+      );
+    for (const cap of dueCapsules) {
+      await db
+        .update(capsulesTable)
+        .set({ deliveredAt: new Date() })
+        .where(eq(capsulesTable.id, cap.id));
+      try {
+        await sendEmail({ to: cap.email, ...capsuleEmail(`${appUrl()}/capsules`) });
+      } catch (err) {
+        req.log.error({ err, capsuleId: cap.id }, "Capsule email failed");
+        summary.errors++;
+      }
+      summary.capsulesDelivered++;
+    }
+
     res.json(summary);
   } catch (err) {
     req.log.error({ err }, "Cron run-nudges error");
@@ -208,6 +245,78 @@ router.post("/cron/tag-resurface-safety", async (req, res): Promise<void> => {
   } catch (err) {
     req.log.error({ err }, "Cron tag-resurface-safety error");
     res.status(500).json({ error: "Failed to tag entries" });
+  }
+});
+
+// POST /cron/process-memory-jobs — backstop for async memory surfacing (ADR
+// 0002). Authenticated by x-cron-secret. Resets jobs whose worker died and
+// processes pending ones; the optimistic in-process start handles the common
+// case, so this rarely has work. Processes INLINE (one per tick by default) so
+// the instance stays alive for the engine read — like the other engine crons it
+// may exceed a short client timeout while the server finishes. Optional ?limit=N.
+router.post("/cron/process-memory-jobs", async (req, res): Promise<void> => {
+  const auth = requireCronSecret(req);
+  if (!auth.ok) {
+    res.status(auth.status).json({ error: auth.error });
+    return;
+  }
+  const limitRaw = Number((req.query as { limit?: string }).limit);
+  const limit =
+    Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 20) : 3;
+  try {
+    const summary = await sweepMemoryJobs(limit);
+    res.json(summary);
+  } catch (err) {
+    req.log.error({ err }, "Cron process-memory-jobs error");
+    res.status(500).json({ error: "Failed to process memory jobs" });
+  }
+});
+
+// POST /cron/warm-on-this-day — pre-compute the VOICED "On this day" so the Today
+// page serves it from the engine cache (instant) instead of a cold ~tens-of-
+// seconds read on first visit. For each non-protected user with pages near today,
+// enqueue an on_this_day job over the SAME entry ids the page will read (via
+// onThisDayFramedSet), then the backstop drains them. Idempotent (deduped per
+// user+date); x-cron-secret. Enqueue-only (no optimistic start) so a batch never
+// stampedes the engine. Daily cadence (the date changes daily).
+router.post("/cron/warm-on-this-day", async (req, res): Promise<void> => {
+  const auth = requireCronSecret(req);
+  if (!auth.ok) {
+    res.status(auth.status).json({ error: auth.error });
+    return;
+  }
+  try {
+    const users = await db
+      .select({
+        id: usersTable.id,
+        timezone: usersTable.timezone,
+        memorySensitivity: usersTable.memorySensitivity,
+      })
+      .from(usersTable)
+      .where(isNull(usersTable.deletedAt));
+
+    let enqueued = 0;
+    for (const u of users) {
+      if (u.memorySensitivity === "protected") continue;
+      const target = localDayInTz(u.timezone);
+      const years = await onThisDayFramedSet(u.id, target);
+      if (years.length === 0) continue;
+      const date = target.toISOString().slice(0, 10);
+      await enqueueMemoryJob(
+        u.id,
+        "on_this_day",
+        // Warm the SAME single entry the framed endpoint voices (most recent
+        // year on this exact day) so the cache lines up.
+        { entryIds: [years[0].entryId] },
+        `otd:${u.id}:${date}`,
+        false, // enqueue only; the backstop drains the batch
+      );
+      enqueued++;
+    }
+    res.json({ enqueued });
+  } catch (err) {
+    req.log.error({ err }, "Cron warm-on-this-day error");
+    res.status(500).json({ error: "Failed to warm on-this-day" });
   }
 });
 

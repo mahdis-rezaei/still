@@ -47,10 +47,17 @@ export const fixtures: Fixture[] = [
     entry: becki,
     expect: "surface",
     targets: [
+      // The contradiction as it appears in THIS stored entry (love + doubt held
+      // at once): the engine should surface this.
+      "Too fast! Too scary to say but I feel very strongly for her",
+      "we barely know each other",
+      // The canonical phrasing of the same contradiction from the real archive
+      // entry (used in still.ts CALIBRATE). Kept so the fixture also passes when
+      // run against the full entry, not just this stored excerpt.
       "and I know how wrong that can be",
       "I know how wrong that can be",
     ],
-    note: "Contradiction (devastated + alive). Engine got this right; keep it.",
+    note: "Contradiction (devastated + alive). NB: the canonical 'and I know how wrong that can be' is NOT in this stored excerpt — the same contradiction lives here as 'Too fast! Too scary to say… we barely know each other!'. Targets list both so the case is self-consistent with the text the engine actually receives (adapter posts fx.entry). If you have the full entry, restore its real ending instead.",
   },
   {
     id: "age-2023-10",
@@ -61,13 +68,15 @@ export const fixtures: Fixture[] = [
       "My unconscious brain thinks I am",
       "10 years gap",
       "Between who I am and who I think I am",
+      "She thinks we are still 26 years old",
+      "26 years old whereby we are 36",
     ],
     antiTargets: [
       "Promising the 6 years old, 16 years old",
       "product manager for a different team at Meta",
       "I always get what I want",
     ],
-    note: "Pick the discovery (age gap), not the resolution (the Meta promise).",
+    note: "Pick the discovery (age gap), not the resolution (the Meta promise). The age-gap self-recognition spans several adjacent sentences ('My unconscious brain thinks I am 26' / 'She thinks we are still 26 years old whereby we are 36 years old' / '10 years gap' / 'Between who I am and who I think I am') — ANY of them is the right escaped truth; only the resolution lines (Meta promise, 'I always get what I want') are wrong.",
   },
   {
     id: "brooklyn-2016-04",
@@ -83,9 +92,14 @@ export const fixtures: Fixture[] = [
     title: "Sep 24 2015 — the release valve vs the poetic list",
     entry: complain,
     expect: "surface",
-    targets: ["can I please complain", "I am human too"],
+    targets: [
+      "can I please complain",
+      "I am human too",
+      "does he really love us",
+      "great dady to provide money",
+    ],
     antiTargets: ["Iran - Esfarayen - Mashad", "Esfarayen"],
-    note: "Pick the raw release valve, not the visually-striking travel list.",
+    note: "Pick a true center — either the release valve ('can I please complain / I am human too', the page's demand for her right to feel) OR the deeper escaped truth the long gratitude argument is talking around ('He is a great dady to provide money! But does he really love us?', a real contradiction about her father). Both are valid Views. The wrong answer is the visually-striking travel list (the anti-target).",
   },
   {
     id: "catchup-2016-09",

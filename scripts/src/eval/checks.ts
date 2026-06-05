@@ -52,12 +52,28 @@ function resultText(r: EngineResult): string {
 function findWinner(res: EngineResult): Candidate | undefined {
   const quotes = res.result.quotes.map((q) => norm(q.text)).filter(Boolean);
   if (!quotes.length) return undefined;
-  return res.candidates.find((c) =>
-    c.fragments.some((f) => {
+  // Map the displayed quote back to its candidate by BEST overlap, not the first
+  // loose match. On a "bundled" candidate (one carrying several fragments) a
+  // short fragment from a DIFFERENT candidate can sit inside the displayed quote
+  // (quote.includes(fragment)) and used to win the .find(), mis-mapping the
+  // winner and throwing off the emotional_center check even when the engine
+  // surfaced the right line. Rank: exact match > fragment contains the shown
+  // quote > shown quote contains the fragment, and take the strongest.
+  let best: { c: Candidate; score: number } | undefined;
+  for (const c of res.candidates) {
+    let score = 0;
+    for (const f of c.fragments) {
       const nf = norm(f);
-      return quotes.some((q) => q === nf || q.includes(nf) || nf.includes(q));
-    }),
-  );
+      if (!nf) continue;
+      for (const q of quotes) {
+        if (q === nf) score = Math.max(score, 3);
+        else if (nf.includes(q)) score = Math.max(score, 2);
+        else if (q.includes(nf)) score = Math.max(score, 1);
+      }
+    }
+    if (score > 0 && (!best || score > best.score)) best = { c, score };
+  }
+  return best?.c;
 }
 
 // ── selection checks ────────────────────────────────────────────────────────
@@ -285,6 +301,26 @@ function extractQuotedSnippets(s: string): string[] {
   return out;
 }
 
+// Longest run of consecutive (normalized) words shared between two strings.
+// Used to detect when an observation re-quotes the line the card already shows
+// above it: a long verbatim run means the voice is repeating, not framing.
+function longestSharedWordRun(a: string, b: string): number {
+  const aw = norm(a).split(" ").filter(Boolean);
+  const bw = norm(b).split(" ").filter(Boolean);
+  let best = 0;
+  const dp = new Array(bw.length + 1).fill(0);
+  for (let i = 1; i <= aw.length; i++) {
+    let prev = 0;
+    for (let j = 1; j <= bw.length; j++) {
+      const tmp = dp[j];
+      dp[j] = aw[i - 1] === bw[j - 1] ? prev + 1 : 0;
+      if (dp[j] > best) best = dp[j];
+      prev = tmp;
+    }
+  }
+  return best;
+}
+
 function countSentences(s: string): number {
   // Strip embedded quoted material so a quoted "…life!" doesn't inflate the count.
   const stripped = s.replace(/['"‘’“”][^'"‘’“”]*['"‘’“”]/g, " ");
@@ -353,6 +389,26 @@ function voiceChecks(res: EngineResult): Check[] {
       : referenced.length
         ? "all referenced quotes are shown"
         : "no inline quotes (points without quoting)",
+  });
+
+  // No redundant restatement: the card renders the quote directly above the
+  // observation, so an observation that re-quotes most of that same line reads
+  // as repetition. The voice should FRAME the line, not echo it. We flag a
+  // contiguous verbatim run that is ≥70% of a shown quote (min 3 words) — this
+  // catches a fully restated SHORT quote (e.g. "Close your eyes Mahdis.") as
+  // well as a long one, while a brief pointer fragment still passes.
+  const restated = res.result.quotes.find((q) => {
+    const qWords = norm(q.text).split(" ").filter(Boolean).length;
+    if (qWords < 3) return false;
+    const run = longestSharedWordRun(obs, q.text);
+    return run >= 3 && run >= 0.7 * qWords;
+  });
+  checks.push({
+    name: "observation doesn't restate the displayed quote",
+    pass: !restated,
+    detail: restated
+      ? `re-quotes the shown line ("${restated.text.slice(0, 50)}…") — frame it, don't repeat it`
+      : "ok",
   });
 
   return checks;

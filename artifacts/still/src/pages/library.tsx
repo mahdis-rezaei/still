@@ -11,6 +11,8 @@ import {
 } from "@workspace/api-client-react";
 import { AppNav } from "@/components/app-nav";
 import { PageHeader } from "@/components/page";
+import { ContinuityCard } from "@/components/continuity";
+import { LibraryViews } from "@/components/library-views";
 
 const SOURCE_LABELS: Record<string, string> = {
   pasted_import: "imported",
@@ -241,6 +243,8 @@ export default function Library() {
           </div>
         ) : (
           <>
+            <ContinuityCard />
+            <LibraryViews current="list" />
             {hasSamples && (
               <div className="flex items-center justify-between gap-4 mb-6 rounded-xl border border-accent-sepia/25 bg-[#F3EAD7]/60 px-4 py-3">
                 <p className="font-body text-sm text-deep-brown/80 leading-relaxed">

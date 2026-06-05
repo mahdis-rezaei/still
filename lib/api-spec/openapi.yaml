@@ -756,6 +756,344 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /continuity:
+    get:
+      operationId: getContinuity
+      tags: [memories]
+      summary: Archival continuity metrics (the anti-streak) + gentle milestones
+      responses:
+        "200":
+          description: Continuity metrics for the user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Continuity"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /letters/{year}:
+    get:
+      operationId: getYearLetter
+      tags: [memories]
+      summary: "Your Year in Pages — a printable yearly artifact"
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: The assembled year
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/YearLetter"
+        "400":
+          description: Invalid year
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /shelf:
+    get:
+      operationId: listShelf
+      tags: [memories]
+      summary: The Memory Shelf — a small curated set of pages kept close
+      responses:
+        "200":
+          description: Shelf items, in shelf order
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ShelfItem"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: addToShelf
+      tags: [memories]
+      summary: Add a page to the shelf (idempotent)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entryId:
+                  type: string
+              required:
+                - entryId
+      responses:
+        "201":
+          description: Added
+        "200":
+          description: Already on the shelf
+        "404":
+          description: Page not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /shelf/{entryId}:
+    delete:
+      operationId: removeFromShelf
+      tags: [memories]
+      summary: Take a page off the shelf
+      parameters:
+        - name: entryId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Removed
+  /capsules:
+    get:
+      operationId: listCapsules
+      tags: [memories]
+      summary: The user's Memory Capsules (sealed until delivered)
+      responses:
+        "200":
+          description: Capsules, soonest delivery first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Capsule"
+    post:
+      operationId: createCapsule
+      tags: [memories]
+      summary: Seal a letter to a future self
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body:
+                  type: string
+                deliverAt:
+                  type: string
+              required:
+                - body
+                - deliverAt
+      responses:
+        "201":
+          description: The sealed capsule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Capsule"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /capsules/{id}:
+    patch:
+      operationId: openCapsule
+      tags: [memories]
+      summary: Mark a delivered capsule as opened
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                opened:
+                  type: boolean
+      responses:
+        "200":
+          description: The capsule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Capsule"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /collections:
+    get:
+      operationId: listCollections
+      tags: [memories]
+      summary: The user's collections (with counts; optional per-entry membership)
+      parameters:
+        - name: entryId
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Collections
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CollectionSummary"
+    post:
+      operationId: createCollection
+      tags: [memories]
+      summary: Create a collection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                kind:
+                  type: string
+              required: [name]
+      responses:
+        "201":
+          description: The created collection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollectionSummary"
+  /collections/{id}:
+    get:
+      operationId: getCollection
+      tags: [memories]
+      summary: A collection with its pages, chronological
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The collection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollectionDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteCollection
+      tags: [memories]
+      summary: Delete a collection
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+  /collections/{id}/items:
+    post:
+      operationId: addCollectionItem
+      tags: [memories]
+      summary: Add a page to a collection (idempotent)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entryId:
+                  type: string
+              required: [entryId]
+      responses:
+        "201":
+          description: Added
+  /collections/{id}/items/{entryId}:
+    delete:
+      operationId: removeCollectionItem
+      tags: [memories]
+      summary: Remove a page from a collection
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: entryId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Removed
+  /preferences:
+    get:
+      operationId: getPreferences
+      tags: [memories]
+      summary: User-level preferences (memory sensitivity)
+      responses:
+        "200":
+          description: Preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Preferences"
+    patch:
+      operationId: updatePreferences
+      tags: [memories]
+      summary: Update memory sensitivity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Preferences"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Preferences"
+        "400":
+          description: Invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /resurface-mutes:
     get:
       operationId: listResurfaceMutes
@@ -837,6 +1175,54 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /privacy/export/markdown:
+    get:
+      operationId: exportMarkdown
+      tags: [privacy]
+      summary: Export journals (+ reflections) as Markdown
+      parameters:
+        - name: scope
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [all, favorites, year]
+        - name: year
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A Markdown document
+          content:
+            text/markdown:
+              schema:
+                type: string
+  /privacy/export/text:
+    get:
+      operationId: exportText
+      tags: [privacy]
+      summary: Export journals (+ reflections) as plain text
+      parameters:
+        - name: scope
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [all, favorites, year]
+        - name: year
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A plain-text document
+          content:
+            text/plain:
+              schema:
+                type: string
   /privacy/account:
     delete:
       operationId: deleteAccount
@@ -1491,6 +1877,160 @@ components:
       required:
         - startDate
         - endDate
+    Continuity:
+      type: object
+      properties:
+        pageCount:
+          type: integer
+        writingSinceYear:
+          type: ["integer", "null"]
+        spanYears:
+          type: ["integer", "null"]
+        oldestPageAgeYears:
+          type: ["integer", "null"]
+        reflectionCount:
+          type: integer
+        oldestImportedAgeYears:
+          type: ["integer", "null"]
+        wroteFirstReflectionToday:
+          type: boolean
+      required:
+        - pageCount
+        - reflectionCount
+        - wroteFirstReflectionToday
+    LetterFavorite:
+      type: object
+      properties:
+        entryId:
+          type: string
+        title:
+          type: ["string", "null"]
+        excerpt:
+          type: string
+        entryDate:
+          type: ["string", "null"]
+      required:
+        - entryId
+        - excerpt
+    YearLetter:
+      type: object
+      properties:
+        year:
+          type: integer
+        pageCount:
+          type: integer
+        reflectionCount:
+          type: integer
+        favorites:
+          type: array
+          items:
+            $ref: "#/components/schemas/LetterFavorite"
+      required:
+        - year
+        - pageCount
+        - reflectionCount
+        - favorites
+    ShelfItem:
+      type: object
+      properties:
+        entryId:
+          type: string
+        title:
+          type: ["string", "null"]
+        excerpt:
+          type: string
+        entryDate:
+          type: ["string", "null"]
+        favorite:
+          type: boolean
+      required:
+        - entryId
+        - excerpt
+        - favorite
+    Capsule:
+      type: object
+      properties:
+        id:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        deliverAt:
+          type: string
+          format: date-time
+        delivered:
+          type: boolean
+        openedAt:
+          type: ["string", "null"]
+        body:
+          type: ["string", "null"]
+      required:
+        - id
+        - createdAt
+        - deliverAt
+        - delivered
+    Preferences:
+      type: object
+      properties:
+        memorySensitivity:
+          type: string
+          enum: [open, gentle, protected]
+      required:
+        - memorySensitivity
+    CollectionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        kind:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        itemCount:
+          type: integer
+        containsEntry:
+          type: boolean
+      required:
+        - id
+        - name
+        - kind
+        - itemCount
+        - containsEntry
+    CollectionItem:
+      type: object
+      properties:
+        entryId:
+          type: string
+        title:
+          type: ["string", "null"]
+        excerpt:
+          type: string
+        entryDate:
+          type: ["string", "null"]
+      required:
+        - entryId
+        - excerpt
+    CollectionDetail:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        kind:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CollectionItem"
+      required:
+        - id
+        - name
+        - kind
+        - items
     MemoryRunInput:
       type: object
       properties:

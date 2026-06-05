@@ -16,6 +16,14 @@ export const usersTable = pgTable("users", {
     .notNull()
     .default(false),
   emailVerified: boolean("email_verified").notNull().default(false),
+  // How Yadegar may bring pages back on its own. open = full (push + pull);
+  // gentle = no memory nudges, but in-app date returns still appear; protected =
+  // nothing returns unbidden — only when the user goes looking. Hard floors +
+  // active-crisis exclusion + mutes apply in every mode (those never move).
+  memorySensitivity: text("memory_sensitivity")
+    .$type<"open" | "gentle" | "protected">()
+    .notNull()
+    .default("open"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
