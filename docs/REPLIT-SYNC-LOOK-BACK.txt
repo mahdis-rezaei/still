@@ -1,14 +1,9 @@
-*** CAUTION (2026-06-05): the live engine fix for observation re-quoting was
-authored directly in the Replit workspace (still.ts, PROMPT_VERSION
-2026-06-05.2) and is NOT yet on this GitHub branch. Until it is committed
-upstream, do NOT do a full re-sync from GitHub — it would overwrite still.ts and
-silently revert the verified engine fix. Either (a) commit still.ts upstream
-first, or (b) re-sync ONLY the frontend/eval files listed below, leaving
-artifacts/api-server/** untouched. ***
-
 Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
-(head eb5080d), same method as before. CODE-ONLY (frontend) — NO migration, NO
-new endpoints, NO new secrets, NO PROMPT_VERSION bump.
+(head 356b3ed), same method as before. NO migration, NO new endpoints, NO new
+secrets. NOTE: this head now INCLUDES the engine fix in artifacts/api-server/src/
+routes/still.ts (PROMPT_VERSION 2026-06-05.2) — so a full re-sync is safe again
+and is the intended path. The drift is resolved: GitHub now matches the engine
+that passed the live eval 11/11.
 
 What lands:
   - "Look back" is reworked from a single tabbed page into three lenses, each
@@ -48,24 +43,26 @@ What lands:
         couple of minutes) reads as "still working", not "failed". The
         forgotten-page voice got the same calm treatment.
 
-KNOWN UPSTREAM ITEM (engine, NOT in this sync): on some cards the `observation`
-restates the displayed `quote` almost verbatim (redundant). The card is correct;
-this is the PASS-2 voicing prompt echoing the quote instead of framing it — fix
-it engine-side so the observation never re-quotes the displayed line. The exact
-prompt fix to hand the engine agent is in docs/REPLIT-FIX-OBSERVATION-REDUNDANCY
-.txt, and a regression guard ("observation doesn't restate the displayed quote")
-is already in scripts/src/eval/checks.ts — run the harness live to confirm it
-goes green once the voicing is fixed.
+ENGINE FIX NOW INCLUDED (observation re-quoting): the PASS-2 voicing in
+still.ts used to restate the displayed `quote` inside the `observation` (the
+card already shows the quote, so it read as redundant). The prompt now FRAMES
+the line instead of reproducing it, bans the "…and suddenly this: '<line>'"
+family, and adds a self-check; PROMPT_VERSION is bumped to 2026-06-05.2 so
+cached results refresh. Verified on the live eval: the regression guard
+"observation doesn't restate the displayed quote" passes 11/11. (Spec: docs/
+REPLIT-FIX-OBSERVATION-REDUNDANCY.txt; guard: scripts/src/eval/checks.ts.)
 
-Reuses existing endpoints only (/api/memories/run with its existing `fresh`
-flag, /api/look-back, the revisit / then-and-now / year-in-pages routes already
-live). No engine change, no new params.
+Endpoints unchanged (/api/memories/run with its existing `fresh` flag,
+/api/look-back, revisit / then-and-now / year-in-pages). The only engine change
+is the still.ts voicing prompt + PROMPT_VERSION bump above — no new params, no
+schema change.
 
 Steps:
-1. SYNC the code to origin (head eb5080d). Do not edit app code or prompts.
+1. SYNC the code to origin (head 356b3ed). Do not edit app code or prompts.
 2. pnpm install — no-op.
 3. NO drizzle-kit push (no schema change).
-4. RE-PUBLISH the deployment.
+4. RE-PUBLISH the deployment (PROMPT_VERSION bump means the result cache
+   refreshes on first read — expected).
 
 Verify:
   - Top nav "Look back" opens with the sub-bar: What keeps returning · Revisit a
@@ -81,3 +78,6 @@ Verify:
   - Revisit a time: month+year reads the time back and lists the pages; "How far
     you've come" below takes a year and shows the distance.
   - Your Year in Pages: pick a year, open it as a letter.
+  - Observation no longer repeats the quote: on any surfaced card, the
+    observation should FRAME the line shown above it, not quote it back (e.g. no
+    "…and suddenly this: '<the same line>'"). The displayed quote appears once.
