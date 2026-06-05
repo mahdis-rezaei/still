@@ -1,5 +1,5 @@
 Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
-(head 86e4e37), same method as before. CODE-ONLY (frontend) — NO migration, NO
+(head 6e39bf2), same method as before. CODE-ONLY (frontend) — NO migration, NO
 new endpoints, NO new secrets, NO PROMPT_VERSION bump.
 
 What lands:
@@ -21,12 +21,22 @@ What lands:
     now a clearly-framed footer link on the first lens.
   - "A page you'd forgotten" is button-gated, so it no longer runs the engine
     just by being on screen.
+  - What keeps returning, two fixes after live testing on a deep (2019→now)
+    archive that was returning only silence:
+      • An engine ERROR no longer renders the same copy as honest silence — it
+        now shows "Couldn't read across your years just now" with a "try again",
+        while true silence keeps its gentle copy plus a quiet "look again".
+      • The lens now sends `fresh: true`, so this deliberate, user-initiated read
+        bypasses the engine result cache. Without it a one-off cached silence
+        was re-served on every click and "look again"/"show another" returned
+        the identical cached pick.
 
-Reuses existing endpoints only (/api/memories/run, /api/look-back, the
-revisit / then-and-now / year-in-pages routes already live). No engine change.
+Reuses existing endpoints only (/api/memories/run with its existing `fresh`
+flag, /api/look-back, the revisit / then-and-now / year-in-pages routes already
+live). No engine change, no new params.
 
 Steps:
-1. SYNC the code to origin (head 86e4e37). Do not edit app code or prompts.
+1. SYNC the code to origin (head 6e39bf2). Do not edit app code or prompts.
 2. pnpm install — no-op.
 3. NO drizzle-kit push (no schema change).
 4. RE-PUBLISH the deployment.
@@ -35,9 +45,13 @@ Verify:
   - Top nav "Look back" opens with the sub-bar: What keeps returning · Revisit a
     time · Your Year in Pages. Each tab navigates to its own URL and reads as
     its own page (distinct title + intro); the active tab highlights.
-  - What keeps returning: "Show me what keeps returning" surfaces a thread;
-    below it, "Bring back a page you'd forgotten" only runs on click and rotates
-    with "show another"; the footer links to Returns.
+  - What keeps returning: "Show me what keeps returning" surfaces a thread (on a
+    multi-year archive it should NOT just sit silent — if it does, watch for the
+    new "Couldn't read…/try again" error copy, which means a /api/memories/run
+    failure to chase in the engine logs, not honest silence); "look again" and
+    "show another" should now re-roll to a different read each press (fresh run),
+    not repeat the same one. Below it, "Bring back a page you'd forgotten" only
+    runs on click and rotates with "show another"; the footer links to Returns.
   - Revisit a time: month+year reads the time back and lists the pages; "How far
     you've come" below takes a year and shows the distance.
   - Your Year in Pages: pick a year, open it as a letter.
