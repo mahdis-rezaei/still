@@ -101,7 +101,16 @@ export interface MemoryRunOutcome {
 // on-demand /memories/run route and the cron-driven memory nudge.
 export async function runMemoryForUser(
   userId: string,
-  opts: { year?: number; month?: number; entryIds?: string[]; fresh?: boolean },
+  opts: {
+    year?: number;
+    month?: number;
+    entryIds?: string[];
+    fresh?: boolean;
+    // Preview: compute + return the framed memory WITHOUT persisting a Returns
+    // row or touching rotation history. Used by the date-anchored "On this day"
+    // surface, which may render on every Today-page load.
+    preview?: boolean;
+  },
 ): Promise<MemoryRunOutcome> {
   const filters = [
     eq(journalEntriesTable.userId, userId),
@@ -267,21 +276,36 @@ export async function runMemoryForUser(
     theme = match?.theme ?? null;
   }
 
+  const values = {
+    userId,
+    journalEntryId,
+    engineRunId: randomUUID(),
+    label: typeof score.label === "string" ? score.label : null,
+    observation:
+      typeof score.observation === "string" ? score.observation : null,
+    quote,
+    quoteDate,
+    lens: mode as never,
+    theme,
+    fullEngineResponse: score,
+  };
+
+  // Preview: return the framed memory without persisting (no Returns row, no
+  // effect on diversity). The transient shape carries everything the card reads.
+  if (opts.preview) {
+    return {
+      surfaced: true,
+      memory: {
+        id: randomUUID(),
+        createdAt: new Date(),
+        ...values,
+      } as unknown as ReturnedMemory,
+    };
+  }
+
   const [row] = await db
     .insert(returnedMemoriesTable)
-    .values({
-      userId,
-      journalEntryId,
-      engineRunId: randomUUID(),
-      label: typeof score.label === "string" ? score.label : null,
-      observation:
-        typeof score.observation === "string" ? score.observation : null,
-      quote,
-      quoteDate,
-      lens: mode as never,
-      theme,
-      fullEngineResponse: score,
-    })
+    .values(values)
     .returning();
 
   return { surfaced: true, memory: row };

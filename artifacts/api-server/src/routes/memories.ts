@@ -14,6 +14,7 @@ import {
   aroundThisTimeForUser,
   favoritesForUser,
   forgottenForUser,
+  type DateMemory,
 } from "../lib/on-this-day";
 
 const router = Router();
@@ -113,6 +114,52 @@ router.get("/memories/on-this-day", async (req, res): Promise<void> => {
     res.json(await onThisDayForUser(req.userId!, target));
   } catch (err) {
     req.log.error({ err }, "On this day error");
+    res.status(500).json({ error: "Failed to load on-this-day memories" });
+  }
+});
+
+// GET /memories/on-this-day/framed?date=YYYY-MM-DD — the date-anchored surface,
+// VOICED. Returns the raw per-year list (`years`, instant) AND a `framed` pick:
+// the engine scoped to just this date's entries, so the "On this day" memory
+// reads in Yadegar's voice (a chosen line + an observation) instead of a raw
+// excerpt — Facebook-Memories, but warm. Falls back to the same MONTH in prior
+// years when nothing is on the exact day, so it's never a dead end. The framing
+// is a bonus: if the engine stays silent (thin entry), `framed` is null and the
+// client still shows the raw year(s). Preview mode → no Returns row is written.
+router.get("/memories/on-this-day/framed", async (req, res): Promise<void> => {
+  const target = targetDate(req as { query: { date?: string } });
+  if (!target) {
+    res.status(400).json({ error: "Invalid date" });
+    return;
+  }
+  try {
+    const exactItems = await onThisDayForUser(req.userId!, target);
+    const exact = exactItems.length > 0;
+    const years: DateMemory[] = exact
+      ? exactItems
+      : await aroundThisTimeForUser(req.userId!, target);
+
+    if (years.length === 0) {
+      res.json({ exact: false, years: [], framed: null });
+      return;
+    }
+
+    let framed: ReturnType<typeof toMemory> | null = null;
+    try {
+      const out = await runMemoryForUser(req.userId!, {
+        entryIds: years.map((y) => y.entryId),
+        preview: true,
+      });
+      if (out.surfaced && out.memory) framed = toMemory(out.memory);
+    } catch (err) {
+      // Framing is a bonus — never fail the whole surface because the voice pass
+      // errored. The client falls back to the raw year(s).
+      req.log.warn({ err }, "On-this-day framing failed; serving raw years");
+    }
+
+    res.json({ exact, years, framed });
+  } catch (err) {
+    req.log.error({ err }, "On this day (framed) error");
     res.status(500).json({ error: "Failed to load on-this-day memories" });
   }
 });
