@@ -41,7 +41,11 @@ What lands:
 KNOWN UPSTREAM ITEM (engine, NOT in this sync): on some cards the `observation`
 restates the displayed `quote` almost verbatim (redundant). The card is correct;
 this is the PASS-2 voicing prompt echoing the quote instead of framing it — fix
-it engine-side so the observation never re-quotes the displayed line.
+it engine-side so the observation never re-quotes the displayed line. The exact
+prompt fix to hand the engine agent is in docs/REPLIT-FIX-OBSERVATION-REDUNDANCY
+.txt, and a regression guard ("observation doesn't restate the displayed quote")
+is already in scripts/src/eval/checks.ts — run the harness live to confirm it
+goes green once the voicing is fixed.
 
 Reuses existing endpoints only (/api/memories/run with its existing `fresh`
 flag, /api/look-back, the revisit / then-and-now / year-in-pages routes already
