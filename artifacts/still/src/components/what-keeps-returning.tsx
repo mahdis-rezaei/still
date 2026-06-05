@@ -8,6 +8,10 @@ import { MemoryCard } from "@/components/memory-card";
 // (so it never writes silently on every visit), then the voiced result. On a deep
 // archive the engine leans toward a cross-time thread; on a thinner one it finds
 // the line that keeps mattering.
+//
+// We pass `fresh` so this deliberate, user-initiated read bypasses the engine's
+// result cache. Without it a one-off cached silence would re-serve forever, and
+// "look again" / "show another" would just hand back the identical cached pick.
 export function WhatKeepsReturning() {
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<MemoryRunResult | null>(null);
@@ -16,7 +20,7 @@ export function WhatKeepsReturning() {
     setResult(null);
     setPending(true);
     try {
-      setResult(await runMemoryRequest("/api/memories/run", {}));
+      setResult(await runMemoryRequest("/api/memories/run", { fresh: true }));
     } catch {
       setResult({ surfaced: false, reason: "error" });
     } finally {
