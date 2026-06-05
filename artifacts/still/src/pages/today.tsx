@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   useCreateEntry,
   useUpdateEntry,
+  useListEntries,
   getListEntriesQueryKey,
   customFetch,
   type MemoryRunResult,
@@ -60,6 +61,14 @@ export default function Today() {
   const queryClient = useQueryClient();
   const createEntry = useCreateEntry();
   const updateEntry = useUpdateEntry();
+  // How many pages you've kept TODAY — drives a persistent confirmation under
+  // the composer so a just-written page never feels like it vanished on refresh
+  // (Today isn't a feed; your pages live in the Library). Reads from the cached
+  // list, so it survives reloads and updates live after each save.
+  const { data: entries } = useListEntries();
+  const keptToday = (entries ?? []).filter(
+    (e) => e.entryDate?.slice(0, 10) === todayISO(),
+  ).length;
 
   // Whether the page has any text yet (drives the save guard + "new page"
   // affordance). The editor itself is uncontrolled (see RichEditor).
@@ -344,8 +353,13 @@ export default function Today() {
           <Link
             href="/library"
             className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"
+            data-testid="link-library"
           >
-            Your pages live in your Library →
+            {keptToday > 0
+              ? `You've kept ${keptToday} page${keptToday === 1 ? "" : "s"} today — ${
+                  keptToday === 1 ? "it's" : "they're"
+                } in your Library →`
+              : "Your pages live in your Library →"}
           </Link>
         </p>
       </main>
