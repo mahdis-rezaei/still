@@ -31,7 +31,6 @@ import EntryDetail from "@/pages/entry-detail";
 import Returns from "@/pages/returns";
 import LookBack from "@/pages/look-back";
 import Timeline from "@/pages/timeline";
-import Search from "@/pages/search";
 import Letter from "@/pages/letter";
 import Calendar from "@/pages/calendar";
 import Book from "@/pages/book";
@@ -95,7 +94,10 @@ function ProtectedApp() {
       <Route path="/returns" component={Returns} />
       <Route path="/look-back" component={LookBack} />
       <Route path="/timeline" component={Timeline} />
-      <Route path="/search" component={Search} />
+      {/* Search merged into Library (its search box). Keep the path working. */}
+      <Route path="/search">
+        <Redirect to="/library" />
+      </Route>
       <Route path="/letters/:year" component={Letter} />
       <Route path="/calendar" component={Calendar} />
       <Route path="/book" component={Book} />

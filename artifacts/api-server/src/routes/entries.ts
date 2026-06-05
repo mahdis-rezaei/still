@@ -61,6 +61,35 @@ router.get("/entries", async (req, res): Promise<void> => {
   }
 });
 
+// GET /entries/summary — a lightweight journaling summary (first-entry date +
+// count). Powers the "Your Year in Pages" anniversary banner without loading the
+// whole archive. Declared before /entries/:id so "summary" isn't read as an id.
+router.get("/entries/summary", async (req, res): Promise<void> => {
+  try {
+    const [row] = await db
+      .select({
+        firstEntryDate: sql<
+          string | null
+        >`min(${journalEntriesTable.entryDate})`,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(journalEntriesTable)
+      .where(
+        and(
+          eq(journalEntriesTable.userId, req.userId!),
+          isNull(journalEntriesTable.deletedAt),
+        ),
+      );
+    res.json({
+      firstEntryDate: row?.firstEntryDate ?? null,
+      count: row?.count ?? 0,
+    });
+  } catch (err) {
+    req.log.error({ err }, "Entries summary route error");
+    res.status(500).json({ error: "Failed to load summary" });
+  }
+});
+
 // POST /entries — create a manual entry.
 router.post("/entries", async (req, res): Promise<void> => {
   const parsed = CreateEntryBody.safeParse(req.body);
