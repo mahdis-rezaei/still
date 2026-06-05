@@ -255,6 +255,60 @@ router.post(
   },
 );
 
+// POST /memories/this-time-of-year { date? } — the voiced nostalgia for Look Back:
+// the engine reads your pages from AROUND NOW (this day ±3 and this month) across
+// prior years and surfaces ONE voiced page (a thread / arc is welcome here, unlike
+// Today's strict single page). No input; the wider-window counterpart to Today's
+// exact-day surface. Async when ASYNC_MEMORY is on.
+router.post(
+  "/memories/this-time-of-year",
+  runLimiter,
+  async (req, res): Promise<void> => {
+    const dateStr = (req.body as { date?: string })?.date;
+    const target =
+      dateStr && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)
+        ? new Date(`${dateStr}T00:00:00Z`)
+        : new Date();
+    try {
+      const [exact, around] = await Promise.all([
+        onThisDayForUser(req.userId!, target),
+        aroundThisTimeForUser(req.userId!, target),
+      ]);
+      const entryIds = [
+        ...new Set([...exact, ...around].map((m) => m.entryId)),
+      ];
+      if (entryIds.length === 0) {
+        res.json({ surfaced: false, reason: "not_enough" });
+        return;
+      }
+      const dateKey = target.toISOString().slice(0, 10);
+      if (asyncMemoryEnabled()) {
+        const jobId = await enqueueMemoryJob(
+          req.userId!,
+          "run",
+          { entryIds },
+          `ttoy:${req.userId}:${dateKey}`,
+        );
+        res.status(202).json({ jobId, status: "queued" });
+        return;
+      }
+      const result = await runMemoryForUser(req.userId!, { entryIds });
+      if (!result.surfaced) {
+        res.json({
+          surfaced: false,
+          reason: result.reason,
+          supportMessage: result.supportMessage ?? null,
+        });
+        return;
+      }
+      res.json({ surfaced: true, memory: toMemory(result.memory!) });
+    } catch (err) {
+      req.log.error({ err }, "This-time-of-year error");
+      res.status(500).json({ error: "Failed to read this time of year" });
+    }
+  },
+);
+
 // GET /memories — the Returns archive.
 router.get("/memories", async (req, res): Promise<void> => {
   try {
