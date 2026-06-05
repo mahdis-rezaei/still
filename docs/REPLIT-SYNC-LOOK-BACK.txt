@@ -1,5 +1,5 @@
 Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
-(head ca30b81), same method as before. CODE-ONLY (frontend) — NO migration, NO
+(head eb5080d), same method as before. CODE-ONLY (frontend) — NO migration, NO
 new endpoints, NO new secrets, NO PROMPT_VERSION bump.
 
 What lands:
@@ -20,7 +20,9 @@ What lands:
   - The confusing top "Returns — pages brought back →" link is gone; Returns is
     now a clearly-framed footer link on the first lens.
   - "A page you'd forgotten" is button-gated, so it no longer runs the engine
-    just by being on screen.
+    just by being on screen; the first pull now picks a RANDOM forgotten page
+    (not always the same most-forgotten one) and "show another" avoids repeating
+    the current page.
   - What keeps returning, two fixes after live testing on a deep (2019→now)
     archive that was returning only silence:
       • An engine ERROR no longer renders the same copy as honest silence — it
@@ -52,7 +54,7 @@ flag, /api/look-back, the revisit / then-and-now / year-in-pages routes already
 live). No engine change, no new params.
 
 Steps:
-1. SYNC the code to origin (head ca30b81). Do not edit app code or prompts.
+1. SYNC the code to origin (head eb5080d). Do not edit app code or prompts.
 2. pnpm install — no-op.
 3. NO drizzle-kit push (no schema change).
 4. RE-PUBLISH the deployment.
