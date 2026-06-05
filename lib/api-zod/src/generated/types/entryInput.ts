@@ -10,5 +10,6 @@ export interface EntryInput {
   title?: string;
   /** @minLength 1 */
   body: string;
+  bodyRich?: string;
   entryDate?: string;
 }

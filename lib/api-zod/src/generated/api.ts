@@ -126,6 +126,7 @@ export const ListEntriesResponse = zod.array(ListEntriesResponseItem)
 export const CreateEntryBody = zod.object({
   "title": zod.string().optional(),
   "body": zod.string().min(1),
+  "bodyRich": zod.string().optional(),
   "entryDate": zod.string().optional()
 })
 
@@ -192,6 +193,7 @@ export const UpdateEntryParams = zod.object({
 export const UpdateEntryBody = zod.object({
   "title": zod.string().nullish(),
   "body": zod.string().min(1).optional(),
+  "bodyRich": zod.string().nullish(),
   "entryDate": zod.string().nullish(),
   "favorite": zod.boolean().optional(),
   "resurfacingPreference": zod.enum(['normal', 'more_often', 'never']).optional()
