@@ -58,20 +58,21 @@ export default function Letter() {
         <AppNav />
       </div>
 
-      <main className="flex-1 w-full max-w-[640px] mx-auto px-6 py-12 md:py-20">
-        {/* Navigation + print — hidden in the printed PDF. */}
-        <div className="print:hidden flex items-center justify-between gap-4 mb-12">
+      <main className="flex-1 w-full px-6 py-12 md:py-20">
+        {/* Navigation + print — hidden in the printed PDF. Sits a touch wider
+            than the 640px book column so the controls fit on one line. */}
+        <div className="print:hidden max-w-[760px] mx-auto flex flex-wrap items-center justify-between gap-x-5 gap-y-3 mb-12">
           <div className="flex items-center gap-3 md:gap-4">
             <Link
               href="/look-back/keepsake"
-              className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"
+              className="font-sans text-sm text-soft-ink hover:text-ink transition-colors whitespace-nowrap"
             >
               ← Look back
             </Link>
             {prevYear && (
               <Link
                 href={`/letters/${prevYear}`}
-                className="font-sans text-sm text-faint-ink hover:text-ink transition-colors"
+                className="font-sans text-sm text-faint-ink hover:text-ink transition-colors whitespace-nowrap"
               >
                 {prevYear}
               </Link>
@@ -94,7 +95,7 @@ export default function Letter() {
             {nextYear && (
               <Link
                 href={`/letters/${nextYear}`}
-                className="font-sans text-sm text-faint-ink hover:text-ink transition-colors"
+                className="font-sans text-sm text-faint-ink hover:text-ink transition-colors whitespace-nowrap"
               >
                 {nextYear}
               </Link>
@@ -104,13 +105,13 @@ export default function Letter() {
             <div className="flex items-center gap-4">
               <Link
                 href={`/book?scope=year&year=${year}`}
-                className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"
+                className="font-sans text-sm text-soft-ink hover:text-ink transition-colors whitespace-nowrap"
               >
                 Make a full book →
               </Link>
               <button
                 onClick={() => window.print()}
-                className="rounded-full border border-border hover:border-accent-sepia text-soft-ink hover:text-ink px-4 py-2 font-sans text-sm transition-colors"
+                className="rounded-full border border-border hover:border-accent-sepia text-soft-ink hover:text-ink px-4 py-2 font-sans text-sm transition-colors whitespace-nowrap"
               >
                 Print / Save as PDF
               </button>
@@ -118,6 +119,7 @@ export default function Letter() {
           )}
         </div>
 
+        <div className="w-full max-w-[640px] mx-auto">
         {!valid ? (
           <p className="font-body text-soft-ink">That isn't a year.</p>
         ) : isLoading ? (
@@ -213,6 +215,7 @@ export default function Letter() {
             )}
           </article>
         )}
+        </div>
       </main>
     </div>
   );
