@@ -14,6 +14,8 @@ export interface Entry {
   title?: string | null;
   body: string;
   /** @nullable */
+  bodyRich?: string | null;
+  /** @nullable */
   entryDate?: string | null;
   source: EntrySource;
   favorite: boolean;

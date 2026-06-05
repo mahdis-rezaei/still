@@ -1,0 +1,121 @@
+HANDOFF FROM A PARALLEL THREAD — please read before any branch reset/merge.
+
+A sibling Claude session built three user-facing features on a separate branch.
+That branch is based on YOUR latest pushed commit, so it's a strict superset of
+your work — but a naive reset to your branch would drop these commits. Details
+below so you can verify and merge cleanly.
+
+== BRANCH & COMMITS ==
+Branch:  claude/lucid-edison-kCUis   (HEAD = c8ddb71)
+Base:    origin/claude/ecstatic-wright-y4npO @ 5e33a99 (your HEAD at the time)
+i.e. lucid-edison = ecstatic-wright@5e33a99 + these commits, in order:
+  c8d542c  Image attachments (feature)
+  37418b8  docs: Replit sync prompt (images)
+  f4ea4af  Rich text formatting (feature)
+  11536de  docs: Replit sync prompt (rich text + images, cumulative)
+  c8ddb71  Voice dictation (feature)
+There is NO divergence from 5e33a99 — if your branch hasn't advanced past it,
+this merges as a fast-forward. Per CLAUDE.md, integrate with MERGE COMMITS, not
+squash, to keep shared history.
+
+== WHAT WAS BUILT (3 rounds, all on the writing surface) ==
+
+1) IMAGE ATTACHMENTS — attach images (upload, or "take a photo" on mobile via
+   <input capture>) to a page, from BOTH the Today composer and the entry view.
+   - Bytes are app-encrypted (AES-256-GCM, the SAME ENCRYPTION_KEY as journal
+     text) and stored in Replit Object Storage. Postgres holds only metadata +
+     the storage key. Images are NEVER sent to the memory engine and NEVER
+     resurfaced — they appear only when the writer opens the full page.
+   - New table: entry_attachments. New endpoints (owner-scoped):
+       POST   /api/entries/:id/attachments     (raw image via express.raw)
+       GET    /api/entries/:id/attachments      (metadata list)
+       GET    /api/attachments/:id              (streams DECRYPTED bytes)
+       DELETE /api/attachments/:id
+   - Account delete now purges image objects from the bucket; /privacy/export
+     JSON gained an `attachments` array.
+
+2) RICH TEXT — a literary formatting layer (bold, italic, H2/H3, bullet+numbered
+   lists, blockquote, a few MUTED on-brand text colors) in both editors.
+   - ENGINE-SAFE BY CONSTRUCTION: `body` stays the canonical PLAIN TEXT the
+     engine, resurfacing excerpts, Library previews, and exports read. A new
+     nullable, encrypted `body_rich` column holds sanitized HTML (display only).
+   - The SERVER is the trust boundary: when a request carries `bodyRich`, the
+     server sanitizes it (sanitize-html allowlist) and DERIVES `body` plaintext
+     from the sanitized HTML. Client markup is never trusted into `body`; stored
+     HTML is always safe to render. Entries without formatting render as before.
+
+3) VOICE DICTATION — a mic in the editor toolbar (so it's in both editors).
+   Uses the browser Web Speech API: live interim caption, finalized transcripts
+   inserted at the caret, honest in-UI disclosure that the browser's speech
+   service handles audio and we don't record it. Feature-detected (hidden in
+   Firefox). Frontend-only — no API/schema/dep changes.
+
+== ENGINE CONTRACT — UNCHANGED ON PURPOSE ==
+memory-engine.ts still reads `[date]\n${body}` plain text. Nothing in these
+features feeds the engine HTML, images, or audio. Body-change still nulls the
+resurface-safety verdict in PATCH. Do not re-wire the adapter.
+
+== SCHEMA / MIGRATION (additive — safe) ==
+  - entry_attachments (new table)
+  - journal_entries.body_rich (new nullable column)
+A single `pnpm --filter @workspace/db exec drizzle-kit push` applies both. No
+existing tables/data are altered.
+
+== NEW DEPENDENCIES (pnpm-lock.yaml already updated) ==
+  - @replit/object-storage  (api-server; kept EXTERNAL in build.mjs so esbuild
+    leaves it as a runtime require — Replit sidecar auto-discovers the bucket)
+  - sanitize-html + @types/sanitize-html  (api-server)
+  Run `pnpm install` after merging.
+
+== NEW SETUP / ENV ==
+  - Create a Replit Object Storage bucket (Tools -> Object Storage). The default
+    bucket is auto-discovered; optional OBJECT_STORAGE_BUCKET_ID to pin one.
+    Must be available to the Deployment too.
+  - ENCRYPTION_KEY: already set — reused to encrypt image bytes + body_rich.
+
+== API CONTRACT CHANGE — IMPORTANT RE: CODEGEN ==
+Added `bodyRich` to Entry / EntryInput / EntryUpdate in lib/api-spec/openapi.yaml.
+I then HAND-APPLIED the same field to the committed generated files rather than
+running a full `orval` codegen:
+    lib/api-zod/src/generated/api.ts (CreateEntryBody, UpdateEntryBody)
+    lib/api-zod/src/generated/types/{entry,entryInput,entryUpdate}.ts
+    lib/api-client-react/src/generated/api.schemas.ts (Entry/EntryInput/EntryUpdate)
+WHY: a clean `pnpm --filter @workspace/api-spec run codegen` in my environment
+drifted the generated file layout (split many per-type files) and produced
+DUPLICATE-EXPORT collisions on unrelated endpoints you added (collections,
+capsules, shelf, look-back) — it broke `tsc --build`. So if you regenerate,
+expect those collisions and either fix the index re-exports or hand-patch the
+bodyRich field as I did. The hand-patched state currently typechecks + builds.
+
+== FILES (new = +, changed = ~) ==
+DB:        ~lib/db/src/crypto.ts (encryptBytes/decryptBytes)
+           ~lib/db/src/index.ts  +lib/db/src/schema/entry-attachments.ts
+           ~lib/db/src/schema/index.ts  ~lib/db/src/schema/journal-entries.ts
+api-server:+src/lib/object-storage.ts  +src/lib/rich-text.ts
+           +src/routes/attachments.ts  ~src/routes/index.ts (attachments before
+            entries)  ~src/routes/entries.ts  ~src/routes/privacy.ts
+           ~build.mjs  ~package.json
+spec/gen:  ~lib/api-spec/openapi.yaml  ~lib/api-zod/** (hand)  ~lib/api-client-react/** (hand)
+frontend:  +src/components/entry-images.tsx  +src/components/rich-editor.tsx
+           +src/lib/speech-recognition.ts  ~src/index.css (.rich-content)
+           ~src/pages/today.tsx  ~src/pages/entry-detail.tsx
+
+== VERIFICATION ALREADY DONE ==
+`pnpm run typecheck` (libs + all artifacts) passes; api-server esbuild bundle and
+the vite frontend build both succeed; the sanitizer/plaintext-derivation was
+runtime-tested (scripts/handlers/disallowed CSS dropped, muted colors kept,
+engine-facing plaintext is clean newline-separated prose).
+
+== NOT DONE / FOLLOW-UPS ==
+  - Markdown/text export still emits plain `body` (no rich/markdown rendering).
+  - Orphaned bucket objects possible if an upload row insert fails mid-flight
+    (delete path is best-effort; objects are useless ciphertext regardless).
+  - Dictation is en/locale-default only (no language picker), no auto-punctuation.
+
+== ASK ==
+Please merge claude/lucid-edison-kCUis into the working branch (and/or main) as a
+MERGE COMMIT, run `pnpm install`, apply the additive `drizzle-kit push`, and make
+sure the Object Storage bucket exists before publishing. Ready-made publish
+prompts are in docs/REPLIT-SYNC-IMAGE-ATTACHMENTS.txt and
+docs/REPLIT-SYNC-RICH-TEXT.txt (the latter is cumulative for images + rich text;
+voice needs only a frontend rebuild).

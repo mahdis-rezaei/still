@@ -1,0 +1,82 @@
+Re-sync + deploy: the writing-surface batch — image attachments, rich text, and
+voice dictation. One consolidated note (supersedes REPLIT-SYNC-IMAGE-ATTACHMENTS
+.txt + REPLIT-SYNC-RICH-TEXT.txt for this deploy).
+
+Sync GitHub branch claude/ecstatic-wright-y4npO at head 7d33b9c (or later), same
+SHA-verified blob-pull as before, leaving .replit and .agents/memory/* untouched.
+
+This deploy is BIGGER than the recent frontend tweaks: it adds new dependencies,
+an additive DB migration, and a new external dependency (Replit Object Storage).
+Do the steps below IN ORDER. The migration is additive and safe (no existing
+tables or data are altered), but it touches the production DB — run it when you
+can watch it.
+
+WHAT LANDS
+  1) Image attachments — attach an image (upload) or "take a photo" on mobile
+     (<input capture>) to a page, from BOTH the Today composer and the entry
+     view. Bytes are app-encrypted (AES-256-GCM, the SAME ENCRYPTION_KEY as
+     journal text) and stored in Replit Object Storage; Postgres holds only
+     metadata + the storage key. Images are NEVER sent to the memory engine and
+     NEVER resurfaced — they appear only when the writer opens the full page.
+     Account-delete purges the image objects; /privacy/export JSON gains an
+     `attachments` array.
+  2) Rich text — bold / italic / H2-H3 / bullet + numbered lists / blockquote /
+     a few muted on-brand text colors, in both editors. ENGINE-SAFE BY DESIGN:
+     `body` stays the canonical PLAIN TEXT the engine, resurfacing excerpts,
+     Library previews, and exports read. A new nullable encrypted `body_rich`
+     column holds server-sanitized HTML (display only). The server is the trust
+     boundary: it sanitizes incoming bodyRich (sanitize-html allowlist) and
+     DERIVES `body` plaintext from the sanitized HTML — client markup is never
+     trusted into `body`.
+  3) Voice dictation — a mic in the editor toolbar (both editors). Web Speech
+     API: live interim caption, finalized transcript inserted at the caret, with
+     in-UI disclosure that the browser's speech service handles audio (we don't
+     record it). Feature-detected (hidden in Firefox). Frontend-only.
+
+ENGINE CONTRACT UNCHANGED: memory-engine still reads `[date]\n${body}` plain
+text. No HTML, image, or audio ever reaches the engine. A body change still nulls
+the resurface-safety verdict in PATCH. PROMPT_VERSION is NOT changed by this
+batch.
+
+PREREQUISITE — OBJECT STORAGE BUCKET (do this first, one-time, in the UI)
+  - Replit -> Tools -> Object Storage -> "Create a bucket" (default settings).
+  - The default bucket is auto-discovered by @replit/object-storage at runtime —
+    no code config needed. (Optional: set secret OBJECT_STORAGE_BUCKET_ID to pin
+    a specific bucket.)
+  - It MUST be available to the Deployment, not just the dev workspace, or image
+    uploads break in production.
+  - ENCRYPTION_KEY is already set and is reused to encrypt image bytes + body_rich.
+
+DEPLOY STEPS (in order)
+  1. SYNC the code to origin (head 7d33b9c or later). Do not edit app code/prompts.
+  2. pnpm install — pulls the new deps: @replit/object-storage, sanitize-html,
+     @types/sanitize-html (pnpm-lock.yaml is already updated; this resolves them).
+  3. Apply the additive migration:
+       pnpm --filter @workspace/db run push
+     This creates the `entry_attachments` table and the `journal_entries
+     .body_rich` column. It does NOT alter or drop anything existing. Confirm the
+     drizzle output shows only additive changes before accepting.
+  4. DO NOT run codegen (orval / `@workspace/api-spec run codegen`). The generated
+     API files (lib/api-zod/**, lib/api-client-react/**) are HAND-PATCHED for the
+     new `bodyRich` field. A full regen drifts the file layout and collides on the
+     collections/capsules/shelf/look-back endpoints, breaking `tsc --build`. The
+     committed hand-patched state typechecks and builds — leave it as-is.
+  5. pnpm run typecheck — must pass (it builds the libs first, then the artifacts).
+  6. RE-PUBLISH the deployment.
+
+VERIFY (after publishing)
+  - Images: in the Today composer AND an opened entry, attach an image / take a
+    photo -> it appears on the page; reopen the page -> still there (it decrypts
+    from Object Storage). It must NOT appear in any memory / Look-back surface.
+  - Rich text: apply bold / italic / heading / list / quote / a muted color ->
+    renders on the page; the Today memory + Library preview still show PLAIN text
+    (no tags). An entry with no formatting renders exactly as before.
+  - Voice: the mic button transcribes speech into the editor at the caret in
+    Chrome/Safari; it is hidden in Firefox.
+  - Privacy: /privacy/export JSON includes an `attachments` array; deleting the
+    account purges the image objects from the bucket.
+
+ROLLBACK NOTE
+  The migration is additive, so the previous build runs fine against the migrated
+  DB (the extra table/column are simply unused). If you need to revert the app,
+  re-publish the prior head; no down-migration is required.

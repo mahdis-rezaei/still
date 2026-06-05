@@ -13,6 +13,8 @@ export interface EntryUpdate {
   /** @minLength 1 */
   body?: string;
   /** @nullable */
+  bodyRich?: string | null;
+  /** @nullable */
   entryDate?: string | null;
   favorite?: boolean;
   resurfacingPreference?: EntryUpdateResurfacingPreference;

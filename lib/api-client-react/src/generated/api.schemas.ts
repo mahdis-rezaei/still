@@ -82,6 +82,8 @@ export interface Entry {
   title?: string | null;
   body: string;
   /** @nullable */
+  bodyRich?: string | null;
+  /** @nullable */
   entryDate?: string | null;
   source: EntrySource;
   favorite: boolean;
@@ -94,6 +96,7 @@ export interface EntryInput {
   title?: string;
   /** @minLength 1 */
   body: string;
+  bodyRich?: string;
   entryDate?: string;
 }
 
@@ -115,6 +118,8 @@ export interface EntryUpdate {
   title?: string | null;
   /** @minLength 1 */
   body?: string;
+  /** @nullable */
+  bodyRich?: string | null;
   /** @nullable */
   entryDate?: string | null;
   favorite?: boolean;

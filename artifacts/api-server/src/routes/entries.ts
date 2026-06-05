@@ -4,6 +4,7 @@ import { db, journalEntriesTable } from "@workspace/db";
 import { CreateEntryBody, UpdateEntryBody } from "@workspace/api-zod";
 import { requireAuth } from "../lib/auth";
 import { SAMPLE_ENTRIES } from "../lib/sample-entries";
+import { sanitizeRich, richToPlainText } from "../lib/rich-text";
 
 const router = Router();
 
@@ -98,13 +99,27 @@ router.post("/entries", async (req, res): Promise<void> => {
     return;
   }
 
+  // When the writer formatted the page, the sanitized HTML is authoritative and
+  // the plain `body` the engine reads is derived from it (never trusted raw).
+  let body = parsed.data.body;
+  let bodyRich: string | null = null;
+  if (parsed.data.bodyRich && parsed.data.bodyRich.trim()) {
+    bodyRich = sanitizeRich(parsed.data.bodyRich);
+    body = richToPlainText(bodyRich);
+  }
+  if (!body.trim()) {
+    res.status(400).json({ error: "A body is required" });
+    return;
+  }
+
   try {
     const [row] = await db
       .insert(journalEntriesTable)
       .values({
         userId: req.userId!,
         title: parsed.data.title ?? null,
-        body: parsed.data.body,
+        body,
+        bodyRich,
         entryDate: parsed.data.entryDate ?? null,
         source: "manual",
       })
@@ -248,8 +263,26 @@ router.patch("/entries/:id", async (req, res): Promise<void> => {
 
   const updates: Record<string, unknown> = { updatedAt: new Date() };
   if (parsed.data.title !== undefined) updates.title = parsed.data.title;
-  if (parsed.data.body !== undefined) {
-    updates.body = parsed.data.body;
+
+  // Resolve the rich layer first: a non-empty bodyRich is sanitized and becomes
+  // the source of truth for `body`; an explicit null/empty clears formatting and
+  // falls back to the plain `body` the client sent.
+  let newBody = parsed.data.body;
+  if (parsed.data.bodyRich !== undefined) {
+    if (parsed.data.bodyRich && parsed.data.bodyRich.trim()) {
+      const clean = sanitizeRich(parsed.data.bodyRich);
+      updates.bodyRich = clean;
+      newBody = richToPlainText(clean);
+    } else {
+      updates.bodyRich = null;
+    }
+  }
+  if (newBody !== undefined) {
+    if (!newBody.trim()) {
+      res.status(400).json({ error: "A body is required" });
+      return;
+    }
+    updates.body = newBody;
     // The stored safety verdict was computed for the old text; invalidate it so
     // the entry isn't date-resurfaced under a stale verdict. The classifier cron
     // re-tags it once the new text settles.

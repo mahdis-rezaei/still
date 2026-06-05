@@ -1,0 +1,66 @@
+Sync prod to head c8d542c (branch claude/lucid-edison-kCUis) and re-publish.
+Ships IMAGE ATTACHMENTS on journal pages. ⚠️ NEW MIGRATION (entry_attachments
+table) + ⚠️ NEW SETUP (an Object Storage bucket) + a new dependency
+(@replit/object-storage). No API-contract change, so NO codegen needed.
+
+BRANCH NOTE (important for parallel work): this branch =
+origin/claude/ecstatic-wright-y4npO @ 5e33a99 (all of that thread's work,
+including the three new "Look back" lens-tab commits 96b3738 / 21268d6 /
+5e33a99) PLUS the image-attachments commit on top. So syncing prod to THIS
+branch ships a strict superset. ⚠️ If you later run an ecstatic-wright reset
+prompt, it will DROP the image commit unless that branch first pulls/merges
+c8d542c.
+
+WHAT GOES LIVE (since the last publish):
+1. Image attachments (c8d542c): attach images to a page — upload, or "take a
+   picture" on mobile — from BOTH the Today composer and the full entry view.
+   - Bytes are app-encrypted (AES-256-GCM, same ENCRYPTION_KEY as the journal
+     text) and stored in Object Storage; Postgres holds only metadata + the
+     storage key. A stolen bucket is useless without ENCRYPTION_KEY.
+   - Images are display-only: NEVER sent to the memory engine, NEVER resurfaced.
+     The engine still reads plain-text `body` exactly as before.
+   - New endpoints: POST /api/entries/:id/attachments (raw image, owner-scoped),
+     GET /api/entries/:id/attachments (metadata list), GET /api/attachments/:id
+     (streams the decrypted image, owner-only), DELETE /api/attachments/:id.
+   - Account delete now also purges image objects; privacy export JSON gains an
+     `attachments` array (metadata).
+2. (Carried from the other thread, pushed since 0a4c289) Look back lens tabs:
+   "What keeps returning" / "Revisit a time" / tabbed memory home
+   (5e33a99 / 21268d6 / 96b3738).
+
+STEPS:
+1. git fetch origin
+2. git reset --hard origin/claude/lucid-edison-kCUis   (confirm head = c8d542c)
+3. pnpm install                                          (adds @replit/object-storage)
+4. ⚠️ CREATE AN OBJECT STORAGE BUCKET (one-time): Replit Tools → Object Storage
+   → create a bucket. The @replit/object-storage Client auto-discovers the
+   workspace's DEFAULT bucket, so no secret is needed once a default bucket
+   exists. (Optional: set OBJECT_STORAGE_BUCKET_ID to target a specific bucket.)
+   This bucket must also be available to the Deployment.
+5. ⚠️ MIGRATE (additive — creates the entry_attachments table; does NOT touch
+   existing tables/data):
+   pnpm --filter @workspace/db exec drizzle-kit push
+6. Confirm ENCRYPTION_KEY is already set (it is — reused to encrypt image bytes).
+7. Rebuild + restart both services (api-server + still). Then publish / redeploy.
+
+VERIFY (prod after publish):
+A. Today: write a sentence → a "＋ Add image" control appears under the text →
+   add an image → a thumbnail shows. Reopen the page from Library — it persists.
+B. Mobile: the image control offers BOTH camera ("take a picture") and library.
+C. Full entry view: images render under the body; Edit mode can add AND remove.
+D. Privacy: GET /api/attachments/<id> returns the image ONLY when signed in as
+   the owner (404 otherwise). Image src is /api/attachments/<id> (same-origin
+   cookie auth).
+E. Delete an image → it disappears from the page and from the bucket.
+F. Account delete still succeeds; GET /api/privacy/export JSON now has an
+   `attachments` array.
+G. Unaffected: "Bring a page back" (engine), On This Day, Look back, Library —
+   the engine never sees images.
+
+ROLLBACK: re-publish the prior build. entry_attachments is additive and inert if
+unused; no existing entry data is changed. (Uploaded image objects, if any, stay
+in the bucket — harmless encrypted blobs.)
+
+Report: image upload + camera working on Today and the entry view, the image
+served only to the owner, delete removing it, the migration applied, and the
+existing engine/Look-back flows unaffected.

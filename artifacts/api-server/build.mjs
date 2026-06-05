@@ -29,6 +29,8 @@ async function buildAll() {
     // - use path traversal to read files (e.g. @google-cloud/secret-manager loads sibling .proto files)
     external: [
       "*.node",
+      // Resolved from node_modules at runtime (uses a Replit sidecar); not bundled.
+      "@replit/object-storage",
       "sharp",
       "better-sqlite3",
       "sqlite3",
