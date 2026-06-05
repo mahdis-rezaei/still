@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AppNav } from "@/components/app-nav";
 import { PageHeader } from "@/components/page";
 import { DateMemoryCard } from "@/components/date-memory-card";
+import { WhatKeepsReturning } from "@/components/what-keeps-returning";
 import { RevisitATime } from "@/components/revisit-a-time";
 import { ThenAndNow } from "@/components/then-and-now";
 import { useLookBack } from "@/lib/use-look-back";
@@ -13,6 +14,7 @@ import { useLookBack } from "@/lib/use-look-back";
 // and What keeps returning land as their own tabs in the next slices; What keeps
 // returning will become the default greeting.)
 const TABS = [
+  { key: "returning", label: "What keeps returning" },
   { key: "revisit", label: "Revisit a time" },
   { key: "distance", label: "How far you've come" },
   { key: "forgotten", label: "A page you'd forgotten" },
@@ -26,7 +28,7 @@ export default function LookBack() {
   const refresh = () =>
     queryClient.invalidateQueries({ queryKey: ["look-back"] });
   const forgotten = data?.forgotten ?? [];
-  const [tab, setTab] = useState<TabKey>("revisit");
+  const [tab, setTab] = useState<TabKey>("returning");
   const lastYear = new Date().getFullYear() - 1;
 
   return (
@@ -64,6 +66,8 @@ export default function LookBack() {
             </button>
           ))}
         </div>
+
+        {tab === "returning" && <WhatKeepsReturning />}
 
         {tab === "revisit" && <RevisitATime />}
 
