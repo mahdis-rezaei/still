@@ -77,6 +77,8 @@ export default function Today() {
   // image attacher know which page to attach to once the page is first saved.
   const [entryId, setEntryId] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>("idle");
+  // Brief "Kept ✓" confirmation after the deliberate Keep gesture.
+  const [justKept, setJustKept] = useState(false);
   const [prompt] = useState(
     () => PROMPTS[Math.floor(Math.random() * PROMPTS.length)],
   );
@@ -238,6 +240,23 @@ export default function Today() {
     setStatus("idle");
   }
 
+  // The deliberate "I'm finished" gesture. Auto-save already keeps your words
+  // safe as you type; this just flushes anything pending, then opens a fresh
+  // page — the satisfying close, without a manual-only save's risk of loss.
+  async function keepPage() {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    const hadText = !!latestRef.current.trim();
+    if (hadText) {
+      while (savingRef.current) await new Promise((r) => setTimeout(r, 50));
+      await flush();
+    }
+    newPage();
+    if (hadText) {
+      setJustKept(true);
+      setTimeout(() => setJustKept(false), 2500);
+    }
+  }
+
   return (
     <div className="min-h-[100dvh] flex flex-col">
       <AppNav />
@@ -316,6 +335,9 @@ export default function Today() {
 
         {/* Today's page — a real writing surface, anchored like a sheet. */}
         <div className="rounded-2xl border border-border bg-surface/80 shadow-sm p-6 md:p-8 min-h-[56vh] flex flex-col">
+          <p className="font-sans text-xs uppercase tracking-[0.18em] text-faint-ink mb-4">
+            Today's page
+          </p>
           <RichEditor
             ref={editorRef}
             placeholder={prompt}
@@ -331,19 +353,21 @@ export default function Today() {
               className="font-sans text-xs text-faint-ink"
               data-testid="text-savestate"
             >
-              {status === "saving"
-                ? "saving…"
-                : status === "kept"
-                  ? "kept"
-                  : ""}
+              {justKept
+                ? "Kept ✓"
+                : status === "saving"
+                  ? "saving…"
+                  : status === "kept"
+                    ? "saved"
+                    : ""}
             </span>
             {(hasText || entryIdRef.current) && (
               <button
-                onClick={newPage}
-                className="font-sans text-xs text-soft-ink hover:text-ink transition-colors"
-                data-testid="button-newpage"
+                onClick={keepPage}
+                className="font-sans text-sm text-soft-ink hover:text-ink border border-border hover:border-accent-sepia rounded-full px-4 py-1.5 transition-colors"
+                data-testid="button-keep-page"
               >
-                Begin a new page
+                Keep this page →
               </button>
             )}
           </div>
