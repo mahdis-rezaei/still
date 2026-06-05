@@ -1,0 +1,94 @@
+Replit Fix Prompt — Still: three selection/gating bugs (verify LIVE, do not blind-ship)
+=======================================================================================
+
+These are engine-judgment bugs in artifacts/api-server/src/routes/still.ts
+(extraction + Pass-2 scoring/gating). They CANNOT be verified offline — every
+change must be re-run against the live engine on the full fixture set
+(STILL_MODE=http STILL_FRESH=1 pnpm --filter @workspace/scripts run eval) and
+must NOT regress any currently-green case (esp. the redundancy guard 11/11, the
+silence cases, the hard floor, and the catchup/breathe recordings). Make ONE
+change at a time and re-run. If a nudge regresses anything, revert it.
+
+NOTE ON becki: the 4th red case ("becki extraction bug") was a FIXTURE bug, not
+an engine bug — the stored becki entry never contained its target line. Already
+fixed upstream in scripts/src/eval/fixtures.ts (targets now match the text the
+engine actually receives). Nothing to do engine-side for becki.
+
+────────────────────────────────────────────────────────────────────────────
+BUG 1 — age-2023-10: the resolution wins over the discovery
+────────────────────────────────────────────────────────────────────────────
+Entry: the Malibu "age gap" page (Oct 23 2023).
+SHOULD win (discovery — the escaped truth): "My unconscious brain thinks I am
+  26 … we are 36 … 10 years gap! Between who I am and who I think I am."
+MUST NOT win (resolution/affirmation): "I always get what I want", "I'm
+  promising … product manager for a different team at Meta".
+
+Likely root cause: STEP 3 RESOLUTION PENALTY only fires when "ANY surviving
+candidate has discovery >= 4 OR contradiction >= 4". The age-gap line is a real
+escaped self-recognition but is probably being scored discovery < 4 (it reads
+like a quirky aside, not a confession), so the penalty never fires and the
+confident "I always get what I want" wins on emotional_center.
+
+Proposed nudge (discovery axis / resolution-penalty examples): add that a
+self-CAUGHT cognitive mismatch — noticing your own mind holding a false belief
+about yourself ("my unconscious still thinks I'm 26 when I'm 36 — a 10-year gap
+between who I am and who I think I am") — is a HIGH-discovery escaped truth (>=4),
+and that confident "I always get what I want" / "I promise myself" lines are
+resolution-type (the writer reassuring herself), to be demoted under any such
+discovery. Verify the age-gap line now wins and the Meta promise does not.
+
+────────────────────────────────────────────────────────────────────────────
+BUG 2 — catchup-2016-09: a rhetorical wound wins over the real center
+────────────────────────────────────────────────────────────────────────────
+Entry: the train-to-work catch-up page (Sep 6 2016). This is GREEN in the
+recording (it picks "I am living it! Or maybe trying to live it!"), but the live
+run drifts to an anti-target.
+SHOULD win: "I am living it! Or maybe trying to live it!" or "People think I am
+  the happiest girl … But I am tired".
+MUST NOT win: "trying to catch up with life", "why did I need to go such a long
+  way and still be just in the beginning of the road?", "beginning of the road".
+
+Likely root cause: "why did I need to go such a long way…" is a raw rhetorical
+question — the SAME class as "why am I not happy?!" which the wound guidance
+already lists as a raw active cry that must stay gated (gate_perspective_not_wound
+/ the "CRY OF PAIN IS NOT A TURNING LINE" list). It is either (a) not being
+gated, or (b) scoring high on emotional_center on surface striking-ness despite
+the "visually striking fragment must not win on surface alone" rule.
+
+Proposed nudge: add "why did I need to go such a long way and still be just in
+the beginning of the road?" (and the bare "beginning of the road") to the
+explicit examples of raw rhetorical self-pity that FAIL gate_perspective_not_wound
+— same treatment as "why am I not happy?!". It voices the ache and reaches for
+nothing; it is not the page's escaped truth. Verify it drops out and "I am living
+it! Or maybe trying to live it!" / "But I am tired" wins.
+
+────────────────────────────────────────────────────────────────────────────
+BUG 3 — wound-raw: over-surfacing (should be silent)
+────────────────────────────────────────────────────────────────────────────
+Entry (Apr 2 2024): "I'm so frustrated tonight. Everything piled up at once —
+work, the move, money … I just don't have it in me to deal with any of it right
+now. I'm venting because I had to put it somewhere. Ugh." → expect mode="nothing".
+
+Likely root cause: this is raw distress with NO escaped truth and NO perspective
+— the perspective gate should return nothing. The engine is probably reading the
+meta line "I'm venting because I had to put it somewhere" as a small self-aware
+noticing and surfacing it. It is not: it is part of the vent itself, naming the
+act of venting, with no truth slipping out.
+
+Proposed nudge (gate_perspective_not_wound + BARE LIFE-ADMIN/SILENCE block):
+add that naming the act of venting / "I just had to put it somewhere" / "I'm
+just venting" is NOT an escaped truth or self-recognition — it is the wound
+talking about itself. A page that is only piled-up frustration plus an
+acknowledgment that it's a vent has no surfaceable center → mode="nothing". Do
+NOT manufacture a gentle insight from it. Verify wound-raw returns nothing while
+the survived-guard case (real survived difficulty) still surfaces.
+
+────────────────────────────────────────────────────────────────────────────
+REGRESSION GUARD
+────────────────────────────────────────────────────────────────────────────
+After each nudge: STILL_MODE=http STILL_FRESH=1 pnpm --filter @workspace/scripts
+run eval. Required to stay green: the silence cases (todo / thin / list-2018 /
+thread-noise), active-crisis, breathe hard floor, the redundancy restate-check,
+and every case that was already passing. age / catchup / wound-raw should flip to
+green WITHOUT moving any of those. If a fix can't be made without collateral
+regressions, stop and report rather than loosening the silence bar.

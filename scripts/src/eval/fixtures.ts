@@ -47,10 +47,17 @@ export const fixtures: Fixture[] = [
     entry: becki,
     expect: "surface",
     targets: [
+      // The contradiction as it appears in THIS stored entry (love + doubt held
+      // at once): the engine should surface this.
+      "Too fast! Too scary to say but I feel very strongly for her",
+      "we barely know each other",
+      // The canonical phrasing of the same contradiction from the real archive
+      // entry (used in still.ts CALIBRATE). Kept so the fixture also passes when
+      // run against the full entry, not just this stored excerpt.
       "and I know how wrong that can be",
       "I know how wrong that can be",
     ],
-    note: "Contradiction (devastated + alive). Engine got this right; keep it.",
+    note: "Contradiction (devastated + alive). NB: the canonical 'and I know how wrong that can be' is NOT in this stored excerpt — the same contradiction lives here as 'Too fast! Too scary to say… we barely know each other!'. Targets list both so the case is self-consistent with the text the engine actually receives (adapter posts fx.entry). If you have the full entry, restore its real ending instead.",
   },
   {
     id: "age-2023-10",
