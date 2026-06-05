@@ -1,3 +1,11 @@
+*** CAUTION (2026-06-05): the live engine fix for observation re-quoting was
+authored directly in the Replit workspace (still.ts, PROMPT_VERSION
+2026-06-05.2) and is NOT yet on this GitHub branch. Until it is committed
+upstream, do NOT do a full re-sync from GitHub — it would overwrite still.ts and
+silently revert the verified engine fix. Either (a) commit still.ts upstream
+first, or (b) re-sync ONLY the frontend/eval files listed below, leaving
+artifacts/api-server/** untouched. ***
+
 Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
 (head eb5080d), same method as before. CODE-ONLY (frontend) — NO migration, NO
 new endpoints, NO new secrets, NO PROMPT_VERSION bump.
