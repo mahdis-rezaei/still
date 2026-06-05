@@ -53,6 +53,17 @@ export function AForgottenPage({
     }
   }
 
+  // Pick a forgotten page at random so the first pull isn't always the same
+  // (most-forgotten) page; when re-rolling, avoid repeating the current one.
+  function pickIndex(exclude: number): number {
+    const len = forgotten.length;
+    if (len <= 1) return 0;
+    if (exclude < 0) return Math.floor(Math.random() * len);
+    let n = Math.floor(Math.random() * (len - 1));
+    if (n >= exclude) n += 1;
+    return n;
+  }
+
   if (forgotten.length === 0) {
     return (
       <p className="font-body text-soft-ink leading-relaxed">
@@ -66,7 +77,7 @@ export function AForgottenPage({
     <div>
       {i < 0 && (
         <button
-          onClick={() => show(0)}
+          onClick={() => show(pickIndex(i))}
           className="font-sans text-sm text-soft-ink hover:text-ink border border-border hover:border-accent-sepia rounded-full px-4 py-2 transition-colors"
           data-testid="forgotten-go"
         >
@@ -99,7 +110,7 @@ export function AForgottenPage({
 
       {i >= 0 && !pending && forgotten.length > 1 && (
         <button
-          onClick={() => show((i + 1) % forgotten.length)}
+          onClick={() => show(pickIndex(i))}
           className="mt-3 font-sans text-xs text-faint-ink hover:text-soft-ink transition-colors"
           data-testid="forgotten-again"
         >
