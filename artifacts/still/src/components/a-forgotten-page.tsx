@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { type MemoryRunResult } from "@workspace/api-client-react";
 import { runMemoryRequest } from "@/lib/run-job";
 import { MemoryCard } from "@/components/memory-card";
@@ -21,6 +21,18 @@ export function AForgottenPage({
   const [pending, setPending] = useState(false);
   const [voice, setVoice] = useState<MemoryRunResult | null>(null);
   const current = i >= 0 ? forgotten[i] : undefined;
+
+  // Voicing one page is a model read too — show calm, time-aware reassurance so
+  // a few seconds' wait never reads as "stuck" (matches Today / what-keeps-returning).
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    if (!pending) {
+      setElapsed(0);
+      return;
+    }
+    const t = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [pending]);
 
   async function show(next: number) {
     const entry = forgotten[next];
@@ -65,7 +77,9 @@ export function AForgottenPage({
       {pending && (
         <div className="border border-border/70 rounded-2xl bg-surface/50 p-6">
           <p className="font-body text-soft-ink leading-relaxed">
-            Reading a page you'd set down…
+            {elapsed < 12
+              ? "Reading a page you'd set down…"
+              : "Still reading — finding the words for it…"}
           </p>
         </div>
       )}
