@@ -57,11 +57,35 @@ export function WhatKeepsReturning() {
         </div>
       )}
 
-      {!pending && result && !result.surfaced && (
-        <p className="font-body text-soft-ink leading-relaxed">
-          Nothing clear keeps returning just yet — as your pages gather years,
-          the threads will show.
-        </p>
+      {!pending && result && !result.surfaced && result.reason === "error" && (
+        <div>
+          <p className="font-body text-soft-ink leading-relaxed">
+            Couldn't read across your years just now.
+          </p>
+          <button
+            onClick={go}
+            className="mt-2 font-sans text-xs text-faint-ink hover:text-soft-ink transition-colors"
+            data-testid="wkr-retry"
+          >
+            try again →
+          </button>
+        </div>
+      )}
+
+      {!pending && result && !result.surfaced && result.reason !== "error" && (
+        <div>
+          <p className="font-body text-soft-ink leading-relaxed">
+            Nothing clear keeps returning just yet — as your pages gather years,
+            the threads will show.
+          </p>
+          <button
+            onClick={go}
+            className="mt-2 font-sans text-xs text-faint-ink hover:text-soft-ink transition-colors"
+            data-testid="wkr-again-silent"
+          >
+            look again →
+          </button>
+        </div>
       )}
     </div>
   );
