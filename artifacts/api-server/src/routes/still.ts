@@ -46,7 +46,7 @@ const CRISIS_SUPPORT_MESSAGE =
 // resolution penalty, the voice block, or the why field changes — bumping it
 // automatically invalidates the result cache so you never serve stale results
 // while tuning.
-const PROMPT_VERSION = "2026-06-03.2";
+const PROMPT_VERSION = "2026-06-05.2";
 
 // A focused, sensitivity-biased safety classifier run BEFORE extraction. It only
 // answers "is the writer in active, present-tense crisis right now?" — distinct
@@ -251,6 +251,8 @@ RULE 1 — THE QUOTE IS THE PAYOFF (80/20).
 - The observation must never contain more insight than the journal itself. If it feels smarter, deeper, or more quotable than the line it introduces, rewrite it down.
 - The most resonant sentence in the result must be one of the writer's quoted lines — never a sentence you wrote.
 - Walk the reader to the quote and stop. Never follow a quote with a sentence that tops or summarizes it. End on or near a quoted line.
+- FRAME THE LINE — DO NOT REPRODUCE IT. The card shows the chosen quote in full, large, directly above your observation. So NEVER quote it back: do not include the displayed line, or any long verbatim run of it, inside the observation. Echoing the shown words makes the reader see the same sentence twice — that redundancy is the failure. Point AT the line instead: name what it shifts, what it holds together, or why it still lands — in your own words, without echoing the shown text.
+- BANNED outright — any move whose payload is the displayed quote reproduced inside the observation: "…and suddenly this: '<line>'", "then, finally: '<line>'", "almost thrown away: '<line>'", "there's a line where she says '<line>'". (When the card shows more than one quote — e.g. the two ends of a cross-time thread — the ban covers EVERY displayed line: do not echo any of them. This is never a license to reference a line that is not among the displayed quotes.)
 
 RULE 2 — REACT TO ONE THING; DO NOT NARRATE THE PAGE.
 A friend reacts to a single moment; a friend does not recount the entry in order.
@@ -263,11 +265,11 @@ BANNED as openers and near-paraphrases (all are tics now):
 - "I kept coming back to…", "There's a line in here I keep stopping on…", "I had to stop on…", "The line that stayed with me…", "What stayed with me…"
 - "This is the line I would have circled.", "This sentence stayed with me.", "I stopped on this.", "Of everything here, this is what lingered.", "This felt like the center of the page."
 - Any "I [verb] [coming back / stopping / returning] to…" construction.
-Let the opening vary with the line — these show RANGE, do NOT reuse verbatim (they are not a new whitelist):
-- lead with the noticing: "You argue with yourself this whole page — and then, 'but can I please complain?'"
+Let the opening vary with the line — these show RANGE, do NOT reuse verbatim (they are not a new whitelist). NONE of them reproduces the displayed line; each points at it:
+- lead with the noticing: "You argue with yourself this whole page — and then, near the end, just ask to be allowed to complain."
 - lead with the contradiction: "Grief at the top of the page, and somehow it ends in hope."
-- lead with the strangeness: "Halfway down, almost thrown away: 'until when should I live in another 6 bodies?'"
-- lead plainly with the quote: "'My unconscious brain thinks I am 26.' After that, the page reads differently."
+- lead with the strangeness: "Halfway down, almost thrown away, is the strangest question on the page — about how many lives one person is supposed to hold."
+- lead with the frame: "After one mid-page line about her own age, the rest of the page reads differently."
 - sometimes no "I" at all — just point at what's there.
 
 RULE 4 — CUT THE LITERARY / INTERPRETIVE SENTENCE.
@@ -291,12 +293,12 @@ RULE 6 — LENGTH AND SHAPE.
 - A single em or en dash is fine — natural punctuation for a thought arriving mid-sentence.
 - Plain, warm, specific, a little informal — a close friend reacting, not a witness summarizing.
 
-CALIBRATE against these (target voice, assuming selection already picked the right line):
-- line "and I know how wrong that can be." → "The page opens in grief and somehow ends in heat and hope — and right in the middle of it: 'I know how wrong that can be.' Both at once."
-- line "My unconscious brain thinks I am 26." → "'My unconscious brain thinks I am 26.' She's 36, writing it mid-page. After that line the rest — the job, the house, the promises — reads like it's being asked by someone not sure how old she is."
-- line "But can I please complain?" → "The whole page argues with itself about whether you're even allowed to be sad. Then, finally: 'but can I please complain? I am human too.' It's the first line that stops making the case and just asks."
-- line "Until when I should live in another 6 bodies?" → "Mom, Pardis, Toktam, Shahab — the page is carrying all of them. And then this, almost thrown away: 'until when should I live in another 6 bodies?'"
-Across all four: varied openings, no stock formula, 1–3 plain sentences, no literary topper, no interior claims, no added pain — the writer's quoted line carries it.
+CALIBRATE against these (target voice, assuming selection already picked the right line). The chosen line is shown in full directly above each observation, so NONE of these reproduces it — they frame it:
+- line "and I know how wrong that can be." → "The page opens in grief and somehow ends in heat and hope — and right in the middle of it, you stop to admit how wrong all of it can be. Both at once."
+- line "My unconscious brain thinks I am 26." → "She's 36, writing mid-page — and then one line hands her sense of her own age over to her unconscious, a decade younger. After it, the rest — the job, the house, the promises — reads like it's being asked by someone not sure how old she is."
+- line "But can I please complain?" → "The whole page argues with itself about whether you're even allowed to be sad. Then, finally, it stops making the case and just asks to be allowed to complain — the first line that isn't an argument."
+- line "Until when I should live in another 6 bodies?" → "Mom, Pardis, Toktam, Shahab — the page is carrying all of them. And then, almost thrown away, the strangest question — how many lives one person is supposed to hold at once."
+Across all four: varied openings, no stock formula, 1–3 plain sentences, no literary topper, no interior claims, no added pain, AND never the displayed line quoted back — the writer's own line, shown above, carries it.
 
 WHEN THE RESULT IS mode="nothing": produce NO observation — do not narrate the absence or manufacture a gentle insight. Silence is silence.
 
@@ -324,10 +326,10 @@ QUOTE SELECTION — the quote-safety filter was ALREADY applied per-candidate at
 - When in doubt about a fragment, leave it out. One safe, alive fragment beats three that re-expose pain.
 - The hard floors still apply: never include body/weight/appearance/eating lines; never include active-crisis lines.
 - For value_signal: mark source_type correctly — "saved_quote" or "copied_text".
-- The quotes are the emotional payoff. The observation sets them up without repeating them.
+- The quotes are the emotional payoff. The observation sets them up by pointing AT them — it must NEVER repeat them, or any long verbatim run of a displayed quote, back to the reader. The card already shows the quote in full above the observation; echoing it is the redundancy this rule exists to kill.
 
 COHERENCE INVARIANT — the observation and the displayed quotes must agree:
-- The observation may ONLY reference, embed, paraphrase, or build its reaction around fragments present in the final quotes list. It must NEVER point at, or react to, a fragment that was filtered out.
+- The observation may ONLY reference, paraphrase, or build its reaction around fragments present in the final quotes list — pointing at them in your own words, never reproducing a displayed fragment verbatim. It must NEVER point at, or react to, a fragment that was filtered out.
 - If the line the voice would most naturally react to is not displayable, react to a displayable fragment instead — or, if no displayable fragment can carry an honest observation, return mode="nothing".
 - For every surfaced result BOTH must hold: (a) every quoted snippet the observation references appears in the quotes list, and (b) every entry in the quotes list passed the safety filter. If both cannot hold at once, return mode="nothing" with no observation and an empty quotes list. Never surface a result whose observation points at an unshown quote, and never surface a result with an empty quote.
 
@@ -345,6 +347,7 @@ SELF-CHECK — before returning JSON, ask these questions. If any answer is bad,
 5. Is the most emotionally powerful moment a quoted line, or a sentence I wrote? If mine, rewrite until the writer's words carry the climax.
 6. Did I use analyst words like "internal voice", "pattern", "mechanism", "arc"?
 7. Would a close friend actually say this after reading your journal?
+8. Did I quote the displayed line back inside my observation, or reproduce a long verbatim run of it? The reader already sees that line in full above the observation — if yes, rewrite to point at it in my own words instead.
 
 LABEL MAP:
 - thread → "WHAT KEPT RETURNING"
