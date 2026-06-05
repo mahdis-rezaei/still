@@ -5,6 +5,11 @@ import {
   useRef,
   useState,
 } from "react";
+import {
+  createRecognition,
+  speechSupported,
+  type SpeechRecognitionLike,
+} from "@/lib/speech-recognition";
 
 // A deliberately minimal contentEditable composer for the literary formatting
 // set — emphasis, two heading levels, lists, blockquote, and a few muted text
@@ -86,6 +91,16 @@ export const RichEditor = forwardRef<RichEditorHandle, Props>(
     const elRef = useRef<HTMLDivElement>(null);
     const [empty, setEmpty] = useState(!initialHTML);
 
+    // --- Dictation (Web Speech API) -------------------------------------
+    const [supported] = useState(() => speechSupported());
+    const [listening, setListening] = useState(false);
+    const [interim, setInterim] = useState("");
+    const [dictError, setDictError] = useState<string | null>(null);
+    const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+    // Web Speech stops on its own after a pause; this flag means "the user still
+    // wants to dictate," so onend restarts it until they explicitly stop.
+    const wantListenRef = useRef(false);
+
     // Seed once on mount. Never write innerHTML from React again — that would
     // reset the caret on every keystroke.
     useEffect(() => {
@@ -101,6 +116,7 @@ export const RichEditor = forwardRef<RichEditorHandle, Props>(
       clear() {
         const el = elRef.current;
         if (!el) return;
+        if (wantListenRef.current) stopDictation();
         el.innerHTML = "";
         setEmpty(true);
         onChange("", "");
@@ -138,6 +154,111 @@ export const RichEditor = forwardRef<RichEditorHandle, Props>(
       }
       exec("formatBlock", current === tag.toLowerCase() ? "P" : tag);
     }
+
+    function placeCaretAtEnd() {
+      const el = elRef.current;
+      if (!el) return;
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+    }
+
+    // Drop a finalized transcript chunk in at the caret. If focus has wandered
+    // out of the editor, append at the end instead.
+    function insertTranscript(text: string) {
+      const el = elRef.current;
+      if (!el || !text) return;
+      el.focus();
+      const sel = window.getSelection();
+      if (!sel || !sel.anchorNode || !el.contains(sel.anchorNode)) {
+        placeCaretAtEnd();
+      }
+      const existing = el.innerText;
+      const needsSpace = existing.length > 0 && !/\s$/.test(existing);
+      document.execCommand("insertText", false, (needsSpace ? " " : "") + text);
+      emit();
+    }
+
+    function stopDictation() {
+      wantListenRef.current = false;
+      try {
+        recognitionRef.current?.stop();
+      } catch {
+        // already stopped
+      }
+      setListening(false);
+      setInterim("");
+    }
+
+    function startDictation() {
+      const rec = createRecognition();
+      if (!rec) return;
+      setDictError(null);
+      rec.lang = navigator.language || "en-US";
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.onresult = (event) => {
+        let finalText = "";
+        let interimText = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const result = event.results[i];
+          const chunk = result[0]?.transcript ?? "";
+          if (result.isFinal) finalText += chunk;
+          else interimText += chunk;
+        }
+        if (finalText) insertTranscript(finalText.trim());
+        setInterim(interimText);
+      };
+      rec.onerror = (event) => {
+        if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+          setDictError("Microphone access is blocked. Allow it to dictate.");
+        } else if (event.error !== "aborted" && event.error !== "no-speech") {
+          setDictError("Dictation stopped unexpectedly.");
+        }
+        wantListenRef.current = false;
+        setListening(false);
+        setInterim("");
+      };
+      rec.onend = () => {
+        // Continuous mode still ends on long pauses; restart while the user
+        // hasn't stopped, otherwise settle.
+        if (wantListenRef.current) {
+          try {
+            rec.start();
+          } catch {
+            // start can race the end event; ignore.
+          }
+        } else {
+          setListening(false);
+          setInterim("");
+        }
+      };
+      recognitionRef.current = rec;
+      wantListenRef.current = true;
+      setListening(true);
+      elRef.current?.focus();
+      placeCaretAtEnd();
+      try {
+        rec.start();
+      } catch {
+        // ignore double-start
+      }
+    }
+
+    // Tear down recognition if the editor unmounts mid-dictation.
+    useEffect(() => {
+      return () => {
+        wantListenRef.current = false;
+        try {
+          recognitionRef.current?.abort();
+        } catch {
+          // ignore
+        }
+      };
+    }, []);
 
     return (
       <div className={className}>
@@ -207,6 +328,38 @@ export const RichEditor = forwardRef<RichEditorHandle, Props>(
             title="Clear formatting"
             onActivate={() => exec("removeFormat")}
           />
+          {supported && (
+            <>
+              <span className="w-px h-4 bg-border mx-1" aria-hidden />
+              <button
+                type="button"
+                title={
+                  listening
+                    ? "Stop dictation"
+                    : "Dictate (speech is handled by your browser)"
+                }
+                aria-label={listening ? "Stop dictation" : "Start dictation"}
+                aria-pressed={listening}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  if (listening) stopDictation();
+                  else startDictation();
+                }}
+                className={
+                  "h-7 min-w-7 px-1.5 rounded-md transition-colors text-sm leading-none flex items-center gap-1 " +
+                  (listening
+                    ? "text-accent-sepia bg-accent-sepia/10"
+                    : "text-soft-ink hover:text-ink hover:bg-border/40")
+                }
+                data-testid="button-dictate"
+              >
+                <span className={listening ? "animate-pulse" : ""}>🎙</span>
+                {listening && (
+                  <span className="font-sans text-xs">Listening…</span>
+                )}
+              </button>
+            </>
+          )}
         </div>
 
         <div
@@ -222,6 +375,23 @@ export const RichEditor = forwardRef<RichEditorHandle, Props>(
           onInput={emit}
           className="rich-content rich-editor flex-1 w-full bg-transparent focus:outline-none"
         />
+
+        {listening && (
+          <div className="mt-2" data-testid="dictation-status">
+            {interim && (
+              <p className="font-body text-soft-ink/80 italic leading-relaxed">
+                {interim}
+              </p>
+            )}
+            <p className="font-sans text-xs text-faint-ink mt-1">
+              Speak and your words appear above. Dictation is handled by your
+              browser's speech service — Yadegar doesn't record the audio.
+            </p>
+          </div>
+        )}
+        {dictError && (
+          <p className="font-sans text-xs text-faint-ink mt-2">{dictError}</p>
+        )}
       </div>
     );
   },
