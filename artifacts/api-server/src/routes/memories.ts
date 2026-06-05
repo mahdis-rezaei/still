@@ -309,6 +309,73 @@ router.post(
   },
 );
 
+// POST /memories/revisit { year, month } — "Revisit a time": the engine reads a
+// chosen month and surfaces the one line worth returning to from it (voice first);
+// the client then lists the period's entries beneath. Scoped by entryIds (so it's
+// exactly that period, bypassing diversity). Async when ASYNC_MEMORY is on.
+router.post(
+  "/memories/revisit",
+  runLimiter,
+  async (req, res): Promise<void> => {
+    const body = (req.body as { year?: unknown; month?: unknown }) ?? {};
+    const year = Number(body.year);
+    const month = Number(body.month);
+    if (
+      !Number.isInteger(year) ||
+      year < 1900 ||
+      year > 3000 ||
+      !Number.isInteger(month) ||
+      month < 1 ||
+      month > 12
+    ) {
+      res.status(400).json({ error: "A valid year and month are required" });
+      return;
+    }
+    try {
+      const rows = await db
+        .select({ id: journalEntriesTable.id })
+        .from(journalEntriesTable)
+        .where(
+          and(
+            eq(journalEntriesTable.userId, req.userId!),
+            isNull(journalEntriesTable.deletedAt),
+            isNotNull(journalEntriesTable.entryDate),
+            sql`extract(year from ${journalEntriesTable.entryDate}) = ${year}`,
+            sql`extract(month from ${journalEntriesTable.entryDate}) = ${month}`,
+          ),
+        );
+      const entryIds = rows.map((r) => r.id);
+      if (entryIds.length === 0) {
+        res.json({ surfaced: false, reason: "not_enough" });
+        return;
+      }
+      if (asyncMemoryEnabled()) {
+        const jobId = await enqueueMemoryJob(
+          req.userId!,
+          "run",
+          { entryIds },
+          `revisit:${req.userId}:${year}:${month}`,
+        );
+        res.status(202).json({ jobId, status: "queued" });
+        return;
+      }
+      const result = await runMemoryForUser(req.userId!, { entryIds });
+      if (!result.surfaced) {
+        res.json({
+          surfaced: false,
+          reason: result.reason,
+          supportMessage: result.supportMessage ?? null,
+        });
+        return;
+      }
+      res.json({ surfaced: true, memory: toMemory(result.memory!) });
+    } catch (err) {
+      req.log.error({ err }, "Revisit error");
+      res.status(500).json({ error: "Failed to revisit that time" });
+    }
+  },
+);
+
 // GET /memories — the Returns archive.
 router.get("/memories", async (req, res): Promise<void> => {
   try {
