@@ -1,0 +1,43 @@
+Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
+(head 86e4e37), same method as before. CODE-ONLY (frontend) — NO migration, NO
+new endpoints, NO new secrets, NO PROMPT_VERSION bump.
+
+What lands:
+  - "Look back" is reworked from a single tabbed page into three lenses, each
+    its own route, shown in the same calm contextual sub-bar that "Explore"
+    uses (no more wrapping inline tabs):
+      • What keeps returning  (/look-back)           — default
+      • Revisit a time        (/look-back/revisit)
+      • Your Year in Pages    (/look-back/keepsake)
+  - The five old surfaces are collapsed into the three above, grouped by who
+    drives it:
+      • What keeps returning — Yadegar surfaces a recurring thread, with "a page
+        you'd forgotten" folded in below as a second, button-gated surface.
+      • Revisit a time — pick a month+year to have it read back + the pages laid
+        out, with "how far you've come" (then↔now) folded in below.
+      • Your Year in Pages — the keepsake.
+  - Each lens now opens with a short intro that explains what it does.
+  - The confusing top "Returns — pages brought back →" link is gone; Returns is
+    now a clearly-framed footer link on the first lens.
+  - "A page you'd forgotten" is button-gated, so it no longer runs the engine
+    just by being on screen.
+
+Reuses existing endpoints only (/api/memories/run, /api/look-back, the
+revisit / then-and-now / year-in-pages routes already live). No engine change.
+
+Steps:
+1. SYNC the code to origin (head 86e4e37). Do not edit app code or prompts.
+2. pnpm install — no-op.
+3. NO drizzle-kit push (no schema change).
+4. RE-PUBLISH the deployment.
+
+Verify:
+  - Top nav "Look back" opens with the sub-bar: What keeps returning · Revisit a
+    time · Your Year in Pages. Each tab navigates to its own URL and reads as
+    its own page (distinct title + intro); the active tab highlights.
+  - What keeps returning: "Show me what keeps returning" surfaces a thread;
+    below it, "Bring back a page you'd forgotten" only runs on click and rotates
+    with "show another"; the footer links to Returns.
+  - Revisit a time: month+year reads the time back and lists the pages; "How far
+    you've come" below takes a year and shows the distance.
+  - Your Year in Pages: pick a year, open it as a letter.
