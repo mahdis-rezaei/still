@@ -46,6 +46,19 @@ do **not** re-wire it from scratch. If the engine response shape changes, edit
 **only** `adapter.ts` (the `runEngine` http branch + `normalizeResponse`) — the
 checks never touch raw engine JSON.
 
+**The re-sync landmine — NEVER overwrite these files Replit→from GitHub:**
+- **`.replit`** — GitHub's copy is stale-minimal. A full re-sync that overwrites
+  it strips production config: the `postgresql-16` / `python-3.11` modules, the
+  port mapping, and the live feature flags (`WHY_TODAY_TIEBREAK`, `SOFT_AFFINITY`,
+  `ASYNC_MEMORY`). The running engine would lose its DB/runtime and flags.
+- **`.agents/memory/*`** — live local agent state in the workspace.
+A "re-sync to head X" means **app/engine/harness code**, NOT these two. Pull
+everything else verbatim; leave `.replit` and `.agents/memory/*` untouched.
+(Confirmed 2026-06-05: Replit correctly skipped both during the lens/redundancy
+re-sync.) The real fix for `.replit` is to commit the *production* version
+upstream so GitHub stops being a landmine — do that before relying on a naive
+full sync.
+
 ---
 
 ## 2. Engine architecture (what's running in Replit)
