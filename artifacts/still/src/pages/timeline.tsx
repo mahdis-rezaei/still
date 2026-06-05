@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { useListEntries, type Entry } from "@workspace/api-client-react";
 import { AppNav } from "@/components/app-nav";
 import { PageHeader } from "@/components/page";
+import { LibraryViews } from "@/components/library-views";
 
 // One-line preview: the title, else the first non-empty line of the page.
 function preview(e: Entry): string {
@@ -71,6 +72,7 @@ export default function Timeline() {
           title="The timeline of you"
           subtitle="Your life as you wrote it — oldest page to newest. Only your own words; nothing inferred."
         />
+        <LibraryViews current="timeline" />
 
         {isLoading ? (
           <p className="font-sans text-sm text-faint-ink">Gathering…</p>

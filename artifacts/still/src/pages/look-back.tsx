@@ -43,6 +43,26 @@ export default function LookBack() {
         {/* How far you've come — Then & now (self-hides with no past year). */}
         <ThenAndNow />
 
+        {/* Your Year in Pages — a beautiful, shareable recap of a whole year. */}
+        <section className="mb-10">
+          <Link
+            href={`/letters/${new Date().getFullYear() - 1}`}
+            className="block rounded-2xl border border-border bg-surface/60 px-6 py-5 hover:border-accent-sepia transition-colors"
+            data-testid="card-year-in-pages"
+          >
+            <span className="font-sans text-xs tracking-wide uppercase text-faint-ink">
+              Your Year in Pages
+            </span>
+            <p className="font-display text-2xl text-deep-brown mt-1">
+              {new Date().getFullYear() - 1} →
+            </p>
+            <p className="font-sans text-sm text-soft-ink mt-1">
+              A year of your writing, gathered — ready to read, print, or keep as a
+              book.
+            </p>
+          </Link>
+        </section>
+
         {/* A page you'd forgotten — one old, unseen page. */}
         {forgotten.length > 0 && (
           <section className="mb-10">

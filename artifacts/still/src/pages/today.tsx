@@ -11,6 +11,7 @@ import {
 import { AppNav } from "@/components/app-nav";
 import { MemoryCard } from "@/components/memory-card";
 import { OnThisDay } from "@/components/on-this-day";
+import { YearInPagesBanner } from "@/components/year-in-pages-banner";
 
 const PROMPTS = [
   "What wants to be written today?",
@@ -198,6 +199,9 @@ export default function Today() {
       <AppNav />
 
       <main className="flex-1 w-full max-w-[680px] mx-auto px-6 py-12 md:py-16">
+        {/* Seasonal "Your Year in Pages" — quiet around New Year, dismissible. */}
+        <YearInPagesBanner />
+
         {/* Header: the day on the left, the (secondary) memory affordance right. */}
         <div className="flex items-end justify-between mb-6">
           <div>

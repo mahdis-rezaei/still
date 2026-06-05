@@ -10,14 +10,6 @@ const EXPLORE_TABS = [
   { href: "/collections", label: "Collections" },
   { href: "/capsules", label: "Capsules" },
 ];
-// Ways to view the Library — secondary, shown only while in the Library section.
-const LIBRARY_VIEWS = [
-  { href: "/library", label: "List" },
-  { href: "/calendar", label: "Calendar" },
-  { href: "/timeline", label: "Timeline" },
-  { href: "/search", label: "Search" },
-];
-
 // The quiet top bar for the signed-in app. Three calm destinations by intent —
 // Today (write), Look back (be visited by your past), Explore (your archive) —
 // with account/settings on the right. A contextual second bar appears under
@@ -113,10 +105,12 @@ export function AppNav() {
         </div>
       </nav>
 
-      {/* Explore sub-tabs — contextual second bar (in-page tabs, not a dropdown). */}
+      {/* Explore sub-tabs — contextual second bar (in-page tabs, not a dropdown),
+          aligned to the content column. (Library's own views — List/Calendar/
+          Timeline — live in the page, and Search is the Library search box.) */}
       {exploreActive && (
-        <div className="w-full px-6 md:px-8 py-3 border-b border-border/40 bg-surface/30">
-          <div className="flex items-center gap-5 md:gap-6">
+        <div className="w-full border-b border-border/40 bg-surface/30">
+          <div className="max-w-[680px] mx-auto px-6 py-3 flex items-center gap-5 md:gap-6">
             {EXPLORE_TABS.map((t) =>
               subTab(
                 t.href,
@@ -125,26 +119,6 @@ export function AppNav() {
               ),
             )}
           </div>
-          {inLibrary && (
-            <div className="flex items-center gap-4 mt-2">
-              {LIBRARY_VIEWS.map((v) => (
-                <Link
-                  key={v.href + v.label}
-                  href={v.href}
-                  className={
-                    "font-sans text-xs transition-colors " +
-                    (isActive(v.href) ||
-                    (v.label === "List" && isActive("/library"))
-                      ? "text-soft-ink"
-                      : "text-faint-ink hover:text-soft-ink")
-                  }
-                  data-testid={`subnav-view-${v.label.toLowerCase()}`}
-                >
-                  {v.label}
-                </Link>
-              ))}
-            </div>
-          )}
         </div>
       )}
 

@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { useListEntries, type Entry } from "@workspace/api-client-react";
 import { AppNav } from "@/components/app-nav";
 import { PageHeader } from "@/components/page";
+import { LibraryViews } from "@/components/library-views";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -58,6 +59,7 @@ export default function Calendar() {
           title="Calendar"
           subtitle="Your pages by the turning of the year. Tap a month to see it across all the years you've written."
         />
+        <LibraryViews current="calendar" />
 
         {/* Month grid */}
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-12">

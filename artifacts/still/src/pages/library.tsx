@@ -12,6 +12,7 @@ import {
 import { AppNav } from "@/components/app-nav";
 import { PageHeader } from "@/components/page";
 import { ContinuityCard } from "@/components/continuity";
+import { LibraryViews } from "@/components/library-views";
 
 const SOURCE_LABELS: Record<string, string> = {
   pasted_import: "imported",
@@ -243,26 +244,7 @@ export default function Library() {
         ) : (
           <>
             <ContinuityCard />
-            <p className="-mt-3 mb-8 flex flex-wrap gap-x-6 gap-y-1">
-              <Link
-                href="/timeline"
-                className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"
-              >
-                See your life as a timeline →
-              </Link>
-              <Link
-                href="/search"
-                className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"
-              >
-                Search across your pages →
-              </Link>
-              <Link
-                href={`/letters/${new Date().getFullYear()}`}
-                className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"
-              >
-                Your year in pages →
-              </Link>
-            </p>
+            <LibraryViews current="list" />
             {hasSamples && (
               <div className="flex items-center justify-between gap-4 mb-6 rounded-xl border border-accent-sepia/25 bg-[#F3EAD7]/60 px-4 py-3">
                 <p className="font-body text-sm text-deep-brown/80 leading-relaxed">
