@@ -51,3 +51,25 @@ export function decrypt(value: string): string {
     "utf8",
   );
 }
+
+// Binary variant of the above, for encrypting file bytes (e.g. attached images)
+// before they leave the server for object storage — so a stolen bucket is just
+// as useless as a stolen DB dump without ENCRYPTION_KEY. Layout is the same
+// (iv[12] | authTag[16] | ciphertext) but kept as raw bytes, no base64/prefix:
+// the blob is always our ciphertext, so there's no legacy-plaintext case.
+export function encryptBytes(plaintext: Buffer): Buffer {
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", getKey(), iv);
+  const enc = Buffer.concat([cipher.update(plaintext), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return Buffer.concat([iv, tag, enc]);
+}
+
+export function decryptBytes(buf: Buffer): Buffer {
+  const iv = buf.subarray(0, 12);
+  const tag = buf.subarray(12, 28);
+  const enc = buf.subarray(28);
+  const decipher = createDecipheriv("aes-256-gcm", getKey(), iv);
+  decipher.setAuthTag(tag);
+  return Buffer.concat([decipher.update(enc), decipher.final()]);
+}

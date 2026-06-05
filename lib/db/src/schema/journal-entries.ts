@@ -44,6 +44,12 @@ export const journalEntriesTable = pgTable("journal_entries", {
     .references(() => usersTable.id, { onDelete: "cascade" }),
   title: encryptedText("title"),
   body: encryptedText("body").notNull(),
+  // Optional rich-text layer: sanitized HTML the writer composed (bold, italic,
+  // headings, lists, blockquote, muted text colors). `body` above stays the
+  // canonical PLAIN TEXT — derived from this on the server — so the memory
+  // engine, resurfacing excerpts, and exports never see markup. NULL = a plain
+  // entry (render `body`). Encrypted at rest like the rest of the page.
+  bodyRich: encryptedText("body_rich"),
   entryDate: date("entry_date"),
   source: text("source").$type<EntrySource>().notNull().default("manual"),
   sourceDocumentId: uuid("source_document_id"),

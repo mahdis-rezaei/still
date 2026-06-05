@@ -12,6 +12,8 @@ import { AppNav } from "@/components/app-nav";
 import { MemoryCard } from "@/components/memory-card";
 import { OnThisDay } from "@/components/on-this-day";
 import { YearInPagesBanner } from "@/components/year-in-pages-banner";
+import { EntryImages } from "@/components/entry-images";
+import { RichEditor, type RichEditorHandle } from "@/components/rich-editor";
 
 const PROMPTS = [
   "What wants to be written today?",
@@ -59,7 +61,12 @@ export default function Today() {
   const createEntry = useCreateEntry();
   const updateEntry = useUpdateEntry();
 
-  const [body, setBody] = useState("");
+  // Whether the page has any text yet (drives the save guard + "new page"
+  // affordance). The editor itself is uncontrolled (see RichEditor).
+  const [hasText, setHasText] = useState(false);
+  // Mirror of entryIdRef for rendering (refs don't trigger re-renders). Lets the
+  // image attacher know which page to attach to once the page is first saved.
+  const [entryId, setEntryId] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>("idle");
   const [prompt] = useState(
     () => PROMPTS[Math.floor(Math.random() * PROMPTS.length)],
@@ -135,24 +142,28 @@ export default function Today() {
   // Refs so the debounced saver never reads stale state.
   const entryIdRef = useRef<string | null>(null);
   const latestRef = useRef("");
+  const latestHtmlRef = useRef("");
   const savingRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const editorRef = useRef<RichEditorHandle>(null);
 
   async function flush() {
     const text = latestRef.current;
+    const html = latestHtmlRef.current;
     if (!text.trim() || savingRef.current) return;
     savingRef.current = true;
     setStatus("saving");
     try {
       if (!entryIdRef.current) {
         const row = await createEntry.mutateAsync({
-          data: { body: text, entryDate: todayISO() },
+          data: { body: text, bodyRich: html, entryDate: todayISO() },
         });
         entryIdRef.current = row.id;
+        setEntryId(row.id);
       } else {
         await updateEntry.mutateAsync({
           id: entryIdRef.current,
-          data: { body: text },
+          data: { body: text, bodyRich: html },
         });
       }
       setStatus("kept");
@@ -173,10 +184,31 @@ export default function Today() {
     timerRef.current = setTimeout(flush, 900);
   }
 
-  function onChange(value: string) {
-    setBody(value);
-    latestRef.current = value;
+  function onChange(html: string, text: string) {
+    latestRef.current = text;
+    latestHtmlRef.current = html;
+    setHasText(!!text.trim());
     scheduleSave();
+  }
+
+  // Attaching an image needs a saved page. If there's text but no entry yet,
+  // create it now and return its id; if the page is still blank, there's nothing
+  // to attach to.
+  async function ensureEntry(): Promise<string | null> {
+    if (entryIdRef.current) return entryIdRef.current;
+    const text = latestRef.current;
+    if (!text.trim()) return null;
+    const row = await createEntry.mutateAsync({
+      data: {
+        body: text,
+        bodyRich: latestHtmlRef.current,
+        entryDate: todayISO(),
+      },
+    });
+    entryIdRef.current = row.id;
+    setEntryId(row.id);
+    queryClient.invalidateQueries({ queryKey: getListEntriesQueryKey() });
+    return row.id;
   }
 
   // Flush on unmount so nothing in flight is lost.
@@ -190,7 +222,10 @@ export default function Today() {
     if (timerRef.current) clearTimeout(timerRef.current);
     entryIdRef.current = null;
     latestRef.current = "";
-    setBody("");
+    latestHtmlRef.current = "";
+    editorRef.current?.clear();
+    setHasText(false);
+    setEntryId(null);
     setStatus("idle");
   }
 
@@ -272,14 +307,16 @@ export default function Today() {
 
         {/* Today's page — a real writing surface, anchored like a sheet. */}
         <div className="rounded-2xl border border-border bg-surface/80 shadow-sm p-6 md:p-8 min-h-[56vh] flex flex-col">
-          <textarea
-            value={body}
-            onChange={(e) => onChange(e.target.value)}
+          <RichEditor
+            ref={editorRef}
             placeholder={prompt}
             autoFocus
-            className="flex-1 w-full bg-transparent text-xl md:text-2xl text-ink font-body leading-relaxed placeholder:text-faint-ink/80 focus:outline-none resize-none"
+            ariaLabel="Today's page"
+            onChange={onChange}
+            className="flex-1 flex flex-col text-xl md:text-2xl text-ink font-body leading-relaxed"
             data-testid="input-entry"
           />
+          <EntryImages entryId={entryId} editable ensureEntry={ensureEntry} />
           <div className="flex items-center justify-between pt-4 mt-4 border-t border-border/60">
             <span
               className="font-sans text-xs text-faint-ink"
@@ -291,7 +328,7 @@ export default function Today() {
                   ? "kept"
                   : ""}
             </span>
-            {(body.trim() || entryIdRef.current) && (
+            {(hasText || entryIdRef.current) && (
               <button
                 onClick={newPage}
                 className="font-sans text-xs text-soft-ink hover:text-ink transition-colors"

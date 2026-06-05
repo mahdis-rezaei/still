@@ -16,6 +16,24 @@ import {
 import { AppNav } from "@/components/app-nav";
 import { ShelfToggle } from "@/components/shelf-toggle";
 import { CollectionPicker } from "@/components/collection-picker";
+import { EntryImages } from "@/components/entry-images";
+import { RichEditor } from "@/components/rich-editor";
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+// Seed the rich editor from a legacy plain-text entry: paragraphs split on blank
+// lines, single newlines become <br>. (Used only when an entry has no bodyRich.)
+function plainToHtml(text: string): string {
+  return text
+    .split(/\n{2,}/)
+    .map((p) => `<p>${escapeHtml(p).replace(/\n/g, "<br>")}</p>`)
+    .join("");
+}
 
 const RESURFACING: {
   value: EntryUpdateResurfacingPreference;
@@ -54,6 +72,7 @@ export default function EntryDetail() {
 
   const [editing, setEditing] = useState(false);
   const [draftBody, setDraftBody] = useState("");
+  const [draftRich, setDraftRich] = useState<string | null>(null);
   const [draftDate, setDraftDate] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [reflecting, setReflecting] = useState(false);
@@ -88,12 +107,17 @@ export default function EntryDetail() {
   function startEdit() {
     if (!entry) return;
     setDraftBody(entry.body);
+    setDraftRich(entry.bodyRich ?? plainToHtml(entry.body));
     setDraftDate(entry.entryDate ?? "");
     setEditing(true);
   }
 
   async function saveEdit() {
-    await patch({ body: draftBody, entryDate: draftDate || null });
+    await patch({
+      body: draftBody,
+      bodyRich: draftRich,
+      entryDate: draftDate || null,
+    });
     setEditing(false);
   }
 
@@ -182,10 +206,14 @@ export default function EntryDetail() {
                   onChange={(e) => setDraftDate(e.target.value)}
                   className="self-start bg-surface border border-border rounded-lg px-3 py-2 text-sm text-soft-ink font-sans focus:outline-none focus:border-accent-sepia"
                 />
-                <textarea
-                  value={draftBody}
-                  onChange={(e) => setDraftBody(e.target.value)}
-                  className="w-full min-h-[40vh] bg-surface border border-border rounded-lg p-5 text-lg text-ink font-body leading-relaxed focus:outline-none focus:border-accent-sepia resize-none"
+                <RichEditor
+                  initialHTML={draftRich ?? ""}
+                  ariaLabel="Edit this page"
+                  onChange={(html, text) => {
+                    setDraftRich(html);
+                    setDraftBody(text);
+                  }}
+                  className="w-full min-h-[40vh] bg-surface border border-border rounded-lg p-5 text-lg text-ink font-body leading-relaxed flex flex-col"
                   data-testid="input-edit-body"
                 />
                 <div className="flex items-center gap-3">
@@ -203,11 +231,23 @@ export default function EntryDetail() {
                     Cancel
                   </button>
                 </div>
+                <EntryImages entryId={id} editable />
               </div>
             ) : (
-              <p className="font-body text-lg md:text-xl text-ink leading-relaxed whitespace-pre-wrap">
-                {entry.body}
-              </p>
+              <>
+                {entry.bodyRich ? (
+                  // Server-sanitized HTML — safe to render.
+                  <div
+                    className="rich-content font-body text-lg md:text-xl text-ink leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: entry.bodyRich }}
+                  />
+                ) : (
+                  <p className="font-body text-lg md:text-xl text-ink leading-relaxed whitespace-pre-wrap">
+                    {entry.body}
+                  </p>
+                )}
+                <EntryImages entryId={id} />
+              </>
             )}
 
             {!editing && (

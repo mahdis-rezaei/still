@@ -1,0 +1,69 @@
+Sync prod to head f4ea4af (branch claude/lucid-edison-kCUis) and re-publish.
+This is CUMULATIVE — it ships round 1 (image attachments) AND round 2 (rich
+text). If you already published the image-attachments prompt, this just adds
+rich text; if not, syncing this head does both at once.
+
+⚠️ SETUP NEEDED: an Object Storage bucket (images), `pnpm install` (two new
+deps), and ONE migration that creates the entry_attachments table AND adds the
+journal_entries.body_rich column. No API-contract codegen step (the generated
+client was hand-patched).
+
+BRANCH NOTE: this branch = origin/claude/ecstatic-wright-y4npO @ 5e33a99 (all of
+that thread's work) PLUS image-attachments + rich-text on top — a strict
+superset. ⚠️ A later ecstatic-wright reset would DROP these two commits unless
+that branch first pulls/merges f4ea4af.
+
+WHAT GOES LIVE:
+1. Rich text (f4ea4af): a literary formatting layer on journal pages — bold,
+   italic, two heading levels, bullet/numbered lists, blockquote, and a few
+   muted on-brand text colors — in BOTH the Today composer and the entry view.
+   - Engine-safe: `body` stays the canonical PLAIN TEXT the memory engine,
+     resurfacing, Library previews, and exports read. A new encrypted
+     `body_rich` column holds the sanitized HTML display layer.
+   - The SERVER sanitizes the HTML (strict allowlist, sanitize-html) and DERIVES
+     the plain `body` from it, so markup can never reach the engine and stored
+     HTML is always safe to render. Entries without formatting render as before.
+2. Image attachments (c8d542c): attach images (upload or take a photo on mobile)
+   to a page from Today and the entry view; bytes are app-encrypted and stored
+   in Object Storage; never sent to the engine, never resurfaced.
+
+STEPS:
+1. git fetch origin
+2. git reset --hard origin/claude/lucid-edison-kCUis   (confirm head = f4ea4af)
+3. pnpm install        (adds @replit/object-storage and sanitize-html)
+4. ⚠️ Object Storage bucket (one-time, for images): Replit Tools → Object
+   Storage → create a bucket (becomes the default; no secret needed). Must also
+   be available to the Deployment. (Optional: OBJECT_STORAGE_BUCKET_ID to pin a
+   specific bucket.)
+5. ⚠️ MIGRATE (additive — creates entry_attachments AND adds the body_rich
+   column; existing tables/data untouched):
+   pnpm --filter @workspace/db exec drizzle-kit push
+6. Confirm ENCRYPTION_KEY is set (it is — reused to encrypt image bytes and the
+   rich-text column).
+7. Rebuild + restart api-server + still, then publish / redeploy.
+
+VERIFY (prod after publish):
+RICH TEXT
+A. Today: a slim formatting toolbar sits above the writing area. Type a line,
+   select it, click B / I, make an H2 heading, a bullet list, a quote, pick a
+   muted color → the text restyles. Reload Library, open the page — formatting
+   persists and renders in the read view.
+B. "Begin a new page" clears the editor and formatting.
+C. Open an OLD (plain) entry → Edit: it loads into the formatted editor; you can
+   format and Save; the read view now shows the formatting.
+D. Engine unaffected: "Bring a page back", On This Day, and Look back still read
+   clean text (no stray HTML/tags in any returned excerpt). Library list
+   previews show plain text.
+IMAGES
+E. Add an image on Today and on the entry view (mobile offers camera + library);
+   thumbnail persists on reload; GET /api/attachments/<id> serves only to the
+   owner; delete removes it from the page and the bucket.
+PRIVACY
+F. Account delete still works; export JSON includes an `attachments` array.
+
+ROLLBACK: re-publish the prior build. body_rich + entry_attachments are additive
+and inert if unused; existing entries are unchanged (they render as plain text).
+
+Report: formatting visibly works and persists on Today and the entry view, old
+plain entries still open/edit, the engine/Look-back excerpts stay clean text,
+and the image flows from round 1 still work.

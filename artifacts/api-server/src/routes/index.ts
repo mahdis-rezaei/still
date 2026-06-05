@@ -3,6 +3,7 @@ import healthRouter from "./health";
 import authRouter from "./auth";
 import privacyRouter from "./privacy";
 import reflectionsRouter from "./reflections";
+import attachmentsRouter from "./attachments";
 import entriesRouter from "./entries";
 import memoriesRouter from "./memories";
 import continuityRouter from "./continuity";
@@ -35,9 +36,10 @@ const engineGuard = rateLimit({
 router.use(healthRouter);
 router.use(authRouter);
 router.use(privacyRouter);
-// Reflections before entries so /entries/:id/reflections matches here first
-// (single auth) rather than falling through the entries router.
+// Reflections + attachments before entries so /entries/:id/reflections and
+// /entries/:id/attachments match here first rather than falling through.
 router.use(reflectionsRouter);
+router.use(attachmentsRouter);
 router.use(entriesRouter);
 router.use(memoriesRouter);
 router.use(continuityRouter);

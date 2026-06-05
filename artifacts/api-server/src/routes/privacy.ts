@@ -4,12 +4,14 @@ import {
   db,
   usersTable,
   journalEntriesTable,
+  entryAttachmentsTable,
   reflectionsTable,
   returnedMemoriesTable,
   type JournalEntry,
   type Reflection,
 } from "@workspace/db";
 import { requireAuth, clearSessionCookie } from "../lib/auth";
+import { deleteObject } from "../lib/object-storage";
 
 const router = Router();
 // Scope auth to /privacy (not path-less) so it never blocks /still/*.
@@ -175,6 +177,21 @@ router.get("/privacy/export", async (req, res): Promise<void> => {
       .where(eq(returnedMemoriesTable.userId, user.id))
       .orderBy(desc(returnedMemoriesTable.createdAt));
 
+    // Attachment metadata only (the encrypted bytes live in object storage and
+    // are downloadable per-image via the app).
+    const attachments = await db
+      .select({
+        id: entryAttachmentsTable.id,
+        journalEntryId: entryAttachmentsTable.journalEntryId,
+        mimeType: entryAttachmentsTable.mimeType,
+        width: entryAttachmentsTable.width,
+        height: entryAttachmentsTable.height,
+        createdAt: entryAttachmentsTable.createdAt,
+      })
+      .from(entryAttachmentsTable)
+      .where(eq(entryAttachmentsTable.userId, user.id))
+      .orderBy(asc(entryAttachmentsTable.createdAt));
+
     res.json({
       exportedAt: new Date().toISOString(),
       account: {
@@ -185,6 +202,7 @@ router.get("/privacy/export", async (req, res): Promise<void> => {
       entries,
       reflections,
       memories,
+      attachments,
     });
   } catch (err) {
     req.log.error({ err }, "Export error");
@@ -197,6 +215,19 @@ router.get("/privacy/export", async (req, res): Promise<void> => {
 // the schema's onDelete: "cascade" foreign keys, and frees the email for reuse.
 router.delete("/privacy/account", async (req, res): Promise<void> => {
   try {
+    // Delete the user's image blobs from object storage first — the DB cascade
+    // frees their rows but can't reach bytes stored outside Postgres. Best-effort
+    // and pre-delete, so a storage hiccup can't strand an un-deletable account.
+    try {
+      const objs = await db
+        .select({ objectKey: entryAttachmentsTable.objectKey })
+        .from(entryAttachmentsTable)
+        .where(eq(entryAttachmentsTable.userId, req.userId!));
+      await Promise.allSettled(objs.map((o) => deleteObject(o.objectKey)));
+    } catch (err) {
+      req.log.warn({ err }, "Attachment cleanup on account delete failed");
+    }
+
     await db.delete(usersTable).where(eq(usersTable.id, req.userId!));
     clearSessionCookie(res);
     res.status(204).end();
