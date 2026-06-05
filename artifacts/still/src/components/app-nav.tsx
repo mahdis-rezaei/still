@@ -10,6 +10,13 @@ const EXPLORE_TABS = [
   { href: "/collections", label: "Collections" },
   { href: "/capsules", label: "Capsules" },
 ];
+// Look back = the three ways your past returns to you, in the same contextual
+// sub-bar pattern as Explore (real routes, not wrapping in-page tabs).
+const LOOK_BACK_TABS = [
+  { href: "/look-back", label: "What keeps returning" },
+  { href: "/look-back/revisit", label: "Revisit a time" },
+  { href: "/look-back/keepsake", label: "Your Year in Pages" },
+];
 // The quiet top bar for the signed-in app. Three calm destinations by intent —
 // Today (write), Look back (be visited by your past), Explore (your archive) —
 // with account/settings on the right. A contextual second bar appears under
@@ -35,6 +42,10 @@ export function AppNav() {
     isActive("/capsules");
   // Returns lives under Look back (until the Look back home absorbs it).
   const lookBackActive = isActive("/look-back") || isActive("/returns");
+  // The default lens ("What keeps returning") is the bare /look-back path; the
+  // other two are sub-routes, so match it exactly to avoid lighting up all three.
+  const lookBackTabActive = (href: string) =>
+    href === "/look-back" ? location === "/look-back" : isActive(href);
 
   const navLink = (href: string, label: string, active: boolean) => (
     <Link
@@ -117,6 +128,17 @@ export function AppNav() {
                 t.label,
                 t.label === "Library" ? inLibrary : isActive(t.href),
               ),
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Look back sub-tabs — the same contextual second bar as Explore. */}
+      {lookBackActive && (
+        <div className="w-full border-b border-border/40 bg-surface/30">
+          <div className="max-w-[680px] mx-auto px-6 py-3 flex items-center gap-5 md:gap-6">
+            {LOOK_BACK_TABS.map((t) =>
+              subTab(t.href, t.label, lookBackTabActive(t.href)),
             )}
           </div>
         </div>

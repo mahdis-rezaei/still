@@ -93,6 +93,7 @@ function ProtectedApp() {
       <Route path="/library/:entryId" component={EntryDetail} />
       <Route path="/returns" component={Returns} />
       <Route path="/look-back" component={LookBack} />
+      <Route path="/look-back/:lens" component={LookBack} />
       <Route path="/timeline" component={Timeline} />
       {/* Search merged into Library (its search box). Keep the path working. */}
       <Route path="/search">
