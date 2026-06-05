@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AppNav } from "@/components/app-nav";
 import { PageHeader } from "@/components/page";
 import { DateMemoryCard } from "@/components/date-memory-card";
+import { ThenAndNow } from "@/components/then-and-now";
 import { useLookBack, type DateMemory } from "@/lib/use-look-back";
 import { onThisDayLabel, type OnThisDayMemory } from "@/lib/use-on-this-day";
 
@@ -52,6 +53,10 @@ export default function LookBack() {
           title="Look back"
           subtitle="Your own pages, returning by the calendar and by the ones you treasured. Nothing is added — just brought back."
         />
+
+        {/* Then & now — the engine reads a year you choose against where you are
+            now. Self-hides when there's no past year to compare. */}
+        <ThenAndNow />
 
         {isLoading ? (
           <p className="font-sans text-sm text-faint-ink">Gathering…</p>

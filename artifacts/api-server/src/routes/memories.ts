@@ -1,7 +1,8 @@
 import { Router } from "express";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import {
   db,
+  journalEntriesTable,
   returnedMemoriesTable,
   type ReturnedMemory,
 } from "@workspace/db";
@@ -160,6 +161,99 @@ router.get("/memories/jobs/:id", async (req, res): Promise<void> => {
     res.status(500).json({ error: "Failed to read the job" });
   }
 });
+
+// POST /memories/then-and-now { year, month? } — the "How far you've come"
+// reflection: the engine reads the chosen PAST window together with your RECENT
+// pages and surfaces the distance between then and now (its distance/arc mode).
+// It's a scoped engine run you steer — the same async queue + reading state as
+// Bring a page back, just with a pool of [that window] + [recent]. Async when
+// ASYNC_MEMORY is on (→ { jobId } to poll); else synchronous (→ the result).
+router.post(
+  "/memories/then-and-now",
+  runLimiter,
+  async (req, res): Promise<void> => {
+    const body = (req.body ?? {}) as { year?: unknown; month?: unknown };
+    const year = Number(body.year);
+    const month = body.month == null ? undefined : Number(body.month);
+    if (!Number.isInteger(year) || year < 1900 || year > 3000) {
+      res.status(400).json({ error: "A valid year is required" });
+      return;
+    }
+    if (
+      month !== undefined &&
+      (!Number.isInteger(month) || month < 1 || month > 12)
+    ) {
+      res.status(400).json({ error: "Invalid month" });
+      return;
+    }
+
+    try {
+      // THEN = the chosen window; NOW = the most recent pages. The engine refines
+      // eligibility (muted / never / safety) itself, so we only gather by date.
+      const baseFilters = [
+        eq(journalEntriesTable.userId, req.userId!),
+        isNull(journalEntriesTable.deletedAt),
+        isNotNull(journalEntriesTable.entryDate),
+      ];
+      const thenFilters = [
+        ...baseFilters,
+        sql`extract(year from ${journalEntriesTable.entryDate}) = ${year}`,
+      ];
+      if (month !== undefined) {
+        thenFilters.push(
+          sql`extract(month from ${journalEntriesTable.entryDate}) = ${month}`,
+        );
+      }
+      const [thenRows, nowRows] = await Promise.all([
+        db
+          .select({ id: journalEntriesTable.id })
+          .from(journalEntriesTable)
+          .where(and(...thenFilters)),
+        db
+          .select({ id: journalEntriesTable.id })
+          .from(journalEntriesTable)
+          .where(and(...baseFilters))
+          .orderBy(desc(journalEntriesTable.entryDate))
+          .limit(12),
+      ]);
+      const entryIds = [
+        ...new Set([
+          ...thenRows.map((r) => r.id),
+          ...nowRows.map((r) => r.id),
+        ]),
+      ];
+      if (entryIds.length === 0) {
+        res.json({ surfaced: false, reason: "not_enough" });
+        return;
+      }
+
+      if (asyncMemoryEnabled()) {
+        const jobId = await enqueueMemoryJob(
+          req.userId!,
+          "run",
+          { entryIds },
+          `tan:${req.userId}:${year}:${month ?? "all"}`,
+        );
+        res.status(202).json({ jobId, status: "queued" });
+        return;
+      }
+
+      const result = await runMemoryForUser(req.userId!, { entryIds });
+      if (!result.surfaced) {
+        res.json({
+          surfaced: false,
+          reason: result.reason,
+          supportMessage: result.supportMessage ?? null,
+        });
+        return;
+      }
+      res.json({ surfaced: true, memory: toMemory(result.memory!) });
+    } catch (err) {
+      req.log.error({ err }, "Then-and-now error");
+      res.status(500).json({ error: "Failed to read then and now" });
+    }
+  },
+);
 
 // GET /memories — the Returns archive.
 router.get("/memories", async (req, res): Promise<void> => {
