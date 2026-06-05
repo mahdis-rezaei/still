@@ -77,7 +77,10 @@ export async function processMemoryJob(jobId: string): Promise<void> {
 async function runJob(job: MemoryJob): Promise<Record<string, unknown>> {
   const params = (job.params ?? {}) as Record<string, unknown>;
   if (job.kind === "run") {
-    const out = await runMemoryForUser(job.userId, {});
+    const out = await runMemoryForUser(
+      job.userId,
+      params as Parameters<typeof runMemoryForUser>[1],
+    );
     return out.surfaced && out.memory
       ? { surfaced: true, memoryId: out.memory.id }
       : {

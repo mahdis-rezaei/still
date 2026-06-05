@@ -117,9 +117,12 @@ export default function Today() {
     setPending(true);
     (async () => {
       try {
-        setRun(await pollRunJob(jobId));
+        const result = await pollRunJob(jobId);
+        // Only surface a real page on resume; if the job is gone/silent/errored,
+        // stay quiet rather than showing an error card the user didn't ask for.
+        if (result.surfaced) setRun(result);
       } catch {
-        setRun({ surfaced: false, reason: "error" });
+        // stale/expired job — clear silently.
       } finally {
         localStorage.removeItem(RUN_JOB_KEY);
         setPending(false);

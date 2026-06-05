@@ -69,11 +69,13 @@ router.post("/memories/run", runLimiter, async (req, res): Promise<void> => {
   // hangs for minutes and the user can leave and come back.
   if (asyncMemoryEnabled()) {
     try {
+      // Carry the SAME inputs the sync path used (year/month/entryIds/fresh), and
+      // key dedupe on them so two differently-scoped runs aren't merged.
       const jobId = await enqueueMemoryJob(
         req.userId!,
         "run",
-        {},
-        `run:${req.userId}`,
+        parsed.data,
+        `run:${req.userId}:${JSON.stringify(parsed.data)}`,
       );
       res.status(202).json({ jobId, status: "queued" });
     } catch (err) {
