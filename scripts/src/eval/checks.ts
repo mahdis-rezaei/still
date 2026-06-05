@@ -52,12 +52,28 @@ function resultText(r: EngineResult): string {
 function findWinner(res: EngineResult): Candidate | undefined {
   const quotes = res.result.quotes.map((q) => norm(q.text)).filter(Boolean);
   if (!quotes.length) return undefined;
-  return res.candidates.find((c) =>
-    c.fragments.some((f) => {
+  // Map the displayed quote back to its candidate by BEST overlap, not the first
+  // loose match. On a "bundled" candidate (one carrying several fragments) a
+  // short fragment from a DIFFERENT candidate can sit inside the displayed quote
+  // (quote.includes(fragment)) and used to win the .find(), mis-mapping the
+  // winner and throwing off the emotional_center check even when the engine
+  // surfaced the right line. Rank: exact match > fragment contains the shown
+  // quote > shown quote contains the fragment, and take the strongest.
+  let best: { c: Candidate; score: number } | undefined;
+  for (const c of res.candidates) {
+    let score = 0;
+    for (const f of c.fragments) {
       const nf = norm(f);
-      return quotes.some((q) => q === nf || q.includes(nf) || nf.includes(q));
-    }),
-  );
+      if (!nf) continue;
+      for (const q of quotes) {
+        if (q === nf) score = Math.max(score, 3);
+        else if (nf.includes(q)) score = Math.max(score, 2);
+        else if (q.includes(nf)) score = Math.max(score, 1);
+      }
+    }
+    if (score > 0 && (!best || score > best.score)) best = { c, score };
+  }
+  return best?.c;
 }
 
 // ── selection checks ────────────────────────────────────────────────────────
