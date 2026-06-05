@@ -1,5 +1,5 @@
 Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
-(head 6e39bf2), same method as before. CODE-ONLY (frontend) — NO migration, NO
+(head ca30b81), same method as before. CODE-ONLY (frontend) — NO migration, NO
 new endpoints, NO new secrets, NO PROMPT_VERSION bump.
 
 What lands:
@@ -26,17 +26,29 @@ What lands:
       • An engine ERROR no longer renders the same copy as honest silence — it
         now shows "Couldn't read across your years just now" with a "try again",
         while true silence keeps its gentle copy plus a quiet "look again".
-      • The lens now sends `fresh: true`, so this deliberate, user-initiated read
-        bypasses the engine result cache. Without it a one-off cached silence
-        was re-served on every click and "look again"/"show another" returned
-        the identical cached pick.
+      • The first read uses the CACHED run (instant once the engine's extract/
+        score caches are warm); only the re-roll buttons ("look again" /
+        "show another") send `fresh: true` so they actually vary. This is the
+        "cached-first, re-roll on demand" shape — it avoids re-paying the slow
+        cold run on the common first click while still escaping a stale pick.
+      • The pending state now shows time-aware reassurance that escalates with
+        elapsed seconds ("Reading across your years…" → "Still reading…" →
+        "Your archive is large, so this takes a moment…"), matching Today, so a
+        slow COLD run (a two-pass model read over a deep archive can take a
+        couple of minutes) reads as "still working", not "failed". The
+        forgotten-page voice got the same calm treatment.
+
+KNOWN UPSTREAM ITEM (engine, NOT in this sync): on some cards the `observation`
+restates the displayed `quote` almost verbatim (redundant). The card is correct;
+this is the PASS-2 voicing prompt echoing the quote instead of framing it — fix
+it engine-side so the observation never re-quotes the displayed line.
 
 Reuses existing endpoints only (/api/memories/run with its existing `fresh`
 flag, /api/look-back, the revisit / then-and-now / year-in-pages routes already
 live). No engine change, no new params.
 
 Steps:
-1. SYNC the code to origin (head 6e39bf2). Do not edit app code or prompts.
+1. SYNC the code to origin (head ca30b81). Do not edit app code or prompts.
 2. pnpm install — no-op.
 3. NO drizzle-kit push (no schema change).
 4. RE-PUBLISH the deployment.
