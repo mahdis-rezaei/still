@@ -1,0 +1,28 @@
+Re-sync this workspace to GitHub branch claude/ecstatic-wright-y4npO (head
+229137c or later), same method as before, then re-publish. FRONTEND-ONLY — NO
+migration, NO new endpoints, NO new secrets, NO PROMPT_VERSION bump. Reuses the
+existing /api/letters/:year and entry-list endpoints; no engine change.
+
+What lands (polish to "Your Year in Pages" after live review):
+  - Default year no longer hijacked by a stray future-dated entry — the picker
+    defaults to the most recent year that ISN'T in the future (future years are
+    still selectable in the dropdown).
+  - The letter view (/letters/:year) gains real navigation: a "← Look back" link
+    back to the picker, a year-jump dropdown, and prev/next arrows bounded to
+    years you've actually written (no more walking into empty years).
+  - A year with pages but no favorites no longer renders as just a cover + a
+    count — it now gathers that year's actual pages (dated, with an excerpt,
+    each linking to the full entry), so every year reads as a real keepsake.
+
+Steps:
+1. SYNC the code to origin (head 229137c or later). Do not edit app code.
+2. pnpm install — no-op.
+3. NO drizzle-kit push (no schema change).
+4. RE-PUBLISH the deployment.
+
+Verify (Look back → Your Year in Pages):
+  - The picker defaults to a real, non-future year (not a stray 2030 test entry).
+  - Open a year → the header shows "← Look back", a year dropdown that jumps
+    directly to any written year, and prev/next limited to real years.
+  - Open a year that has pages but nothing favorited → the letter shows that
+    year's pages (dated + excerpt + "Read the full page →"), not just a count.
