@@ -262,7 +262,7 @@ router.post("/cron/process-memory-jobs", async (req, res): Promise<void> => {
   }
   const limitRaw = Number((req.query as { limit?: string }).limit);
   const limit =
-    Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 10) : 1;
+    Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 20) : 3;
   try {
     const summary = await sweepMemoryJobs(limit);
     res.json(summary);

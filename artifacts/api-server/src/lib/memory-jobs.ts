@@ -104,10 +104,12 @@ async function runJob(job: MemoryJob): Promise<Record<string, unknown>> {
 }
 
 // Backstop: reset jobs stuck 'running' past the stale window (instance died)
-// back to 'queued', then process pending queued jobs INLINE — within this
-// request, so the instance stays alive for the engine read. Bounded per tick;
-// the optimistic start handles the common case, so this rarely has work.
-export async function sweepMemoryJobs(limit = 1): Promise<{ processed: number }> {
+// back to 'queued', then KICK pending ones fire-and-forget so the cron returns
+// immediately — no long request, so no client-timeout / failure-email noise on
+// cron-job.org. The optimistic start handles the common case; a job whose start
+// was dropped is re-kicked on the next tick (and recovered from a dead 'running'
+// via the stale reset). Bounded per tick to cap concurrent engine reads.
+export async function sweepMemoryJobs(limit = 3): Promise<{ kicked: number }> {
   const staleBefore = new Date(Date.now() - STALE_RUNNING_MS);
   await db
     .update(memoryJobsTable)
@@ -126,12 +128,8 @@ export async function sweepMemoryJobs(limit = 1): Promise<{ processed: number }>
     .orderBy(memoryJobsTable.createdAt)
     .limit(limit);
 
-  let processed = 0;
-  for (const { id } of queued) {
-    await processMemoryJob(id);
-    processed++;
-  }
-  return { processed };
+  for (const { id } of queued) void processMemoryJob(id).catch(() => {});
+  return { kicked: queued.length };
 }
 
 export async function getMemoryJob(
