@@ -2,23 +2,48 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppNav } from "@/components/app-nav";
-import { PageHeader } from "@/components/page";
-import { DateMemoryCard } from "@/components/date-memory-card";
 import { WhatKeepsReturning } from "@/components/what-keeps-returning";
 import { RevisitATime } from "@/components/revisit-a-time";
 import { ThenAndNow } from "@/components/then-and-now";
+import { AForgottenPage } from "@/components/a-forgotten-page";
+import { YearInPagesTab } from "@/components/year-in-pages-tab";
 import { useLookBack } from "@/lib/use-look-back";
 
-// Look back — the memory home, tabbed so each AI lens is its own calm surface
-// (voice first, depth underneath) rather than one long scroll. (Revisit a time
-// and What keeps returning land as their own tabs in the next slices; What keeps
-// returning will become the default greeting.)
+// Look back — the memory home, tabbed so each AI lens is its own calm surface.
+// Each tab carries its OWN prominent title + lead (rendered here, uniformly), so
+// switching tabs visibly swaps the page — earlier they all shared one header and
+// felt identical. "Look back" itself is just a quiet eyebrow above the tabs now.
 const TABS = [
-  { key: "returning", label: "What keeps returning" },
-  { key: "revisit", label: "Revisit a time" },
-  { key: "distance", label: "How far you've come" },
-  { key: "forgotten", label: "A page you'd forgotten" },
-  { key: "year", label: "Your Year in Pages" },
+  {
+    key: "returning",
+    label: "What keeps returning",
+    title: "What keeps returning",
+    lead: "The threads and lines that come back across your years — let Yadegar find one.",
+  },
+  {
+    key: "revisit",
+    label: "Revisit a time",
+    title: "Revisit a time",
+    lead: "Pick a month and year, and Yadegar reads it back to you — then lays out the pages.",
+  },
+  {
+    key: "distance",
+    label: "How far you've come",
+    title: "How far you've come",
+    lead: "Pick a year, and Yadegar holds it up against where you are now.",
+  },
+  {
+    key: "forgotten",
+    label: "A page you'd forgotten",
+    title: "A page you'd forgotten",
+    lead: "An old page that's slipped out of view, read back to you in Yadegar's voice.",
+  },
+  {
+    key: "year",
+    label: "Your Year in Pages",
+    title: "Your Year in Pages",
+    lead: "A whole year of your writing, gathered — to read, print, or keep as a book.",
+  },
 ] as const;
 type TabKey = (typeof TABS)[number]["key"];
 
@@ -29,19 +54,18 @@ export default function LookBack() {
     queryClient.invalidateQueries({ queryKey: ["look-back"] });
   const forgotten = data?.forgotten ?? [];
   const [tab, setTab] = useState<TabKey>("returning");
-  const lastYear = new Date().getFullYear() - 1;
+  const active = TABS.find((t) => t.key === tab)!;
 
   return (
     <div className="min-h-[100dvh] flex flex-col">
       <AppNav />
 
       <main className="flex-1 w-full max-w-[680px] mx-auto px-6 py-12 md:py-16">
-        <PageHeader
-          title="Look back"
-          subtitle="Your past, read back to you a few pieces at a time — in your own words."
-        />
-
-        <div className="-mt-4 mb-6">
+        {/* Quiet eyebrow + Returns link — the section frame, not the page title. */}
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <span className="font-sans text-xs uppercase tracking-[0.18em] text-faint-ink">
+            Look back
+          </span>
           <Link
             href="/returns"
             className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"
@@ -58,7 +82,9 @@ export default function LookBack() {
               onClick={() => setTab(t.key)}
               className={
                 "font-sans text-sm transition-colors " +
-                (tab === t.key ? "text-ink" : "text-soft-ink hover:text-ink")
+                (tab === t.key
+                  ? "text-ink border-b-2 border-accent-sepia -mb-[15px] pb-3"
+                  : "text-soft-ink hover:text-ink")
               }
               data-testid={`lookback-tab-${t.key}`}
             >
@@ -67,44 +93,28 @@ export default function LookBack() {
           ))}
         </div>
 
+        {/* Per-tab title + lead — the big changing element, so each tab is clearly
+            its own page. */}
+        <div className="mb-6">
+          <h1 className="font-display text-3xl md:text-4xl text-deep-brown">
+            {active.title}
+          </h1>
+          <p className="font-body text-soft-ink mt-2 leading-relaxed">
+            {active.lead}
+          </p>
+        </div>
+
         {tab === "returning" && <WhatKeepsReturning />}
 
         {tab === "revisit" && <RevisitATime />}
 
         {tab === "distance" && <ThenAndNow />}
 
-        {tab === "forgotten" &&
-          (forgotten.length > 0 ? (
-            <DateMemoryCard
-              heading="You haven't seen this in a while"
-              memory={forgotten[0]}
-              onChanged={refresh}
-            />
-          ) : (
-            <p className="font-body text-soft-ink leading-relaxed">
-              Nothing's slipped far enough out of view yet — as your pages gather
-              years, forgotten ones will surface here.
-            </p>
-          ))}
-
-        {tab === "year" && (
-          <Link
-            href={`/letters/${lastYear}`}
-            className="block rounded-2xl border border-border bg-surface/60 px-6 py-5 hover:border-accent-sepia transition-colors"
-            data-testid="card-year-in-pages"
-          >
-            <span className="font-sans text-xs tracking-wide uppercase text-faint-ink">
-              Your Year in Pages
-            </span>
-            <p className="font-display text-2xl text-deep-brown mt-1">
-              {lastYear} →
-            </p>
-            <p className="font-sans text-sm text-soft-ink mt-1">
-              A year of your writing, gathered — ready to read, print, or keep as
-              a book.
-            </p>
-          </Link>
+        {tab === "forgotten" && (
+          <AForgottenPage forgotten={forgotten} onChanged={refresh} />
         )}
+
+        {tab === "year" && <YearInPagesTab />}
       </main>
     </div>
   );

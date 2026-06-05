@@ -76,9 +76,6 @@ export function RevisitATime() {
 
   return (
     <div>
-      <p className="font-sans text-sm text-faint-ink mb-4">
-        Pick a month, and Yadegar reads it back to you — then lays out the pages.
-      </p>
       <div className="flex flex-wrap items-center gap-3 mb-2">
         <select
           value={month}

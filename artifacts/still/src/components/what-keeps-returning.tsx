@@ -26,11 +26,6 @@ export function WhatKeepsReturning() {
 
   return (
     <div>
-      <p className="font-sans text-sm text-faint-ink mb-4">
-        The threads and lines that keep coming back across your years — let
-        Yadegar find one.
-      </p>
-
       {!pending && !result && (
         <button
           onClick={go}

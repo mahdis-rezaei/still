@@ -50,14 +50,7 @@ export function ThenAndNow() {
   }
 
   return (
-    <section className="mb-10">
-      <h2 className="font-display text-2xl text-deep-brown mb-1">
-        How far you've come
-      </h2>
-      <p className="font-sans text-sm text-faint-ink mb-4">
-        Pick a year, and Yadegar holds it up against where you are now.
-      </p>
-
+    <div>
       <div className="flex items-center gap-3 mb-2">
         <select
           value={year}
@@ -106,6 +99,6 @@ export function ThenAndNow() {
           )}
         </div>
       )}
-    </section>
+    </div>
   );
 }
