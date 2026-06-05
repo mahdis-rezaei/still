@@ -1,9 +1,11 @@
 Re-sync this workspace to the latest of GitHub branch claude/ecstatic-wright-y4npO
-(head 356b3ed), same method as before. NO migration, NO new endpoints, NO new
-secrets. NOTE: this head now INCLUDES the engine fix in artifacts/api-server/src/
-routes/still.ts (PROMPT_VERSION 2026-06-05.2) — so a full re-sync is safe again
-and is the intended path. The drift is resolved: GitHub now matches the engine
-that passed the live eval 11/11.
+(head 546f321 or later), same method as before. NO migration, NO new endpoints,
+NO new secrets. This head INCLUDES the full engine in artifacts/api-server/src/
+routes/still.ts at PROMPT_VERSION 2026-06-05.4 — the observation-framing fix AND
+the three selection-bug nudges (age / catchup / wound-raw), all verified live
+(Selection 14/16, Voice 10/10). GitHub now matches the published engine, so a
+full re-sync is safe and is the intended path. Do NOT sync to an OLDER head —
+that would revert still.ts and drop the live fixes.
 
 What lands:
   - "Look back" is reworked from a single tabbed page into three lenses, each
@@ -58,7 +60,7 @@ is the still.ts voicing prompt + PROMPT_VERSION bump above — no new params, no
 schema change.
 
 Steps:
-1. SYNC the code to origin (head 356b3ed). Do not edit app code or prompts.
+1. SYNC the code to origin (head 546f321 or later). Do not edit app code or prompts.
 2. pnpm install — no-op.
 3. NO drizzle-kit push (no schema change).
 4. RE-PUBLISH the deployment (PROMPT_VERSION bump means the result cache
