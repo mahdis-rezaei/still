@@ -16,8 +16,8 @@ import {
 } from "../lib/email";
 import { runMemoryForUser } from "../lib/memory-engine";
 import { tagPendingEntries } from "../lib/resurface-safety";
-import { onThisDayForUser } from "../lib/on-this-day";
-import { sweepMemoryJobs } from "../lib/memory-jobs";
+import { onThisDayForUser, onThisDayFramedSet } from "../lib/on-this-day";
+import { sweepMemoryJobs, enqueueMemoryJob } from "../lib/memory-jobs";
 
 const router = Router();
 
@@ -269,6 +269,52 @@ router.post("/cron/process-memory-jobs", async (req, res): Promise<void> => {
   } catch (err) {
     req.log.error({ err }, "Cron process-memory-jobs error");
     res.status(500).json({ error: "Failed to process memory jobs" });
+  }
+});
+
+// POST /cron/warm-on-this-day — pre-compute the VOICED "On this day" so the Today
+// page serves it from the engine cache (instant) instead of a cold ~tens-of-
+// seconds read on first visit. For each non-protected user with pages near today,
+// enqueue an on_this_day job over the SAME entry ids the page will read (via
+// onThisDayFramedSet), then the backstop drains them. Idempotent (deduped per
+// user+date); x-cron-secret. Enqueue-only (no optimistic start) so a batch never
+// stampedes the engine. Daily cadence (the date changes daily).
+router.post("/cron/warm-on-this-day", async (req, res): Promise<void> => {
+  const auth = requireCronSecret(req);
+  if (!auth.ok) {
+    res.status(auth.status).json({ error: auth.error });
+    return;
+  }
+  try {
+    const users = await db
+      .select({
+        id: usersTable.id,
+        timezone: usersTable.timezone,
+        memorySensitivity: usersTable.memorySensitivity,
+      })
+      .from(usersTable)
+      .where(isNull(usersTable.deletedAt));
+
+    let enqueued = 0;
+    for (const u of users) {
+      if (u.memorySensitivity === "protected") continue;
+      const target = localDayInTz(u.timezone);
+      const { years } = await onThisDayFramedSet(u.id, target);
+      if (years.length === 0) continue;
+      const date = target.toISOString().slice(0, 10);
+      await enqueueMemoryJob(
+        u.id,
+        "on_this_day",
+        { entryIds: years.map((y) => y.entryId) },
+        `otd:${u.id}:${date}`,
+        false, // enqueue only; the backstop drains the batch
+      );
+      enqueued++;
+    }
+    res.json({ enqueued });
+  } catch (err) {
+    req.log.error({ err }, "Cron warm-on-this-day error");
+    res.status(500).json({ error: "Failed to warm on-this-day" });
   }
 });
 

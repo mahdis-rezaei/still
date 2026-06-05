@@ -58,15 +58,19 @@ One additive table, `memory_jobs`, via `drizzle-kit push` (same flow as capsules
 No change to existing tables/data.
 
 ## Slices
-- **A — schema (this commit):** `memory_jobs` table + ADR. Inert; nothing reads it
-  yet. (`drizzle-kit push` creates the table when the user runs it.)
-- **B — queue + run flow:** job lib (`enqueue` w/ dedupe, `claimAndProcess`,
-  backstop sweep); `POST /memories/run` → enqueue; `GET /memories/jobs/:id`;
-  `POST /cron/process-memory-jobs`; frontend: button → enqueue → poll → render
-  (resume on revisit). Dev-verify.
-- **C — on-this-day warming** via the queue (instant voiced lead); then ship the
-  on-this-day feature (held from ADR 0001 work) already-instant.
-- **D — dev A/B + prod**, with the backstop cron scheduled.
+- **A — DONE:** `memory_jobs` table + ADR. Inert.
+- **B — DONE:** job lib (`enqueueMemoryJob` w/ dedupe + optimistic start,
+  `processMemoryJob` atomic claim, `sweepMemoryJobs` backstop); `POST
+  /memories/run` → enqueue when `ASYNC_MEMORY=on` (else unchanged sync);
+  `GET /memories/jobs/:id`; `POST /cron/process-memory-jobs`; frontend enqueue →
+  poll (3s) → render, resume via `localStorage`.
+- **C — DONE:** on-this-day warming. `onThisDayFramedSet` is shared by the framed
+  endpoint and `POST /cron/warm-on-this-day` so warm + serve use identical entry
+  ids → the warmed engine cache lines up and the page serves the voiced lead
+  instantly. Warm cron enqueue-only (no optimistic stampede); backstop drains.
+- **D — NEXT:** dev-verify B+C together, then the ordered prod enable
+  (`drizzle-kit push` → `ASYNC_MEMORY=on` → schedule `process-memory-jobs` +
+  `warm-on-this-day` crons).
 
 ## Rollback
 `POST /memories/run` keeps a synchronous fallback path behind a flag during

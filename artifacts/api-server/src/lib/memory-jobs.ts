@@ -21,6 +21,9 @@ export async function enqueueMemoryJob(
   kind: "run" | "on_this_day",
   params: Record<string, unknown>,
   dedupeKey: string,
+  // Bulk warming enqueues many at once and lets the backstop drain them, so it
+  // passes false to skip the optimistic in-process start (no thundering herd).
+  optimistic = true,
 ): Promise<string> {
   const existing = await db
     .select({ id: memoryJobsTable.id })
@@ -41,7 +44,7 @@ export async function enqueueMemoryJob(
     .returning({ id: memoryJobsTable.id });
 
   // Fast path: start immediately. Errors are caught and surfaced via the job row.
-  void processMemoryJob(row.id).catch(() => {});
+  if (optimistic) void processMemoryJob(row.id).catch(() => {});
   return row.id;
 }
 

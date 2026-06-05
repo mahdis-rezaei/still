@@ -20,9 +20,9 @@ function asyncMemoryEnabled(): boolean {
 import {
   onThisDayForUser,
   aroundThisTimeForUser,
+  onThisDayFramedSet,
   favoritesForUser,
   forgottenForUser,
-  type DateMemory,
 } from "../lib/on-this-day";
 
 const router = Router();
@@ -219,11 +219,7 @@ router.get("/memories/on-this-day/framed", async (req, res): Promise<void> => {
     return;
   }
   try {
-    const exactItems = await onThisDayForUser(req.userId!, target);
-    const exact = exactItems.length > 0;
-    const years: DateMemory[] = exact
-      ? exactItems
-      : await aroundThisTimeForUser(req.userId!, target);
+    const { exact, years } = await onThisDayFramedSet(req.userId!, target);
 
     if (years.length === 0) {
       res.json({ exact: false, years: [], framed: null });
