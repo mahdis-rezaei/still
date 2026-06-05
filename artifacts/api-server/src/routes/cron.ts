@@ -17,6 +17,7 @@ import {
 import { runMemoryForUser } from "../lib/memory-engine";
 import { tagPendingEntries } from "../lib/resurface-safety";
 import { onThisDayForUser } from "../lib/on-this-day";
+import { sweepMemoryJobs } from "../lib/memory-jobs";
 
 const router = Router();
 
@@ -244,6 +245,30 @@ router.post("/cron/tag-resurface-safety", async (req, res): Promise<void> => {
   } catch (err) {
     req.log.error({ err }, "Cron tag-resurface-safety error");
     res.status(500).json({ error: "Failed to tag entries" });
+  }
+});
+
+// POST /cron/process-memory-jobs — backstop for async memory surfacing (ADR
+// 0002). Authenticated by x-cron-secret. Resets jobs whose worker died and
+// processes pending ones; the optimistic in-process start handles the common
+// case, so this rarely has work. Processes INLINE (one per tick by default) so
+// the instance stays alive for the engine read — like the other engine crons it
+// may exceed a short client timeout while the server finishes. Optional ?limit=N.
+router.post("/cron/process-memory-jobs", async (req, res): Promise<void> => {
+  const auth = requireCronSecret(req);
+  if (!auth.ok) {
+    res.status(auth.status).json({ error: auth.error });
+    return;
+  }
+  const limitRaw = Number((req.query as { limit?: string }).limit);
+  const limit =
+    Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 10) : 1;
+  try {
+    const summary = await sweepMemoryJobs(limit);
+    res.json(summary);
+  } catch (err) {
+    req.log.error({ err }, "Cron process-memory-jobs error");
+    res.status(500).json({ error: "Failed to process memory jobs" });
   }
 });
 

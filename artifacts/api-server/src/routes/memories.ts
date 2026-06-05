@@ -9,6 +9,14 @@ import { UpdateMemoryBody, RunMemoryBody } from "@workspace/api-zod";
 import { requireAuth } from "../lib/auth";
 import { rateLimit } from "../lib/rate-limit";
 import { runMemoryForUser } from "../lib/memory-engine";
+import { enqueueMemoryJob, getMemoryJob } from "../lib/memory-jobs";
+
+// ADR 0002: when on, long reads run as background jobs (enqueue + poll) instead
+// of blocking the request. Off → the synchronous path below, byte-identical to
+// before, so this is a clean dark-ship + instant rollback.
+function asyncMemoryEnabled(): boolean {
+  return process.env.ASYNC_MEMORY === "on";
+}
 import {
   onThisDayForUser,
   aroundThisTimeForUser,
@@ -56,6 +64,26 @@ router.post("/memories/run", runLimiter, async (req, res): Promise<void> => {
     res.status(400).json({ error: "Invalid run input" });
     return;
   }
+
+  // Async (ADR 0002): enqueue and return a job to poll, so the request never
+  // hangs for minutes and the user can leave and come back.
+  if (asyncMemoryEnabled()) {
+    try {
+      const jobId = await enqueueMemoryJob(
+        req.userId!,
+        "run",
+        {},
+        `run:${req.userId}`,
+      );
+      res.status(202).json({ jobId, status: "queued" });
+    } catch (err) {
+      req.log.error({ err }, "Enqueue memory run failed");
+      res.status(500).json({ error: "Failed to start the memory engine" });
+    }
+    return;
+  }
+
+  // Synchronous fallback (default): unchanged behavior.
   try {
     const result = await runMemoryForUser(req.userId!, parsed.data);
     if (!result.surfaced) {
@@ -70,6 +98,64 @@ router.post("/memories/run", runLimiter, async (req, res): Promise<void> => {
   } catch (err) {
     req.log.error({ err }, "Memory run error");
     res.status(500).json({ error: "Failed to run the memory engine" });
+  }
+});
+
+// GET /memories/jobs/:id — poll an async run. Declared BEFORE /memories/:id so
+// "jobs" is never read as a memory id. Returns { status } while pending, and on
+// done resolves to the SAME shape the synchronous run returned ({ surfaced,
+// memory } | { surfaced:false, reason }) by dereferencing the stored pointer.
+router.get("/memories/jobs/:id", async (req, res): Promise<void> => {
+  try {
+    const job = await getMemoryJob(req.userId!, req.params.id);
+    if (!job) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    if (job.status === "error") {
+      res.json({ status: "error", result: { surfaced: false, reason: "error" } });
+      return;
+    }
+    if (job.status !== "done") {
+      res.json({ status: job.status });
+      return;
+    }
+    const r = (job.result ?? {}) as {
+      surfaced?: boolean;
+      memoryId?: string;
+      reason?: string;
+      supportMessage?: string | null;
+    };
+    if (r.surfaced && r.memoryId) {
+      const [row] = await db
+        .select()
+        .from(returnedMemoriesTable)
+        .where(
+          and(
+            eq(returnedMemoriesTable.id, r.memoryId),
+            eq(returnedMemoriesTable.userId, req.userId!),
+          ),
+        )
+        .limit(1);
+      res.json({
+        status: "done",
+        result: row
+          ? { surfaced: true, memory: toMemory(row) }
+          : { surfaced: false, reason: "nothing" },
+      });
+      return;
+    }
+    res.json({
+      status: "done",
+      result: {
+        surfaced: false,
+        reason: r.reason ?? "nothing",
+        supportMessage: r.supportMessage ?? null,
+      },
+    });
+  } catch (err) {
+    req.log.error({ err }, "Memory job poll error");
+    res.status(500).json({ error: "Failed to read the job" });
   }
 });
 

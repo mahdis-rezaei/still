@@ -4,8 +4,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   useCreateEntry,
   useUpdateEntry,
-  useRunMemory,
   getListEntriesQueryKey,
+  customFetch,
   type MemoryRunResult,
 } from "@workspace/api-client-react";
 import { AppNav } from "@/components/app-nav";
@@ -36,6 +36,23 @@ function todayLong(): string {
 
 type Status = "idle" | "saving" | "kept";
 
+const RUN_JOB_KEY = "still:run-job";
+
+// Poll an async memory job (ADR 0002) to completion, then resolve to the same
+// shape a synchronous run returns. Bounded (~4 min) so it never spins forever.
+async function pollRunJob(jobId: string): Promise<MemoryRunResult> {
+  for (let i = 0; i < 80; i++) {
+    const r = await customFetch<{ status: string; result?: MemoryRunResult }>(
+      `/api/memories/jobs/${jobId}`,
+      { responseType: "json" },
+    );
+    if (r.status === "done" && r.result) return r.result;
+    if (r.status === "error") return { surfaced: false, reason: "error" };
+    await new Promise((res) => setTimeout(res, 3000));
+  }
+  return { surfaced: false, reason: "error" };
+}
+
 export default function Today() {
   const queryClient = useQueryClient();
   const createEntry = useCreateEntry();
@@ -47,8 +64,8 @@ export default function Today() {
     () => PROMPTS[Math.floor(Math.random() * PROMPTS.length)],
   );
 
-  const runMemory = useRunMemory();
   const [run, setRun] = useState<MemoryRunResult | null>(null);
+  const [pending, setPending] = useState(false);
 
   // Reading a large archive is a two-pass model read and can take a couple of
   // minutes. Without feedback that long wait reads as "broken," so we show calm,
@@ -56,23 +73,60 @@ export default function Today() {
   // makes the wait feel anxious).
   const [elapsed, setElapsed] = useState(0);
   useEffect(() => {
-    if (!runMemory.isPending) {
+    if (!pending) {
       setElapsed(0);
       return;
     }
     const t = setInterval(() => setElapsed((s) => s + 1), 1000);
     return () => clearInterval(t);
-  }, [runMemory.isPending]);
+  }, [pending]);
 
+  // ADR 0002: the run may come back synchronously (a result) or as an async job
+  // to poll. We persist the job id so leaving and returning resumes the read.
   async function bringPageBack() {
     setRun(null);
+    setPending(true);
     try {
-      const result = await runMemory.mutateAsync({ data: {} });
-      setRun(result);
+      const resp = await customFetch<MemoryRunResult & { jobId?: string }>(
+        "/api/memories/run",
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({}),
+          responseType: "json",
+        },
+      );
+      if (resp && typeof resp.jobId === "string") {
+        localStorage.setItem(RUN_JOB_KEY, resp.jobId);
+        setRun(await pollRunJob(resp.jobId));
+        localStorage.removeItem(RUN_JOB_KEY);
+      } else {
+        setRun(resp as MemoryRunResult);
+      }
     } catch {
       setRun({ surfaced: false, reason: "error" });
+    } finally {
+      setPending(false);
     }
   }
+
+  // Resume an in-flight run if the user navigated away and came back.
+  useEffect(() => {
+    const jobId = localStorage.getItem(RUN_JOB_KEY);
+    if (!jobId) return;
+    setPending(true);
+    (async () => {
+      try {
+        setRun(await pollRunJob(jobId));
+      } catch {
+        setRun({ surfaced: false, reason: "error" });
+      } finally {
+        localStorage.removeItem(RUN_JOB_KEY);
+        setPending(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Refs so the debounced saver never reads stale state.
   const entryIdRef = useRef<string | null>(null);
@@ -151,17 +205,17 @@ export default function Today() {
           </div>
           <button
             onClick={bringPageBack}
-            disabled={runMemory.isPending}
+            disabled={pending}
             className="font-sans text-sm text-soft-ink hover:text-ink border border-border hover:border-accent-sepia rounded-full px-4 py-2 transition-colors disabled:opacity-50"
             data-testid="button-bring-page-back"
           >
-            {runMemory.isPending ? "reading…" : "✦ Bring a page back"}
+            {pending ? "reading…" : "✦ Bring a page back"}
           </button>
         </div>
 
         {/* While reading, calm time-aware reassurance so the long two-pass read
             never reads as a failure. */}
-        {runMemory.isPending && (
+        {pending && (
           <section className="mb-8">
             <div className="border border-border/70 rounded-2xl bg-surface/50 p-6">
               <p className="font-body text-soft-ink leading-relaxed">
