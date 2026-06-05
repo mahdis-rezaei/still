@@ -54,6 +54,17 @@ export default function LookBack() {
           subtitle="Your own pages, returning by the calendar and by the ones you treasured. Nothing is added — just brought back."
         />
 
+        {/* Returns — the pages the engine has already brought back. (Will become
+            a sub-tab of the Look back home.) */}
+        <div className="-mt-4 mb-8">
+          <Link
+            href="/returns"
+            className="font-sans text-sm text-soft-ink hover:text-ink transition-colors"
+          >
+            Returns — pages brought back →
+          </Link>
+        </div>
+
         {/* Then & now — the engine reads a year you choose against where you are
             now. Self-hides when there's no past year to compare. */}
         <ThenAndNow />

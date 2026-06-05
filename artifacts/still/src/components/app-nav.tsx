@@ -3,40 +3,69 @@ import { Link, useLocation } from "wouter";
 import { useResendVerification } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 
-// Ways to revisit the archive — grouped under one calm "Explore" menu rather
-// than crowding the top bar with a link each.
-const EXPLORE_ITEMS = [
-  { href: "/search", label: "Search" },
-  { href: "/timeline", label: "Timeline" },
-  { href: "/look-back", label: "Look back" },
-  { href: "/calendar", label: "Calendar" },
+// Explore = your archive + keepsakes, shown as in-page sub-tabs (not a dropdown).
+const EXPLORE_TABS = [
+  { href: "/library", label: "Library" },
   { href: "/shelf", label: "Shelf" },
   { href: "/collections", label: "Collections" },
   { href: "/capsules", label: "Capsules" },
 ];
+// Ways to view the Library — secondary, shown only while in the Library section.
+const LIBRARY_VIEWS = [
+  { href: "/library", label: "List" },
+  { href: "/calendar", label: "Calendar" },
+  { href: "/timeline", label: "Timeline" },
+  { href: "/search", label: "Search" },
+];
 
-// The quiet top bar for the signed-in app: wordmark, a couple of calm links,
-// and a discreet account / sign-out on the right. Plus a soft "confirm your
-// email" banner while the account is unverified (never blocking).
+// The quiet top bar for the signed-in app. Three calm destinations by intent —
+// Today (write), Look back (be visited by your past), Explore (your archive) —
+// with account/settings on the right. A contextual second bar appears under
+// Explore for its sub-tabs. Plus a soft "confirm your email" banner.
 export function AppNav() {
   const [location, setLocation] = useLocation();
   const { user, logout } = useAuth();
   const resend = useResendVerification();
   const [resent, setResent] = useState(false);
-  const [exploreOpen, setExploreOpen] = useState(false);
 
   const isActive = (href: string) =>
     location === href || location.startsWith(href + "/");
-  const exploreActive = EXPLORE_ITEMS.some((i) => isActive(i.href));
 
-  const link = (href: string, label: string) => (
+  const inLibrary =
+    isActive("/library") ||
+    isActive("/calendar") ||
+    isActive("/timeline") ||
+    isActive("/search");
+  const exploreActive =
+    inLibrary ||
+    isActive("/shelf") ||
+    isActive("/collections") ||
+    isActive("/capsules");
+  // Returns lives under Look back (until the Look back home absorbs it).
+  const lookBackActive = isActive("/look-back") || isActive("/returns");
+
+  const navLink = (href: string, label: string, active: boolean) => (
     <Link
       href={href}
       className={
         "font-sans text-sm transition-colors " +
-        (isActive(href) ? "text-ink" : "text-soft-ink hover:text-ink")
+        (active ? "text-ink" : "text-soft-ink hover:text-ink")
       }
-      data-testid={`nav-${label.toLowerCase()}`}
+      data-testid={`nav-${label.toLowerCase().replace(/\s+/g, "-")}`}
+    >
+      {label}
+    </Link>
+  );
+
+  const subTab = (href: string, label: string, active: boolean) => (
+    <Link
+      key={href + label}
+      href={href}
+      className={
+        "font-sans text-sm transition-colors " +
+        (active ? "text-ink" : "text-soft-ink hover:text-ink")
+      }
+      data-testid={`subnav-${label.toLowerCase()}`}
     >
       {label}
     </Link>
@@ -61,57 +90,13 @@ export function AppNav() {
             Yadegar
           </Link>
           <div className="flex items-center gap-5 md:gap-6">
-            {link("/today", "Today")}
-            {link("/library", "Library")}
-
-            {/* Explore — a calm dropdown of ways to revisit the archive. */}
-            <div className="relative">
-              <button
-                onClick={() => setExploreOpen((v) => !v)}
-                className={
-                  "font-sans text-sm transition-colors flex items-center gap-1 " +
-                  (exploreActive ? "text-ink" : "text-soft-ink hover:text-ink")
-                }
-                aria-haspopup="true"
-                aria-expanded={exploreOpen}
-                data-testid="nav-explore"
-              >
-                Explore
-                <span className="text-[10px] leading-none mt-0.5">▾</span>
-              </button>
-              {exploreOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setExploreOpen(false)}
-                  />
-                  <div className="absolute left-0 mt-2 z-50 min-w-[160px] rounded-xl border border-border bg-surface shadow-sm py-1.5">
-                    {EXPLORE_ITEMS.map((i) => (
-                      <Link
-                        key={i.href}
-                        href={i.href}
-                        onClick={() => setExploreOpen(false)}
-                        className={
-                          "block px-4 py-2 font-sans text-sm transition-colors " +
-                          (isActive(i.href)
-                            ? "text-ink bg-background/60"
-                            : "text-soft-ink hover:text-ink hover:bg-background/40")
-                        }
-                        data-testid={`nav-explore-${i.label.toLowerCase().replace(/\s+/g, "-")}`}
-                      >
-                        {i.label}
-                      </Link>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-
-            {link("/returns", "Returns")}
-            {link("/settings", "Settings")}
+            {navLink("/today", "Today", isActive("/today"))}
+            {navLink("/look-back", "Look back", lookBackActive)}
+            {navLink("/library", "Explore", exploreActive)}
           </div>
         </div>
         <div className="flex items-center gap-4">
+          {navLink("/settings", "Settings", isActive("/settings"))}
           <span className="hidden sm:inline font-sans text-xs text-faint-ink">
             {user?.name || user?.email}
           </span>
@@ -127,6 +112,41 @@ export function AppNav() {
           </button>
         </div>
       </nav>
+
+      {/* Explore sub-tabs — contextual second bar (in-page tabs, not a dropdown). */}
+      {exploreActive && (
+        <div className="w-full px-6 md:px-8 py-3 border-b border-border/40 bg-surface/30">
+          <div className="flex items-center gap-5 md:gap-6">
+            {EXPLORE_TABS.map((t) =>
+              subTab(
+                t.href,
+                t.label,
+                t.label === "Library" ? inLibrary : isActive(t.href),
+              ),
+            )}
+          </div>
+          {inLibrary && (
+            <div className="flex items-center gap-4 mt-2">
+              {LIBRARY_VIEWS.map((v) => (
+                <Link
+                  key={v.href + v.label}
+                  href={v.href}
+                  className={
+                    "font-sans text-xs transition-colors " +
+                    (isActive(v.href) ||
+                    (v.label === "List" && isActive("/library"))
+                      ? "text-soft-ink"
+                      : "text-faint-ink hover:text-soft-ink")
+                  }
+                  data-testid={`subnav-view-${v.label.toLowerCase()}`}
+                >
+                  {v.label}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {user && !user.emailVerified && (
         <div className="w-full bg-[#F3EAD7] border-b border-accent-sepia/20 px-6 md:px-8 py-2.5 text-center">
