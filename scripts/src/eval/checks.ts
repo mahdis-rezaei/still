@@ -377,14 +377,15 @@ function voiceChecks(res: EngineResult): Check[] {
 
   // No redundant restatement: the card renders the quote directly above the
   // observation, so an observation that re-quotes most of that same line reads
-  // as repetition. The voice should FRAME the line, not echo it. We flag a long
-  // near-verbatim run (≥6 words AND ≥70% of the quote) against any shown line —
-  // a brief pointer fragment is fine; restating the line is not.
+  // as repetition. The voice should FRAME the line, not echo it. We flag a
+  // contiguous verbatim run that is ≥70% of a shown quote (min 3 words) — this
+  // catches a fully restated SHORT quote (e.g. "Close your eyes Mahdis.") as
+  // well as a long one, while a brief pointer fragment still passes.
   const restated = res.result.quotes.find((q) => {
     const qWords = norm(q.text).split(" ").filter(Boolean).length;
-    if (qWords < 4) return false;
+    if (qWords < 3) return false;
     const run = longestSharedWordRun(obs, q.text);
-    return run >= 6 && run >= 0.7 * qWords;
+    return run >= 3 && run >= 0.7 * qWords;
   });
   checks.push({
     name: "observation doesn't restate the displayed quote",

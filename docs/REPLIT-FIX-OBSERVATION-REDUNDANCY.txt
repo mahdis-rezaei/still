@@ -47,8 +47,10 @@ BEFORE → AFTER (illustrative)
 ACCEPTANCE / REGRESSION GUARD (already added to the harness)
 scripts/src/eval/checks.ts now has a voice check:
   "observation doesn't restate the displayed quote"
-It FAILS any observation that shares a verbatim run of ≥6 words AND ≥70% of a
-displayed quote. Run it live against the engine after the prompt change:
+It FAILS any observation that contains a contiguous verbatim run ≥70% of a
+displayed quote (min 3 words) — so a fully restated short line like "Close your
+eyes Mahdis." is caught as well as a long one. Run it live against the engine
+after the prompt change:
   STILL_MODE=http STILL_API_URL=<engine base incl. /api> STILL_FRESH=1 \
     pnpm --filter @workspace/scripts run eval
 The check should go GREEN once observations stop re-quoting the shown line. (The
