@@ -12,6 +12,7 @@ import { AppNav } from "@/components/app-nav";
 import { MemoryCard } from "@/components/memory-card";
 import { OnThisDay } from "@/components/on-this-day";
 import { YearInPagesBanner } from "@/components/year-in-pages-banner";
+import { EntryImages } from "@/components/entry-images";
 
 const PROMPTS = [
   "What wants to be written today?",
@@ -60,6 +61,9 @@ export default function Today() {
   const updateEntry = useUpdateEntry();
 
   const [body, setBody] = useState("");
+  // Mirror of entryIdRef for rendering (refs don't trigger re-renders). Lets the
+  // image attacher know which page to attach to once the page is first saved.
+  const [entryId, setEntryId] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>("idle");
   const [prompt] = useState(
     () => PROMPTS[Math.floor(Math.random() * PROMPTS.length)],
@@ -149,6 +153,7 @@ export default function Today() {
           data: { body: text, entryDate: todayISO() },
         });
         entryIdRef.current = row.id;
+        setEntryId(row.id);
       } else {
         await updateEntry.mutateAsync({
           id: entryIdRef.current,
@@ -179,6 +184,22 @@ export default function Today() {
     scheduleSave();
   }
 
+  // Attaching an image needs a saved page. If there's text but no entry yet,
+  // create it now and return its id; if the page is still blank, there's nothing
+  // to attach to.
+  async function ensureEntry(): Promise<string | null> {
+    if (entryIdRef.current) return entryIdRef.current;
+    const text = latestRef.current;
+    if (!text.trim()) return null;
+    const row = await createEntry.mutateAsync({
+      data: { body: text, entryDate: todayISO() },
+    });
+    entryIdRef.current = row.id;
+    setEntryId(row.id);
+    queryClient.invalidateQueries({ queryKey: getListEntriesQueryKey() });
+    return row.id;
+  }
+
   // Flush on unmount so nothing in flight is lost.
   useEffect(() => {
     return () => {
@@ -191,6 +212,7 @@ export default function Today() {
     entryIdRef.current = null;
     latestRef.current = "";
     setBody("");
+    setEntryId(null);
     setStatus("idle");
   }
 
@@ -280,6 +302,7 @@ export default function Today() {
             className="flex-1 w-full bg-transparent text-xl md:text-2xl text-ink font-body leading-relaxed placeholder:text-faint-ink/80 focus:outline-none resize-none"
             data-testid="input-entry"
           />
+          <EntryImages entryId={entryId} editable ensureEntry={ensureEntry} />
           <div className="flex items-center justify-between pt-4 mt-4 border-t border-border/60">
             <span
               className="font-sans text-xs text-faint-ink"

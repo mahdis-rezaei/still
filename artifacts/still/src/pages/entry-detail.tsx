@@ -16,6 +16,7 @@ import {
 import { AppNav } from "@/components/app-nav";
 import { ShelfToggle } from "@/components/shelf-toggle";
 import { CollectionPicker } from "@/components/collection-picker";
+import { EntryImages } from "@/components/entry-images";
 
 const RESURFACING: {
   value: EntryUpdateResurfacingPreference;
@@ -203,11 +204,15 @@ export default function EntryDetail() {
                     Cancel
                   </button>
                 </div>
+                <EntryImages entryId={id} editable />
               </div>
             ) : (
-              <p className="font-body text-lg md:text-xl text-ink leading-relaxed whitespace-pre-wrap">
-                {entry.body}
-              </p>
+              <>
+                <p className="font-body text-lg md:text-xl text-ink leading-relaxed whitespace-pre-wrap">
+                  {entry.body}
+                </p>
+                <EntryImages entryId={id} />
+              </>
             )}
 
             {!editing && (
