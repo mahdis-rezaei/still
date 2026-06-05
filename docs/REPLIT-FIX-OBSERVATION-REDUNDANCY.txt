@@ -1,0 +1,59 @@
+Replit Fix Prompt — Still: the observation must FRAME the line, not re-quote it
+================================================================================
+
+CONTEXT
+In the product, a surfaced memory card renders the chosen QUOTE verbatim (large,
+italic) and then renders the engine's OBSERVATION directly beneath it. So when
+the observation repeats the same line, the user sees the quote twice — it reads
+as redundant. Real example from production ("What keeps returning"):
+
+  QUOTE shown on the card:
+    "It sounds like your scope of your spirit collapse with your scope of your
+     body! And they are not the same thing!"
+
+  OBSERVATION shown right below it:
+    "A coaching voice, mid-session — and suddenly this: 'your scope of your
+     spirit collapse with your scope of your body. And they are not the same
+     thing.' The whole page turns on that distinction."
+
+The observation re-quotes almost the entire displayed line, then adds one short
+clause. That repetition is the bug.
+
+THE FIX (PASS-2 voicing prompt only — NO schema/contract change)
+The observation must FRAME the displayed quote, not reproduce it. The card
+already shows the words; the observation's job is to point at what they do.
+
+Rules to add/tighten in the voicing instructions:
+  1. Do NOT include the displayed quote, or any long verbatim run of it, inside
+     the observation. Ban the "…and suddenly this: '<quote>'" / "There's a line
+     where she says '<quote>'" pattern outright.
+  2. Instead, point AT the line: name what shifts, what it holds together, or
+     why it still lands — in your own words, without echoing the shown text.
+  3. Keep every existing constraint: 1–3 sentences, concise (≤ ~45 words),
+     varied opener (the "There's a line…" opener stays banned), no literary/
+     analysis vocab, no interior/mind-reading claims, notice — don't interpret.
+  4. Referencing a SECOND, non-displayed fragment (e.g. the far end of a
+     cross-time thread) is still fine — the existing "only quote lines that are
+     actually shown" rule still applies. The point of THIS fix is narrower:
+     don't echo the one line already rendered above the observation.
+
+BEFORE → AFTER (illustrative)
+  Before: "A coaching voice, mid-session — and suddenly this: 'your scope of
+           your spirit collapse with your scope of your body...' The whole page
+           turns on that distinction."
+  After:  "Mid-session, you draw a hard line between spirit and body — and the
+           whole page pivots on insisting they aren't the same thing."
+
+ACCEPTANCE / REGRESSION GUARD (already added to the harness)
+scripts/src/eval/checks.ts now has a voice check:
+  "observation doesn't restate the displayed quote"
+It FAILS any observation that shares a verbatim run of ≥6 words AND ≥70% of a
+displayed quote. Run it live against the engine after the prompt change:
+  STILL_MODE=http STILL_API_URL=<engine base incl. /api> STILL_FRESH=1 \
+    pnpm --filter @workspace/scripts run eval
+The check should go GREEN once observations stop re-quoting the shown line. (The
+recorded before-states catchup-2016-09 / breathe-2015-08 trip it on purpose —
+they snapshot the old house style.)
+
+This is a prompt-quality change. If it alters output text under a fixed
+PROMPT_VERSION, bump PROMPT_VERSION so cached results don't serve the old voice.

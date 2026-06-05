@@ -9,10 +9,16 @@ import type { EngineResult } from "./types";
 //   with the honest head-to-head trace. Over-gating FIXED ("I am living it! Or
 //   maybe trying to live it!" is its own candidate and wins on emotional_center,
 //   4 vs Funny Laughing God 3 — no anomaly); "6 bodies" stays gated (View A);
-//   date is real; voice opener varied with no narrate-the-text. Fully GREEN.
+//   date is real; voice opener varied with no narrate-the-text. Selection is
+//   GREEN; as of the redundancy guard it now trips one voice check — the
+//   observation re-quotes its displayed line ('I am living it! Or maybe trying
+//   to live it!') verbatim. That's a recorded BEFORE-state of the engine's
+//   house style (the card shows the quote, so repeating it is redundant);
+//   it goes green once the PASS-2 voicing is fixed to frame, not re-quote.
 // - breathe-2015-08: PRE-voice-fix capture. Selection + hard floor are correct;
-//   the observation still uses the banned "There's a line…" opener, so its voice
-//   checks fail by design — it records the before-state.
+//   the observation still uses the banned "There's a line…" opener AND re-quotes
+//   its displayed line, so its voice checks fail by design — it records the
+//   before-state.
 
 export const recordings: Record<string, EngineResult> = {
   "catchup-2016-09": {

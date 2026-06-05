@@ -285,6 +285,26 @@ function extractQuotedSnippets(s: string): string[] {
   return out;
 }
 
+// Longest run of consecutive (normalized) words shared between two strings.
+// Used to detect when an observation re-quotes the line the card already shows
+// above it: a long verbatim run means the voice is repeating, not framing.
+function longestSharedWordRun(a: string, b: string): number {
+  const aw = norm(a).split(" ").filter(Boolean);
+  const bw = norm(b).split(" ").filter(Boolean);
+  let best = 0;
+  const dp = new Array(bw.length + 1).fill(0);
+  for (let i = 1; i <= aw.length; i++) {
+    let prev = 0;
+    for (let j = 1; j <= bw.length; j++) {
+      const tmp = dp[j];
+      dp[j] = aw[i - 1] === bw[j - 1] ? prev + 1 : 0;
+      if (dp[j] > best) best = dp[j];
+      prev = tmp;
+    }
+  }
+  return best;
+}
+
 function countSentences(s: string): number {
   // Strip embedded quoted material so a quoted "…life!" doesn't inflate the count.
   const stripped = s.replace(/['"‘’“”][^'"‘’“”]*['"‘’“”]/g, " ");
@@ -353,6 +373,25 @@ function voiceChecks(res: EngineResult): Check[] {
       : referenced.length
         ? "all referenced quotes are shown"
         : "no inline quotes (points without quoting)",
+  });
+
+  // No redundant restatement: the card renders the quote directly above the
+  // observation, so an observation that re-quotes most of that same line reads
+  // as repetition. The voice should FRAME the line, not echo it. We flag a long
+  // near-verbatim run (≥6 words AND ≥70% of the quote) against any shown line —
+  // a brief pointer fragment is fine; restating the line is not.
+  const restated = res.result.quotes.find((q) => {
+    const qWords = norm(q.text).split(" ").filter(Boolean).length;
+    if (qWords < 4) return false;
+    const run = longestSharedWordRun(obs, q.text);
+    return run >= 6 && run >= 0.7 * qWords;
+  });
+  checks.push({
+    name: "observation doesn't restate the displayed quote",
+    pass: !restated,
+    detail: restated
+      ? `re-quotes the shown line ("${restated.text.slice(0, 50)}…") — frame it, don't repeat it`
+      : "ok",
   });
 
   return checks;
