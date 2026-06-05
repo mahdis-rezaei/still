@@ -156,7 +156,7 @@ export function AppNav() {
             >
               {menuItem("/settings", "Settings")}
               {menuItem("/why", "About Yadegar")}
-              {menuItem("/settings", "My profile")}
+              {menuItem("/settings/profile", "My profile")}
               <div className="my-1.5 border-t border-border/60" />
               <button
                 onClick={async () => {

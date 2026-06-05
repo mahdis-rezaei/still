@@ -18,12 +18,18 @@ export default function Settings() {
           <p className="font-sans text-xs uppercase tracking-[0.18em] text-faint-ink mb-3">
             Account
           </p>
-          <div className="border border-border rounded-xl bg-surface/60 p-5">
+          <Link
+            href="/settings/profile"
+            className="block border border-border rounded-xl bg-surface/60 p-5 hover:border-accent-sepia transition-colors"
+          >
             {user?.name && (
               <p className="font-body text-lg text-ink">{user.name}</p>
             )}
             <p className="font-body text-soft-ink">{user?.email}</p>
-          </div>
+            <p className="font-sans text-sm text-soft-ink mt-2">
+              Edit your profile →
+            </p>
+          </Link>
         </section>
 
         <section className="mb-10">

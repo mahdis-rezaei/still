@@ -165,6 +165,28 @@ router.get("/auth/me", requireAuth, (req, res): void => {
   res.json(toAuthUser(req.user!));
 });
 
+// Update the signed-in user's profile (just the display name for now). Trimmed,
+// capped, and an empty value clears it (the UI falls back to the email).
+router.patch("/auth/me", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const raw = (req.body ?? {}) as { name?: unknown };
+    if (typeof raw.name !== "string") {
+      res.status(400).json({ error: "name must be a string" });
+      return;
+    }
+    const name = raw.name.trim().slice(0, 80);
+    const [user] = await db
+      .update(usersTable)
+      .set({ name: name || null, updatedAt: new Date() })
+      .where(eq(usersTable.id, req.userId!))
+      .returning();
+    res.json(toAuthUser(user));
+  } catch (err) {
+    req.log.error({ err }, "Update profile error");
+    res.status(500).json({ error: "Failed to update profile" });
+  }
+});
+
 router.post(
   "/auth/complete-onboarding",
   requireAuth,
