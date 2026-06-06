@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import {
   Switch,
   Route,
@@ -40,7 +40,6 @@ import CollectionsPage from "@/pages/collections";
 import CollectionDetail from "@/pages/collection-detail";
 import Import from "@/pages/import";
 import Settings from "@/pages/settings";
-import Help from "@/pages/help";
 import Profile from "@/pages/profile";
 import Privacy from "@/pages/privacy";
 import Notifications from "@/pages/notifications";
@@ -52,6 +51,10 @@ import { AuthProvider, useAuth } from "@/lib/auth";
 import { DevPanel } from "@/components/dev-panel";
 
 const queryClient = new QueryClient();
+
+// Help renders a heavy markdown stack (react-markdown + remark/rehype). Lazy-load
+// it so that runtime stays out of the main bundle and only loads when /help opens.
+const Help = lazy(() => import("@/pages/help"));
 
 function LoadingScreen() {
   return (
@@ -85,7 +88,8 @@ function ProtectedApp() {
   if (!user) return null; // redirecting to /login
 
   return (
-    <Switch>
+    <Suspense fallback={<LoadingScreen />}>
+      <Switch>
       <Route path="/onboarding" component={Onboarding} />
       <Route path="/">
         <Redirect to="/today" />
@@ -123,7 +127,8 @@ function ProtectedApp() {
       <Route path="/result" component={Result} />
       <Route path="/history" component={History} />
       <Route component={NotFound} />
-    </Switch>
+      </Switch>
+    </Suspense>
   );
 }
 
