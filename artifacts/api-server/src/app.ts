@@ -36,6 +36,11 @@ app.use(
 // flows in both same-origin (production) and proxied-dev setups.
 app.use(cors({ origin: true, credentials: true }));
 app.use(cookieParser());
+// Stripe webhook signatures are computed over the EXACT raw bytes, so this one
+// path must keep its body unparsed. Register the raw parser before the global
+// JSON parser (which marks the body parsed and would otherwise consume the
+// stream, breaking verification). Every other route still gets JSON below.
+app.use("/api/billing/webhook", express.raw({ type: "*/*" }));
 // Journal imports can be a whole archive of years pasted at once, well past
 // Express's 100kb default — allow a generous body so large imports don't 413.
 app.use(express.json({ limit: "10mb" }));

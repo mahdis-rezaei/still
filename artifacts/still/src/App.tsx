@@ -41,6 +41,7 @@ import CollectionDetail from "@/pages/collection-detail";
 import Import from "@/pages/import";
 import Settings from "@/pages/settings";
 import Profile from "@/pages/profile";
+import Plan from "@/pages/plan";
 import Privacy from "@/pages/privacy";
 import Notifications from "@/pages/notifications";
 import Resurfacing from "@/pages/resurfacing";
@@ -117,6 +118,7 @@ function ProtectedApp() {
       <Route path="/settings" component={Settings} />
       <Route path="/help" component={Help} />
       <Route path="/settings/profile" component={Profile} />
+      <Route path="/settings/plan" component={Plan} />
       <Route path="/settings/notifications" component={Notifications} />
       <Route path="/settings/resurfacing" component={Resurfacing} />
       <Route path="/settings/privacy" component={Privacy} />

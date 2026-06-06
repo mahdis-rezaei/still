@@ -36,13 +36,15 @@ export default function Settings() {
           <p className="font-sans text-xs uppercase tracking-[0.18em] text-faint-ink mb-3">
             Membership
           </p>
-          <div className="block border border-border rounded-xl bg-surface/60 p-5">
+          <Link
+            href="/settings/plan"
+            className="block border border-border rounded-xl bg-surface/60 p-5 hover:border-accent-sepia transition-colors"
+          >
             {user?.plan === "member" ? (
               <>
                 <p className="font-body text-lg text-ink">Member</p>
                 <p className="font-body text-soft-ink text-sm mt-1 leading-relaxed">
-                  Unlimited fresh returns across your years. Thank you for keeping
-                  Yadegar alive.
+                  Unlimited fresh returns across your years. Manage membership →
                 </p>
               </>
             ) : (
@@ -58,13 +60,12 @@ export default function Settings() {
                     {user.usage.limit}.
                   </p>
                 )}
-                <p className="font-body text-sm text-faint-ink mt-3 leading-relaxed">
-                  Membership — unlimited fresh returns across your years — is
-                  coming soon.
+                <p className="font-sans text-sm text-soft-ink mt-3">
+                  See membership →
                 </p>
               </>
             )}
-          </div>
+          </Link>
         </section>
 
         <section className="mb-10">
