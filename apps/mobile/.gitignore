@@ -1,0 +1,11 @@
+# Expo / RN — generated on your machine when you bootstrap + build
+node_modules/
+.expo/
+dist/
+web-build/
+ios/
+android/
+*.log
+.env
+# keep .env.example tracked
+!.env.example
