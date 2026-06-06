@@ -30,6 +30,9 @@ export const usageTable = pgTable(
     // When the last billable return was counted — used to collapse rapid
     // re-rolls (fresh:true clicks) into a single return.
     lastReturnAt: timestamp("last_return_at", { withTimezone: true }),
+    // When we last emailed this user that they'd reached the month's free limit,
+    // so the "you've hit your returns" lifecycle email fires at most once a period.
+    limitNotifiedAt: timestamp("limit_notified_at", { withTimezone: true }),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

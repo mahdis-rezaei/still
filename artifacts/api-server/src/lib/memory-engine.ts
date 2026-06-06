@@ -19,6 +19,7 @@ import { notMutedSql } from "./resurface-mutes";
 import { diversifiedPoolIds, capPoolByTimeSpread } from "./diversity";
 import { buildAffinityProfile } from "./affinity";
 import { recordRun } from "./usage";
+import { notifyIfAtLimit } from "./quota";
 
 const ENGINE_BASE = `http://127.0.0.1:${process.env.PORT}/api`;
 
@@ -316,14 +317,19 @@ export async function runMemoryForUser(
   // Meter the run — cache misses only (recordRun no-ops on a cache hit). Cost
   // accrues on every real model call; quota (freshReturns) only for a
   // user-initiated, non-re-roll return. Fire-and-forget: never fail a run on it.
+  const runKind = meta?.kind === "auto" || opts.preview ? "auto" : "user";
   recordRun(userId, {
     modelCalled: out.modelCalled,
     inputTokens: out.usage.inputTokens,
     outputTokens: out.usage.outputTokens,
     cacheReadTokens: out.usage.cacheReadTokens,
     cacheCreationTokens: out.usage.cacheCreationTokens,
-    kind: meta?.kind === "auto" || opts.preview ? "auto" : "user",
-  }).catch(() => {});
+    kind: runKind,
+  })
+    // After the count is recorded, a user run that just reached the free limit
+    // gets the one high-intent membership email (no-op in shadow / for members).
+    .then(() => (runKind === "user" ? notifyIfAtLimit(userId) : undefined))
+    .catch(() => {});
 
   if ("crisis" in out) {
     return {

@@ -121,6 +121,30 @@ export function welcomeEmail(opts: { name?: string | null }): {
   };
 }
 
+// ── reached the month's free returns (the high-intent conversion moment) ─────
+export function membershipLimitEmail(opts: { name?: string | null }): {
+  subject: string;
+  html: string;
+  text: string;
+} {
+  const hi = opts.name ? `${opts.name},` : "Hello,";
+  const url = `${appBase()}/settings/plan`;
+  const lines = [
+    "You've brought back all of this month's pages. Nice, that's a real practice of returning.",
+    "Revisiting anything that's already come back to you stays free, always. And if you'd like Yadegar to keep reading across your years without waiting for next month, membership opens it up: unlimited fresh returns, $8 a month or $59 a year.",
+  ];
+  const body =
+    para(hi) +
+    lines.map(para).join("") +
+    button(url, "See membership") +
+    para("Either way, your journal is yours. Mahdis");
+  return {
+    subject: "You've used this month's returns",
+    html: shell(body),
+    text: `${hi}\n\n${lines.join("\n\n")}\n\nSee membership: ${url}\n\nEither way, your journal is yours. Mahdis\n`,
+  };
+}
+
 // ── a warm thank-you when someone becomes a member ──────────────────────────
 export function membershipWelcomeEmail(opts: { name?: string | null }): {
   subject: string;

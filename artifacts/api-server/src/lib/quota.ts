@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
-import { db, usageTable, type User } from "@workspace/db";
+import { db, usageTable, usersTable, type User } from "@workspace/db";
 import { monthStartUTC, REROLL_WINDOW_MS } from "./usage";
+import { sendEmail, membershipLimitEmail } from "./email";
 
 // Phase 1 — free-tier quota on the one costly thing: a FRESH AI return (a
 // cache-miss /memories/run). Writing, keeping, importing, browsing, exporting, and
@@ -128,4 +129,57 @@ export async function assertCanRunMemory(
 
   if (QUOTA_ENFORCED) throw new QuotaExceeded(summary, true);
   return summary; // shadow: metered, not blocked
+}
+
+// Fire-and-forget lifecycle email: when a free user has just reached their monthly
+// allowance, send the one high-intent invitation to membership. Sent at most once
+// per period, never in shadow (the limit isn't real yet), never to members. Call
+// after a user-initiated run has been counted.
+export async function notifyIfAtLimit(userId: string): Promise<void> {
+  if (!QUOTA_ENFORCED) return;
+  try {
+    const [user] = await db
+      .select({
+        email: usersTable.email,
+        name: usersTable.name,
+        plan: usersTable.plan,
+        createdAt: usersTable.createdAt,
+      })
+      .from(usersTable)
+      .where(eq(usersTable.id, userId));
+    if (!user || user.plan === "member") return;
+
+    const period = monthStartUTC();
+    const [row] = await db
+      .select({
+        freshReturns: usageTable.freshReturns,
+        limitNotifiedAt: usageTable.limitNotifiedAt,
+      })
+      .from(usageTable)
+      .where(
+        and(eq(usageTable.userId, userId), eq(usageTable.periodStart, period)),
+      );
+
+    const used = row?.freshReturns ?? 0;
+    if (used < freeLimitFor(user)) return;
+
+    // Already told them this period? (Compare against this period's start.)
+    const notified = row?.limitNotifiedAt ? new Date(row.limitNotifiedAt) : null;
+    if (notified && notified >= period) return;
+
+    // Mark BEFORE sending so a concurrent run can't double-send.
+    await db
+      .update(usageTable)
+      .set({ limitNotifiedAt: new Date() })
+      .where(
+        and(eq(usageTable.userId, userId), eq(usageTable.periodStart, period)),
+      );
+
+    await sendEmail({
+      to: user.email,
+      ...membershipLimitEmail({ name: user.name }),
+    });
+  } catch {
+    // best-effort; a lifecycle email must never break the run path
+  }
 }
