@@ -35,6 +35,8 @@ export interface AuthUser {
     /** @nullable */
     limit: number | null;
     atLimit: boolean;
+    /** Whether the free limit is actually enforced (vs shadow). */
+    enforced?: boolean;
   };
 }
 

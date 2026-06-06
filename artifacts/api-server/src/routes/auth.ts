@@ -31,7 +31,7 @@ import {
   passwordResetEmail,
 } from "../lib/email";
 import { rateLimit, ipKey } from "../lib/rate-limit";
-import { getUsageSummary } from "../lib/quota";
+import { getUsageSummary, QUOTA_ENFORCED } from "../lib/quota";
 
 const VERIFY_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
 const RESET_TTL_MS = 1000 * 60 * 60; // 1 hour
@@ -178,7 +178,15 @@ router.get("/auth/me", requireAuth, async (req, res): Promise<void> => {
   const usage = await getUsageSummary(req.user!);
   res.json({
     ...toAuthUser(req.user!),
-    usage: { used: usage.used, limit: usage.limit, atLimit: usage.atLimit },
+    usage: {
+      used: usage.used,
+      limit: usage.limit,
+      atLimit: usage.atLimit,
+      // Whether the limit is actually enforced (vs shadow). The client only shows
+      // "returns left" cues when this is true, so it never implies a wall that
+      // isn't there yet.
+      enforced: QUOTA_ENFORCED,
+    },
   });
 });
 

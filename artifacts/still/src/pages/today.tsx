@@ -10,10 +10,12 @@ import {
   type MemoryRunResult,
 } from "@workspace/api-client-react";
 import { handleQuotaError } from "@/lib/quota-prompt";
+import { ReturnsLeftNote } from "@/components/returns-left-note";
 import { AppNav } from "@/components/app-nav";
 import { MemoryCard } from "@/components/memory-card";
 import { OnThisDay } from "@/components/on-this-day";
 import { YearInPagesBanner } from "@/components/year-in-pages-banner";
+import { MembershipAnnounceBanner } from "@/components/membership-announce-banner";
 import { EntryImages } from "@/components/entry-images";
 import { RichEditor, type RichEditorHandle } from "@/components/rich-editor";
 
@@ -267,6 +269,8 @@ export default function Today() {
       <main className="flex-1 w-full max-w-[680px] mx-auto px-6 py-12 md:py-16">
         {/* Seasonal "Your Year in Pages", quiet around New Year, dismissible. */}
         <YearInPagesBanner />
+        {/* One-time "membership is here" announcement (free users, dismissible). */}
+        <MembershipAnnounceBanner />
 
         {/* Header: the day on the left, the (secondary) memory affordance right. */}
         <div className="flex items-end justify-between mb-6">
@@ -285,6 +289,8 @@ export default function Today() {
             {pending ? "reading…" : "✦ Bring a page back"}
           </button>
         </div>
+
+        <ReturnsLeftNote />
 
         {/* While reading, calm time-aware reassurance so the long two-pass read
             never reads as a failure. */}

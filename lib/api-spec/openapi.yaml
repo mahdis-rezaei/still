@@ -1459,6 +1459,8 @@ components:
               type: ["integer", "null"]
             atLimit:
               type: boolean
+            enforced:
+              type: boolean
           required:
             - used
             - limit
