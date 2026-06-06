@@ -58,6 +58,35 @@ function billingEnabled(): boolean {
   );
 }
 
+// Create a fresh Stripe customer for the user and persist its id. Called both for
+// a first-time checkout and to self-heal a stale stored id (see checkout below).
+async function createCustomerFor(user: {
+  id: string;
+  email: string;
+}): Promise<string> {
+  const customer = await stripe!.customers.create({
+    email: user.email,
+    metadata: { userId: user.id },
+  });
+  await db
+    .update(usersTable)
+    .set({ stripeCustomerId: customer.id, updatedAt: new Date() })
+    .where(eq(usersTable.id, user.id));
+  return customer.id;
+}
+
+function newCheckoutSession(customerId: string, price: string, userId: string) {
+  return stripe!.checkout.sessions.create({
+    mode: "subscription",
+    customer: customerId,
+    client_reference_id: userId,
+    line_items: [{ price, quantity: 1 }],
+    allow_promotion_codes: true,
+    success_url: `${appUrl()}/settings/plan?status=success`,
+    cancel_url: `${appUrl()}/settings/plan?status=cancelled`,
+  });
+}
+
 const router = Router();
 
 // GET /billing/config — public, unauthenticated. Lets the client show the real
@@ -90,28 +119,33 @@ router.post("/billing/checkout", requireAuth, async (req, res): Promise<void> =>
 
   try {
     const user = req.user!;
-    let customerId = user.stripeCustomerId;
-    if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        metadata: { userId: user.id },
-      });
-      customerId = customer.id;
-      await db
-        .update(usersTable)
-        .set({ stripeCustomerId: customerId, updatedAt: new Date() })
-        .where(eq(usersTable.id, user.id));
-    }
+    const hadStoredCustomer = !!user.stripeCustomerId;
+    let customerId = user.stripeCustomerId ?? (await createCustomerFor(user));
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
-      customer: customerId,
-      client_reference_id: user.id,
-      line_items: [{ price, quantity: 1 }],
-      allow_promotion_codes: true,
-      success_url: `${appUrl()}/settings/plan?status=success`,
-      cancel_url: `${appUrl()}/settings/plan?status=cancelled`,
-    });
+    let session;
+    try {
+      session = await newCheckoutSession(customerId, price, user.id);
+    } catch (err) {
+      // A stored customer id can go stale — most commonly when it was created
+      // under a TEST key and the app later switched to a LIVE key, so the
+      // customer no longer exists in the current Stripe account. Rather than
+      // dead-ending the user, recreate the customer once and retry. (Only when we
+      // were reusing a STORED id, so a genuinely missing price still surfaces.)
+      if (
+        hadStoredCustomer &&
+        err instanceof Stripe.errors.StripeInvalidRequestError &&
+        err.code === "resource_missing"
+      ) {
+        req.log.warn(
+          { userId: user.id, staleCustomer: customerId },
+          "Stored Stripe customer missing — recreating and retrying checkout",
+        );
+        customerId = await createCustomerFor(user);
+        session = await newCheckoutSession(customerId, price, user.id);
+      } else {
+        throw err;
+      }
+    }
     res.json({ url: session.url });
   } catch (err) {
     req.log.error({ err }, "Checkout session failed");
