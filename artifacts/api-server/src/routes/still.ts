@@ -1249,7 +1249,9 @@ router.post("/still/extract", async (req, res) => {
       model: MODEL,
       max_tokens: MAX_TOKENS_PASS1,
       temperature: 0,
-      system: PASS1_SYSTEM,
+      system: [
+        { type: "text", text: PASS1_SYSTEM, cache_control: { type: "ephemeral" } },
+      ],
       messages: [{ role: "user", content: prompt }],
     });
 
@@ -1316,7 +1318,9 @@ async function surfaceOverrideCandidate(
     model: MODEL,
     max_tokens: MAX_TOKENS_PASS2,
     temperature: 0,
-    system: PASS2_SYSTEM,
+    system: [
+        { type: "text", text: PASS2_SYSTEM, cache_control: { type: "ephemeral" } },
+      ],
     messages: [{ role: "user", content: JSON.stringify({ candidates: [annotated] }) }],
   });
   const block = message.content[0];
@@ -1425,7 +1429,9 @@ router.post("/still/score", async (req, res) => {
       model: MODEL,
       max_tokens: MAX_TOKENS_PASS2,
       temperature: 0,
-      system: PASS2_SYSTEM,
+      system: [
+        { type: "text", text: PASS2_SYSTEM, cache_control: { type: "ephemeral" } },
+      ],
       messages: [{ role: "user", content: payload }],
     });
 
