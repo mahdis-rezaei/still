@@ -9,6 +9,8 @@ import {
   getGetCurrentUserQueryKey,
   type AuthUser,
 } from "@workspace/api-client-react";
+import { isNativeApp, apiBaseUrl } from "@/lib/native";
+import { nativeLogin, nativeRegister, nativeLogout } from "@/lib/native-auth";
 
 interface AuthState {
   user: AuthUser | null;
@@ -50,26 +52,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login = async (email: string, password: string) => {
-    const user = await loginMut.mutateAsync({ data: { email, password } });
+    const user = isNativeApp()
+      ? await nativeLogin(email, password)
+      : await loginMut.mutateAsync({ data: { email, password } });
     cacheUser(user);
   };
 
   const register = async (email: string, password: string, name?: string) => {
-    const user = await registerMut.mutateAsync({
-      data: { email, password, ...(name ? { name } : {}) },
-    });
+    const user = isNativeApp()
+      ? await nativeRegister(email, password, name)
+      : await registerMut.mutateAsync({
+          data: { email, password, ...(name ? { name } : {}) },
+        });
     cacheUser(user);
   };
 
   const logout = async () => {
-    await logoutMut.mutateAsync();
+    if (isNativeApp()) await nativeLogout();
+    else await logoutMut.mutateAsync();
     queryClient.setQueryData(getGetCurrentUserQueryKey(), null);
     queryClient.clear();
   };
 
   const loginWithGoogle = () => {
-    // Full-page navigation into the server-side OAuth redirect flow.
-    window.location.href = "/api/auth/google";
+    // Web: full-page navigation into the server-side OAuth redirect flow.
+    // Native: open the absolute flow (a proper native OAuth/deep-link exchange is
+    // a documented follow-up — see docs/MOBILE-BUILD-RUNBOOK.md).
+    window.location.href = isNativeApp()
+      ? `${apiBaseUrl()}/api/auth/google`
+      : "/api/auth/google";
   };
 
   const completeOnboarding = async () => {

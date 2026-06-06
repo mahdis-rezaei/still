@@ -39,6 +39,12 @@
   opacity: 0.3;
 }
 
+/* Native shell: pad the top for the device status bar / notch. The bottom inset
+   is handled by the mobile tab bar's own padding. */
+html.cap-native body {
+  padding-top: env(safe-area-inset-top);
+}
+
 /* A soft, warm ambient field — slow-breathing color washes behind the page.
    Calm by design: low opacity, heavy blur, a very slow drift. */
 .ambient-field {

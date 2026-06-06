@@ -164,12 +164,24 @@ declare global {
   }
 }
 
+// Resolve the session token from either the `Authorization: Bearer <token>`
+// header (native apps, which can't rely on a cross-origin cookie) or the session
+// cookie (web). The header takes precedence.
+export function sessionTokenFromRequest(req: Request): string | undefined {
+  const header = req.headers["authorization"];
+  if (typeof header === "string" && header.startsWith("Bearer ")) {
+    const token = header.slice(7).trim();
+    if (token) return token;
+  }
+  return req.cookies?.[SESSION_COOKIE] as string | undefined;
+}
+
 export async function requireAuth(
   req: Request,
   res: Response,
   next: NextFunction,
 ): Promise<void> {
-  const token = req.cookies?.[SESSION_COOKIE] as string | undefined;
+  const token = sessionTokenFromRequest(req);
   const user = await getUserForToken(token);
   if (!user) {
     res.status(401).json({ error: "Not authenticated" });

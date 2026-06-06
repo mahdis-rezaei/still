@@ -49,6 +49,8 @@ import Onboarding from "@/pages/onboarding";
 import { StillProvider } from "@/lib/store";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { DevPanel } from "@/components/dev-panel";
+import { MobileTabBar } from "@/components/mobile-tab-bar";
+import { LockGate } from "@/components/lock-gate";
 
 const queryClient = new QueryClient();
 
@@ -88,8 +90,11 @@ function ProtectedApp() {
   if (!user) return null; // redirecting to /login
 
   return (
-    <Suspense fallback={<LoadingScreen />}>
-      <Switch>
+    <LockGate>
+      {/* Bottom padding clears the fixed mobile tab bar; removed at md+. */}
+      <div className="md:pb-0 pb-[calc(4rem+env(safe-area-inset-bottom))]">
+        <Suspense fallback={<LoadingScreen />}>
+          <Switch>
       <Route path="/onboarding" component={Onboarding} />
       <Route path="/">
         <Redirect to="/today" />
@@ -127,8 +132,11 @@ function ProtectedApp() {
       <Route path="/result" component={Result} />
       <Route path="/history" component={History} />
       <Route component={NotFound} />
-      </Switch>
-    </Suspense>
+          </Switch>
+        </Suspense>
+      </div>
+      <MobileTabBar />
+    </LockGate>
   );
 }
 

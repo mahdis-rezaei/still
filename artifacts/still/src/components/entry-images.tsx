@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { customFetch } from "@workspace/api-client-react";
+import { isNativeApp } from "@/lib/native";
+import { apiUrl } from "@/lib/api-url";
 
 export type Attachment = {
   id: string;
@@ -88,8 +90,9 @@ export function EntryImages({ entryId, editable = false, ensureEntry }: Props) {
     else setItems([]);
   }, [entryId, load]);
 
-  async function onPick(files: FileList | null) {
-    if (!files || files.length === 0) return;
+  async function uploadFiles(files: File[]) {
+    const images = files.filter((f) => f.type.startsWith("image/"));
+    if (images.length === 0) return;
     setError(null);
     setBusy(true);
     try {
@@ -99,8 +102,7 @@ export function EntryImages({ entryId, editable = false, ensureEntry }: Props) {
         setError("Write a few words first, then add an image.");
         return;
       }
-      for (const file of Array.from(files)) {
-        if (!file.type.startsWith("image/")) continue;
+      for (const file of images) {
         const { blob, width, height } = await prepareImage(file);
         await customFetch(
           `/api/entries/${id}/attachments?w=${width}&h=${height}`,
@@ -118,6 +120,33 @@ export function EntryImages({ entryId, editable = false, ensureEntry }: Props) {
     } finally {
       setBusy(false);
       if (inputRef.current) inputRef.current.value = "";
+    }
+  }
+
+  function onPick(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    void uploadFiles(Array.from(files));
+  }
+
+  // Native: capture straight from the device camera (in-the-moment journaling).
+  async function captureFromCamera() {
+    try {
+      const { Camera, CameraResultType, CameraSource } = await import(
+        "@capacitor/camera"
+      );
+      const photo = await Camera.getPhoto({
+        quality: 90,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Camera,
+      });
+      if (!photo.webPath) return;
+      const blob = await (await fetch(photo.webPath)).blob();
+      const file = new File([blob], `photo.${photo.format || "jpg"}`, {
+        type: blob.type || "image/jpeg",
+      });
+      await uploadFiles([file]);
+    } catch {
+      /* user cancelled, or no camera available */
     }
   }
 
@@ -146,7 +175,7 @@ export function EntryImages({ entryId, editable = false, ensureEntry }: Props) {
               className="relative group rounded-xl overflow-hidden border border-border bg-surface"
             >
               <img
-                src={`/api/attachments/${a.id}`}
+                src={apiUrl(`/api/attachments/${a.id}`)}
                 alt="Attached to this page"
                 loading="lazy"
                 onClick={() => setZoom(a.id)}
@@ -187,6 +216,16 @@ export function EntryImages({ entryId, editable = false, ensureEntry }: Props) {
           >
             {busy ? "adding…" : "＋ Add image"}
           </button>
+          {isNativeApp() && (
+            <button
+              onClick={() => void captureFromCamera()}
+              disabled={busy}
+              className="font-sans text-sm text-soft-ink hover:text-ink border border-border hover:border-accent-sepia rounded-full px-4 py-1.5 transition-colors disabled:opacity-50"
+              data-testid="button-take-photo"
+            >
+              📷 Take photo
+            </button>
+          )}
           {error && (
             <span className="font-sans text-xs text-faint-ink">{error}</span>
           )}
@@ -200,7 +239,7 @@ export function EntryImages({ entryId, editable = false, ensureEntry }: Props) {
           data-testid="overlay-image-zoom"
         >
           <img
-            src={`/api/attachments/${zoom}`}
+            src={apiUrl(`/api/attachments/${zoom}`)}
             alt="Attached to this page"
             className="max-h-full max-w-full rounded-lg shadow-lg"
           />

@@ -17,7 +17,7 @@ import {
   setSessionCookie,
   clearSessionCookie,
   requireAuth,
-  SESSION_COOKIE,
+  sessionTokenFromRequest,
   googleConfigured,
   buildGoogleAuthUrl,
   exchangeGoogleCode,
@@ -78,9 +78,22 @@ function toAuthUser(u: User) {
   };
 }
 
-async function startSession(res: import("express").Response, userId: string) {
+async function startSession(
+  res: import("express").Response,
+  userId: string,
+): Promise<string> {
   const { token, expiresAt } = await createSession(userId);
   setSessionCookie(res, token, expiresAt);
+  return token;
+}
+
+// Native clients declare themselves with this header. When present we include the
+// opaque session token in the JSON body so the app can store it and send it as a
+// Bearer header thereafter. Web never sends the header, so its responses are
+// unchanged (and the token stays in the httpOnly cookie only).
+function wantsToken(req: import("express").Request): boolean {
+  const h = req.headers["x-yadegar-client"];
+  return (Array.isArray(h) ? h[0] : h)?.toLowerCase() === "mobile";
 }
 
 // ── Email + password ─────────────────────────────────────────────────────────
@@ -115,9 +128,12 @@ router.post("/auth/register", credentialLimiter, async (req, res): Promise<void>
       .values({ email, passwordHash, name: parsed.data.name ?? null })
       .returning();
 
-    await startSession(res, user.id);
+    const token = await startSession(res, user.id);
     await sendVerification(user, req.log); // best-effort; soft verification
-    res.status(201).json(toAuthUser(user));
+    res.status(201).json({
+      ...toAuthUser(user),
+      ...(wantsToken(req) ? { token } : {}),
+    });
   } catch (err) {
     req.log.error({ err }, "Register route error");
     res.status(500).json({ error: "Failed to create account" });
@@ -144,8 +160,11 @@ router.post("/auth/login", credentialLimiter, async (req, res): Promise<void> =>
       res.status(401).json({ error: "Incorrect email or password" });
       return;
     }
-    await startSession(res, user.id);
-    res.json(toAuthUser(user));
+    const token = await startSession(res, user.id);
+    res.json({
+      ...toAuthUser(user),
+      ...(wantsToken(req) ? { token } : {}),
+    });
   } catch (err) {
     req.log.error({ err }, "Login route error");
     res.status(500).json({ error: "Failed to sign in" });
@@ -154,7 +173,7 @@ router.post("/auth/login", credentialLimiter, async (req, res): Promise<void> =>
 
 router.post("/auth/logout", async (req, res): Promise<void> => {
   try {
-    await deleteSession(req.cookies?.[SESSION_COOKIE]);
+    await deleteSession(sessionTokenFromRequest(req));
   } catch (err) {
     req.log.error({ err }, "Logout route error");
   }

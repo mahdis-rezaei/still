@@ -2,6 +2,7 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { AppNav } from "@/components/app-nav";
 import { PageHeader } from "@/components/page";
+import { AppLockSetting } from "@/components/app-lock-setting";
 
 export default function Settings() {
   const { user, logout } = useAuth();
@@ -88,6 +89,8 @@ export default function Settings() {
             The Yadegar philosophy →
           </Link>
         </section>
+
+        <AppLockSetting />
 
         <section className="mb-10">
           <p className="font-sans text-xs uppercase tracking-[0.18em] text-faint-ink mb-3">

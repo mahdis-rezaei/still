@@ -16,3 +16,4 @@ export * from "./capsules";
 export * from "./collections";
 export * from "./still-results";
 export * from "./memory-jobs";
+export * from "./device-tokens";

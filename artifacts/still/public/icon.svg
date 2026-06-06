@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Yadegar">
+  <rect width="512" height="512" rx="112" fill="#3A2F25"/>
+  <!-- A journal page with a folded (dog-eared) corner — a page worth returning to -->
+  <path d="M160 140 Q160 124 176 124 H320 L392 196 V372 Q392 388 376 388 H176 Q160 388 160 372 Z" fill="#F7F1E6"/>
+  <path d="M320 124 L392 196 H336 Q320 196 320 180 Z" fill="#DED3C3"/>
+  <!-- Suggested lines of writing -->
+  <rect x="196" y="232" width="148" height="10" rx="5" fill="#A59B8D"/>
+  <rect x="196" y="268" width="148" height="10" rx="5" fill="#A59B8D"/>
+  <rect x="196" y="304" width="96" height="10" rx="5" fill="#C9BCA8"/>
+</svg>
