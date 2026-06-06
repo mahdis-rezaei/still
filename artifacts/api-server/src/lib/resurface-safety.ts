@@ -18,8 +18,42 @@ const SETTLE_MS = 10 * 60 * 1000;
 // finish within a typical 30 s scheduler timeout (e.g. cron-job.org's free tier);
 // 50 overran it during re-tag backlogs. The backlog drains over successive ticks.
 // For a large one-off backfill, call from a terminal (no client timeout) with a
-// higher ?limit (capped at 500).
+// higher ?limit (capped at 500) and ?all=1 to bypass the anniversary window below.
 const DEFAULT_BATCH = 10;
+
+// Lazy import classification (Phase 0 COGS). Date resurfacing only ever shows an
+// entry around its month-day anniversary from a PRIOR year (±3 days; see
+// on-this-day.ts), and an entry whose verdict is still NULL is withheld (fail
+// closed). So instead of eagerly classifying a whole imported archive up front, we
+// classify only entries whose anniversary is APPROACHING — a few days back (to
+// cover the currently-active resurfacing window) through a lookahead buffer (so the
+// cron drains the day's cohort before it's needed). The rest stay NULL — safely
+// un-surfaceable — until their window comes round, turning the import cost spike
+// into a pay-as-used trickle spread across the year. Theme is invisible (engine
+// soft-affinity only), so deferring it has no user-visible effect. A one-off full
+// backfill is still available via the endpoint's ?all=1 escape hatch.
+const CLASSIFY_LOOKAHEAD_DAYS = 30;
+const CLASSIFY_LOOKBACK_DAYS = 5;
+
+// The MM-DD anniversaries "due" for classification today: from CLASSIFY_LOOKBACK
+// days before through CLASSIFY_LOOKAHEAD days after, walked as real UTC dates so
+// month/leap-year boundaries are correct. Year-agnostic — an entry from any prior
+// year matches on its month-day.
+function dueAnniversaries(today = new Date()): string[] {
+  const set = new Set<string>();
+  const base = Date.UTC(
+    today.getUTCFullYear(),
+    today.getUTCMonth(),
+    today.getUTCDate(),
+  );
+  for (let d = -CLASSIFY_LOOKBACK_DAYS; d <= CLASSIFY_LOOKAHEAD_DAYS; d += 1) {
+    const dt = new Date(base + d * 86_400_000);
+    const mm = String(dt.getUTCMonth() + 1).padStart(2, "0");
+    const dd = String(dt.getUTCDate()).padStart(2, "0");
+    set.add(`${mm}-${dd}`);
+  }
+  return [...set];
+}
 
 interface ClassifyResponse {
   crisis?: boolean;
@@ -71,8 +105,21 @@ export interface TagSummary {
 export async function tagPendingEntries(
   log: { error: (obj: unknown, msg: string) => void },
   limit = DEFAULT_BATCH,
+  opts: { dueOnly?: boolean } = {},
 ): Promise<TagSummary> {
+  const dueOnly = opts.dueOnly ?? true;
   const cutoff = new Date(Date.now() - SETTLE_MS);
+
+  // Lazy default: only classify entries whose anniversary is approaching. A NULL
+  // entry_date can never resurface by date, and `to_char(NULL, …)` is NULL (never
+  // IN the list), so dateless entries are naturally skipped here. ?all=1 (dueOnly
+  // false) bypasses this for a one-off full backfill.
+  const dueWindow = dueOnly
+    ? sql`to_char(${journalEntriesTable.entryDate}, 'MM-DD') in (${sql.join(
+        dueAnniversaries().map((d) => sql`${d}`),
+        sql`, `,
+      )})`
+    : undefined;
 
   const pending = await db
     .select({
@@ -92,6 +139,7 @@ export async function tagPendingEntries(
           ne(journalEntriesTable.source, "manual"),
           lt(journalEntriesTable.updatedAt, cutoff),
         ),
+        dueWindow,
       ),
     )
     .orderBy(journalEntriesTable.createdAt)
