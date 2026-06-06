@@ -63,6 +63,33 @@ export function AppNav() {
     </Link>
   );
 
+  // Mobile menu — on phones the inline nav doesn't fit, so it collapses into a
+  // hamburger. Closes on navigation or Escape.
+  const [mobileOpen, setMobileOpen] = useState(false);
+  useEffect(() => setMobileOpen(false), [location]);
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [mobileOpen]);
+
+  const mobileItem = (href: string, label: string, active = false) => (
+    <Link
+      href={href}
+      onClick={() => setMobileOpen(false)}
+      className={
+        "py-2.5 font-sans text-base transition-colors " +
+        (active ? "text-ink" : "text-soft-ink hover:text-ink")
+      }
+      data-testid={`mobilenav-${label.toLowerCase().replace(/\s+/g, "-")}`}
+    >
+      {label}
+    </Link>
+  );
+
   const isActive = (href: string) =>
     location === href || location.startsWith(href + "/");
 
@@ -128,63 +155,126 @@ export function AppNav() {
           >
             Yadegar
           </Link>
-          <div className="flex items-center gap-5 md:gap-6">
+          <div className="hidden md:flex items-center gap-5 md:gap-6">
             {navLink("/today", "Today", isActive("/today"))}
             {navLink("/look-back", "Look back", lookBackActive)}
             {navLink("/library", "Explore", exploreActive)}
           </div>
         </div>
-        <div className="relative" ref={menuRef}>
+        <div className="flex items-center gap-1">
+          {/* Desktop account menu */}
+          <div className="relative hidden md:block" ref={menuRef}>
+            <button
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              className={
+                "flex items-center gap-1.5 font-sans text-sm transition-colors " +
+                (isActive("/settings") || menuOpen
+                  ? "text-ink"
+                  : "text-soft-ink hover:text-ink")
+              }
+              data-testid="account-menu-trigger"
+            >
+              <Avatar user={user} size={26} />
+              <span className="hidden sm:inline">
+                {user?.name || user?.email || "Account"}
+              </span>
+              <span className="text-xs text-faint-ink">⌄</span>
+            </button>
+            {menuOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 mt-2 w-52 rounded-xl border border-border bg-surface shadow-lg py-1.5 z-50"
+              >
+                {menuItem("/settings", "Settings")}
+                {menuItem("/why", "About Yadegar")}
+                {menuItem("/settings/profile", "My profile")}
+                <div className="my-1.5 border-t border-border/60" />
+                <button
+                  onClick={async () => {
+                    setMenuOpen(false);
+                    await logout();
+                    setLocation("/login");
+                  }}
+                  role="menuitem"
+                  className="w-full text-left px-4 py-2 font-sans text-sm text-soft-ink hover:text-ink hover:bg-background/70 transition-colors"
+                  data-testid="button-signout"
+                >
+                  Sign out
+                </button>
+              </div>
+            )}
+          </div>
+          {/* Mobile hamburger */}
           <button
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-haspopup="menu"
-            aria-expanded={menuOpen}
-            className={
-              "flex items-center gap-1.5 font-sans text-sm transition-colors " +
-              (isActive("/settings") || menuOpen
-                ? "text-ink"
-                : "text-soft-ink hover:text-ink")
-            }
-            data-testid="account-menu-trigger"
+            type="button"
+            onClick={() => setMobileOpen((v) => !v)}
+            aria-label="Menu"
+            aria-expanded={mobileOpen}
+            className="md:hidden flex items-center gap-2 p-1 -mr-1 text-soft-ink hover:text-ink transition-colors"
+            data-testid="mobile-menu-trigger"
           >
             <Avatar user={user} size={26} />
-            <span className="hidden sm:inline">
-              {user?.name || user?.email || "Account"}
-            </span>
-            <span className="text-xs text-faint-ink">⌄</span>
-          </button>
-          {menuOpen && (
-            <div
-              role="menu"
-              className="absolute right-0 mt-2 w-52 rounded-xl border border-border bg-surface shadow-lg py-1.5 z-50"
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 22 22"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              aria-hidden="true"
             >
-              {menuItem("/settings", "Settings")}
-              {menuItem("/why", "About Yadegar")}
-              {menuItem("/settings/profile", "My profile")}
-              <div className="my-1.5 border-t border-border/60" />
-              <button
-                onClick={async () => {
-                  setMenuOpen(false);
-                  await logout();
-                  setLocation("/login");
-                }}
-                role="menuitem"
-                className="w-full text-left px-4 py-2 font-sans text-sm text-soft-ink hover:text-ink hover:bg-background/70 transition-colors"
-                data-testid="button-signout"
-              >
-                Sign out
-              </button>
-            </div>
-          )}
+              {mobileOpen ? (
+                <>
+                  <line x1="6" y1="6" x2="16" y2="16" />
+                  <line x1="16" y1="6" x2="6" y2="16" />
+                </>
+              ) : (
+                <>
+                  <line x1="3" y1="7" x2="19" y2="7" />
+                  <line x1="3" y1="11" x2="19" y2="11" />
+                  <line x1="3" y1="15" x2="19" y2="15" />
+                </>
+              )}
+            </svg>
+          </button>
         </div>
       </nav>
+
+      {/* Mobile menu panel — the full nav + account actions, hamburger-driven. */}
+      {mobileOpen && (
+        <div className="md:hidden w-full border-b border-border/60 bg-surface">
+          <div className="px-6 py-2 flex flex-col">
+            {mobileItem("/today", "Today", isActive("/today"))}
+            {mobileItem("/look-back", "Look back", lookBackActive)}
+            {mobileItem("/library", "Explore", exploreActive)}
+            <div className="my-1 border-t border-border/60" />
+            {mobileItem("/settings", "Settings", isActive("/settings"))}
+            {mobileItem("/why", "About Yadegar")}
+            {mobileItem("/settings/profile", "My profile")}
+            <button
+              onClick={async () => {
+                setMobileOpen(false);
+                await logout();
+                setLocation("/login");
+              }}
+              className="py-2.5 text-left font-sans text-base text-soft-ink hover:text-ink transition-colors"
+              data-testid="mobile-signout"
+            >
+              Sign out
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Explore sub-tabs — contextual second bar (in-page tabs, not a dropdown),
           aligned to the content column. (Library's own views — List/Calendar/
           Timeline — live in the page, and Search is the Library search box.) */}
       {exploreActive && (
         <div className="w-full border-b border-border/40 bg-surface/30">
-          <div className="max-w-[680px] mx-auto px-6 py-3 flex items-center gap-5 md:gap-6">
+          <div className="max-w-[680px] mx-auto px-6 py-3 flex items-center gap-5 md:gap-6 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {EXPLORE_TABS.map((t) =>
               subTab(
                 t.href,
@@ -199,7 +289,7 @@ export function AppNav() {
       {/* Look back sub-tabs — the same contextual second bar as Explore. */}
       {lookBackActive && (
         <div className="w-full border-b border-border/40 bg-surface/30">
-          <div className="max-w-[680px] mx-auto px-6 py-3 flex items-center gap-5 md:gap-6">
+          <div className="max-w-[680px] mx-auto px-6 py-3 flex items-center gap-5 md:gap-6 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {LOOK_BACK_TABS.map((t) =>
               subTab(t.href, t.label, lookBackTabActive(t.href)),
             )}

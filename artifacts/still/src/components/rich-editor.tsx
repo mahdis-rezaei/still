@@ -263,7 +263,7 @@ export const RichEditor = forwardRef<RichEditorHandle, Props>(
     return (
       <div className={className}>
         <div
-          className="flex flex-wrap items-center gap-0.5 pb-2 mb-3 border-b border-border/60"
+          className="flex flex-nowrap overflow-x-auto md:flex-wrap md:overflow-visible items-center gap-0.5 pb-2 mb-3 border-b border-border/60 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>*]:shrink-0"
           role="toolbar"
           aria-label="Text formatting"
         >
