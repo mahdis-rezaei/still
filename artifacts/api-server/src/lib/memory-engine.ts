@@ -53,12 +53,22 @@ async function callEngine(
   | {
       crisis: { supportMessage?: string };
       modelCalled: boolean;
-      usage: { inputTokens: number; outputTokens: number };
+      usage: {
+        inputTokens: number;
+        outputTokens: number;
+        cacheReadTokens: number;
+        cacheCreationTokens: number;
+      };
     }
   | {
       score: Record<string, unknown>;
       modelCalled: boolean;
-      usage: { inputTokens: number; outputTokens: number };
+      usage: {
+        inputTokens: number;
+        outputTokens: number;
+        cacheReadTokens: number;
+        cacheCreationTokens: number;
+      };
     }
 > {
   const q = fresh ? "?fresh=1" : "";
@@ -75,16 +85,28 @@ async function callEngine(
     }[];
     crisis?: { supportMessage?: string } | null;
     fromCache?: boolean;
-    usage?: { inputTokens?: number; outputTokens?: number };
+    usage?: {
+      inputTokens?: number;
+      outputTokens?: number;
+      cacheReadTokens?: number;
+      cacheCreationTokens?: number;
+    };
   };
   const exInput = extract.usage?.inputTokens ?? 0;
   const exOutput = extract.usage?.outputTokens ?? 0;
+  const exCacheRead = extract.usage?.cacheReadTokens ?? 0;
+  const exCacheCreate = extract.usage?.cacheCreationTokens ?? 0;
   const exCalled = extract.fromCache === false;
   if (extract.crisis) {
     return {
       crisis: extract.crisis,
       modelCalled: exCalled,
-      usage: { inputTokens: exInput, outputTokens: exOutput },
+      usage: {
+        inputTokens: exInput,
+        outputTokens: exOutput,
+        cacheReadTokens: exCacheRead,
+        cacheCreationTokens: exCacheCreate,
+      },
     };
   }
 
@@ -108,16 +130,25 @@ async function callEngine(
   if (!scRes.ok) throw new Error(`score HTTP ${scRes.status}`);
   const score = (await scRes.json()) as Record<string, unknown> & {
     fromCache?: boolean;
-    usage?: { inputTokens?: number; outputTokens?: number };
+    usage?: {
+      inputTokens?: number;
+      outputTokens?: number;
+      cacheReadTokens?: number;
+      cacheCreationTokens?: number;
+    };
   };
   const scInput = score.usage?.inputTokens ?? 0;
   const scOutput = score.usage?.outputTokens ?? 0;
+  const scCacheRead = score.usage?.cacheReadTokens ?? 0;
+  const scCacheCreate = score.usage?.cacheCreationTokens ?? 0;
   return {
     score,
     modelCalled: exCalled || score.fromCache === false,
     usage: {
       inputTokens: exInput + scInput,
       outputTokens: exOutput + scOutput,
+      cacheReadTokens: exCacheRead + scCacheRead,
+      cacheCreationTokens: exCacheCreate + scCacheCreate,
     },
   };
 }
@@ -289,6 +320,8 @@ export async function runMemoryForUser(
     modelCalled: out.modelCalled,
     inputTokens: out.usage.inputTokens,
     outputTokens: out.usage.outputTokens,
+    cacheReadTokens: out.usage.cacheReadTokens,
+    cacheCreationTokens: out.usage.cacheCreationTokens,
     kind: meta?.kind === "auto" || opts.preview ? "auto" : "user",
   }).catch(() => {});
 

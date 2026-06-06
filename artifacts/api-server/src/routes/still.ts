@@ -1292,6 +1292,8 @@ router.post("/still/extract", async (req, res) => {
       usage: {
         inputTokens: message.usage.input_tokens,
         outputTokens: message.usage.output_tokens,
+        cacheReadTokens: message.usage.cache_read_input_tokens ?? 0,
+        cacheCreationTokens: message.usage.cache_creation_input_tokens ?? 0,
       },
     });
   } catch (err) {
@@ -1554,6 +1556,8 @@ router.post("/still/score", async (req, res) => {
       usage: {
         inputTokens: message.usage.input_tokens,
         outputTokens: message.usage.output_tokens,
+        cacheReadTokens: message.usage.cache_read_input_tokens ?? 0,
+        cacheCreationTokens: message.usage.cache_creation_input_tokens ?? 0,
       },
     });
   } catch (err) {

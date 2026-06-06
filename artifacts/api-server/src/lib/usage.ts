@@ -7,8 +7,12 @@ import { db, usageTable } from "@workspace/db";
 // while the token cost of each call is still recorded.
 const REROLL_WINDOW_MS = 10 * 60 * 1000;
 
-// Sonnet 4.6 list price (USD per 1M tokens). Update if the model/pricing moves.
+// Sonnet 4.6 list price (USD per 1M tokens). Prompt caching splits input into
+// three tiers: uncached (full), cache-read (~0.1x), cache-write (~1.25x). Update
+// if the model/pricing moves.
 const USD_PER_M_INPUT = 3;
+const USD_PER_M_CACHE_READ = 0.3;
+const USD_PER_M_CACHE_WRITE = 3.75;
 const USD_PER_M_OUTPUT = 15;
 
 function monthStartUTC(d = new Date()): Date {
@@ -25,6 +29,8 @@ export async function recordRun(
     modelCalled: boolean;
     inputTokens?: number;
     outputTokens?: number;
+    cacheReadTokens?: number;
+    cacheCreationTokens?: number;
     // "user" counts toward the return quota; "auto" (cron nudges, On-This-Day
     // previews) records cost only.
     kind?: "user" | "auto";
@@ -33,9 +39,17 @@ export async function recordRun(
   if (!opts.modelCalled) return;
   const input = Math.max(0, Math.round(opts.inputTokens ?? 0));
   const output = Math.max(0, Math.round(opts.outputTokens ?? 0));
+  const cacheRead = Math.max(0, Math.round(opts.cacheReadTokens ?? 0));
+  const cacheCreate = Math.max(0, Math.round(opts.cacheCreationTokens ?? 0));
   const costCents = Math.round(
-    ((input / 1e6) * USD_PER_M_INPUT + (output / 1e6) * USD_PER_M_OUTPUT) * 100,
+    ((input / 1e6) * USD_PER_M_INPUT +
+      (cacheRead / 1e6) * USD_PER_M_CACHE_READ +
+      (cacheCreate / 1e6) * USD_PER_M_CACHE_WRITE +
+      (output / 1e6) * USD_PER_M_OUTPUT) *
+      100,
   );
+  // Store total input volume processed (billed at any tier) for visibility.
+  const inputTotal = input + cacheRead + cacheCreate;
   const now = new Date();
   const period = monthStartUTC(now);
 
@@ -60,7 +74,7 @@ export async function recordRun(
       userId,
       periodStart: period,
       freshReturns: inc,
-      inputTokens: input,
+      inputTokens: inputTotal,
       outputTokens: output,
       estCostCents: costCents,
       lastReturnAt: counts ? now : (existing?.lastReturnAt ?? null),
@@ -70,7 +84,7 @@ export async function recordRun(
       target: [usageTable.userId, usageTable.periodStart],
       set: {
         freshReturns: sql`${usageTable.freshReturns} + ${inc}`,
-        inputTokens: sql`${usageTable.inputTokens} + ${input}`,
+        inputTokens: sql`${usageTable.inputTokens} + ${inputTotal}`,
         outputTokens: sql`${usageTable.outputTokens} + ${output}`,
         estCostCents: sql`${usageTable.estCostCents} + ${costCents}`,
         lastReturnAt: counts ? now : sql`${usageTable.lastReturnAt}`,
