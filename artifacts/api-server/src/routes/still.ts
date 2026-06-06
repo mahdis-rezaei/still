@@ -29,6 +29,16 @@ const MAX_TOKENS_PASS1 = 8192;
 const MAX_TOKENS_PASS2 = 16000;
 // The crisis safety check only returns a tiny {crisis, reason} JSON.
 const MAX_TOKENS_CRISIS = 600;
+// Per-entry read window (Phase 0 COGS/latency bound). A single pathologically
+// long entry inflates token cost and latency without improving the find — the
+// engine reasons over sentences, and signal saturates well before tens of
+// thousands of characters. Entries longer than this are sentence-sampled (head +
+// tail kept verbatim, the middle thinned at an even stride). The cap is high
+// enough that ordinary entries pass through byte-for-byte (so the calibrated eval
+// board is unchanged); only oversized entries are reshaped. The §3.1 CRISIS check
+// is deliberately NOT windowed — it reads the writer's present state in full so a
+// crisis line can never be sampled away (safety is never truncated).
+const READ_WINDOW_ENTRY_CHARS = 12000;
 // The whole-entry hard-floor check returns a tiny {hard_floor, reason} JSON.
 const MAX_TOKENS_HARD_FLOOR = 200;
 
@@ -1064,6 +1074,92 @@ function splitSentences(text: string): string[] {
   return out;
 }
 
+// Sentence-sample `text` down to ~maxChars: keep whole sentences from the head
+// (they set context) and the tail (the most recent feeling) verbatim, then fill
+// the remaining budget from the middle at an even stride. Whole sentences only —
+// via splitSentences — so a thought is never cut mid-clause; selected sentences
+// are emitted in original order. Used only for entries past READ_WINDOW_ENTRY_CHARS.
+function sampleSentences(text: string, maxChars: number): string {
+  const sentences = splitSentences(text);
+  const len = (i: number): number => sentences[i].length + 1;
+
+  // Too few sentences to sample meaningfully — keep as many from the front as fit.
+  if (sentences.length <= 4) {
+    const out: string[] = [];
+    let used = 0;
+    for (const s of sentences) {
+      if (used + s.length + 1 > maxChars && out.length > 0) break;
+      out.push(s);
+      used += s.length + 1;
+    }
+    return out.join(" ").trim();
+  }
+
+  const keep = new Set<number>();
+
+  // Head — consecutive sentences from the opening.
+  let budget = maxChars * 0.45;
+  let i = 0;
+  while (i < sentences.length && budget - len(i) > 0) {
+    keep.add(i);
+    budget -= len(i);
+    i += 1;
+  }
+  const headEnd = i; // first index NOT kept as head
+
+  // Tail — consecutive sentences from the close.
+  budget = maxChars * 0.2;
+  let j = sentences.length - 1;
+  while (j >= headEnd && budget - len(j) > 0) {
+    keep.add(j);
+    budget -= len(j);
+    j -= 1;
+  }
+  const tailStart = j + 1; // first index kept as tail
+
+  // Middle — even stride across the un-kept span to fill the rest of the budget.
+  const span = tailStart - headEnd;
+  if (span > 0) {
+    budget = maxChars * 0.35;
+    let midChars = 0;
+    for (let k = headEnd; k < tailStart; k += 1) midChars += len(k);
+    const avg = midChars / span;
+    const affordable = Math.max(1, Math.floor(budget / Math.max(1, avg)));
+    const stride = Math.max(1, Math.ceil(span / affordable));
+    for (let k = headEnd; k < tailStart; k += stride) keep.add(k);
+  }
+
+  return [...keep]
+    .sort((a, b) => a - b)
+    .map((idx) => sentences[idx])
+    .join(" ")
+    .trim();
+}
+
+// Bound each entry's text to the per-entry read window. Fast path: if NO block is
+// oversized, return the input UNCHANGED so ordinary entries (and every existing
+// fixture) hit the exact same downstream segmentation as before. Only when a block
+// exceeds the cap do we reconstruct — windowing the oversized block(s) and emitting
+// every block under an explicit [date] header (an unknown date resolves to the
+// import/metadata fallback, exactly as segmentEntries would apply it, so the
+// non-truncating reconstruction stays date-equivalent to the original). Applied on
+// the EXTRACT path only; the crisis check reads the present state in full.
+function windowEntries(raw: string, fallbackDate?: string | null): string {
+  const blocks = parseEntryBlocks(raw);
+  if (!blocks.some((b) => b.text.length > READ_WINDOW_ENTRY_CHARS)) return raw;
+  return blocks
+    .map((b) => {
+      const date = b.date === "unknown" && fallbackDate ? fallbackDate : b.date;
+      const text =
+        b.text.length > READ_WINDOW_ENTRY_CHARS
+          ? sampleSentences(b.text, READ_WINDOW_ENTRY_CHARS)
+          : b.text.trim();
+      return `[${date}]\n${text}`;
+    })
+    .join("\n\n")
+    .trim();
+}
+
 function segmentEntries(
   raw: string,
   fallbackDate?: string | null,
@@ -1243,7 +1339,11 @@ router.post("/still/extract", async (req, res) => {
       return;
     }
 
-    const { sentences, prompt } = segmentEntries(parsed.data.entries, fallbackDate);
+    // Bound pathologically long entries before segmentation (Phase 0 COGS/latency
+    // cap). No-op for ordinary entries — the crisis check above already ran on the
+    // full present state, so safety is unaffected.
+    const windowed = windowEntries(parsed.data.entries, fallbackDate);
+    const { sentences, prompt } = segmentEntries(windowed, fallbackDate);
 
     const message = await client.messages.create({
       model: MODEL,
