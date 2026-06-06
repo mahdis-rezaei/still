@@ -26,6 +26,7 @@ import {
 } from "../lib/auth";
 import {
   sendEmail,
+  welcomeEmail,
   verificationEmail,
   passwordResetEmail,
 } from "../lib/email";
@@ -73,6 +74,7 @@ function toAuthUser(u: User) {
     name: u.name,
     avatarUrl: u.avatarUrl,
     avatarColor: u.avatarColor,
+    hasPassword: u.passwordHash != null,
     onboardingCompleted: u.onboardingCompleted,
     emailVerified: u.emailVerified,
   };
@@ -117,6 +119,11 @@ router.post("/auth/register", credentialLimiter, async (req, res): Promise<void>
 
     await startSession(res, user.id);
     await sendVerification(user, req.log); // best-effort; soft verification
+    // A warm welcome, separate from the confirm. Fire-and-forget so a mail
+    // hiccup never fails the signup.
+    sendEmail({ to: user.email, ...welcomeEmail({ name: user.name }) }).catch(
+      (err) => req.log.error({ err }, "Welcome email failed"),
+    );
     res.status(201).json(toAuthUser(user));
   } catch (err) {
     req.log.error({ err }, "Register route error");
@@ -219,6 +226,50 @@ router.patch("/auth/me", requireAuth, async (req, res): Promise<void> => {
     res.status(500).json({ error: "Failed to update profile" });
   }
 });
+
+// Change password while signed in — verify the current one, then set the new.
+router.post(
+  "/auth/change-password",
+  requireAuth,
+  async (req, res): Promise<void> => {
+    try {
+      const { currentPassword, newPassword } = (req.body ?? {}) as {
+        currentPassword?: unknown;
+        newPassword?: unknown;
+      };
+      if (typeof newPassword !== "string" || newPassword.length < 8) {
+        res
+          .status(400)
+          .json({ error: "Your new password must be at least 8 characters." });
+        return;
+      }
+      if (!req.user!.passwordHash) {
+        res.status(400).json({
+          error:
+            "Your account signs in with Google — there's no password to change.",
+        });
+        return;
+      }
+      const ok = await verifyPassword(
+        typeof currentPassword === "string" ? currentPassword : "",
+        req.user!.passwordHash,
+      );
+      if (!ok) {
+        res.status(401).json({ error: "Your current password is incorrect." });
+        return;
+      }
+      const passwordHash = await hashPassword(newPassword);
+      await db
+        .update(usersTable)
+        .set({ passwordHash, updatedAt: new Date() })
+        .where(eq(usersTable.id, req.userId!));
+      res.status(204).end();
+    } catch (err) {
+      req.log.error({ err }, "Change password error");
+      res.status(500).json({ error: "Failed to change password" });
+    }
+  },
+);
 
 router.post(
   "/auth/complete-onboarding",
@@ -405,6 +456,11 @@ router.get("/auth/google/callback", async (req, res): Promise<void> => {
             avatarUrl: profile.avatarUrl,
           })
           .returning();
+        // First Google sign-in for this person — welcome them (best-effort).
+        sendEmail({
+          to: user.email,
+          ...welcomeEmail({ name: user.name }),
+        }).catch((err) => req.log.error({ err }, "Welcome email failed"));
       }
     }
 

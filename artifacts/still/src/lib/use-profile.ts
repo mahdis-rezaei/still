@@ -27,3 +27,16 @@ export function useUpdateProfile() {
     },
   });
 }
+
+// POST /auth/change-password — verify the current password and set a new one.
+// 204 on success; the server returns a 400/401 with a message otherwise.
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: (b: { currentPassword: string; newPassword: string }) =>
+      customFetch<void>("/api/auth/change-password", {
+        method: "POST",
+        body: JSON.stringify(b),
+        responseType: "json",
+      }),
+  });
+}

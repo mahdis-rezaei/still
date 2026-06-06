@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { AppNav } from "@/components/app-nav";
 import { useAuth } from "@/lib/auth";
-import { useUpdateProfile } from "@/lib/use-profile";
+import { useUpdateProfile, useChangePassword } from "@/lib/use-profile";
 import { Avatar } from "@/components/avatar";
 import { AVATAR_COLORS, avatarColorFor } from "@/lib/avatar";
 
@@ -30,6 +30,94 @@ function fileToAvatarDataUrl(file: File, max = 256): Promise<string> {
     };
     reader.readAsDataURL(file);
   });
+}
+
+// Change-password — its own little form (separate save from the profile fields).
+// Hidden for Google-only accounts, which have no password.
+function ChangePasswordSection({ hasPassword }: { hasPassword: boolean }) {
+  const change = useChangePassword();
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [done, setDone] = useState(false);
+  const [err, setErr] = useState("");
+
+  if (!hasPassword) {
+    return (
+      <section className="mt-12 pt-8 border-t border-border/40">
+        <p className="block font-sans text-xs uppercase tracking-[0.18em] text-faint-ink mb-2">
+          Password
+        </p>
+        <p className="font-body text-soft-ink">
+          You sign in with Google — there's no password to change.
+        </p>
+      </section>
+    );
+  }
+
+  async function submit() {
+    setErr("");
+    setDone(false);
+    if (next.length < 8) {
+      setErr("Your new password must be at least 8 characters.");
+      return;
+    }
+    try {
+      await change.mutateAsync({ currentPassword: current, newPassword: next });
+      setCurrent("");
+      setNext("");
+      setDone(true);
+      setTimeout(() => setDone(false), 3000);
+    } catch {
+      setErr("Couldn't change it — check that your current password is right.");
+    }
+  }
+
+  const inputCls =
+    "w-full bg-surface border border-border rounded-xl px-4 py-3 font-body text-ink placeholder:text-faint-ink focus:outline-none focus:border-accent-sepia transition-colors";
+
+  return (
+    <section className="mt-12 pt-8 border-t border-border/40">
+      <p className="block font-sans text-xs uppercase tracking-[0.18em] text-faint-ink mb-3">
+        Password
+      </p>
+      <div className="space-y-3 max-w-sm">
+        <input
+          type="password"
+          autoComplete="current-password"
+          placeholder="Current password"
+          value={current}
+          onChange={(e) => setCurrent(e.target.value)}
+          className={inputCls}
+          data-testid="input-current-password"
+        />
+        <input
+          type="password"
+          autoComplete="new-password"
+          placeholder="New password (8+ characters)"
+          value={next}
+          onChange={(e) => setNext(e.target.value)}
+          className={inputCls}
+          data-testid="input-new-password"
+        />
+      </div>
+      <div className="flex items-center gap-4 mt-4">
+        <button
+          onClick={submit}
+          disabled={!current || !next || change.isPending}
+          className="rounded-full border border-border hover:border-accent-sepia text-soft-ink hover:text-ink px-5 py-2 font-sans text-sm disabled:opacity-40 disabled:cursor-default transition-colors"
+          data-testid="button-change-password"
+        >
+          {change.isPending ? "Saving…" : "Change password"}
+        </button>
+        {done && (
+          <span className="font-sans text-sm text-soft-ink">
+            Password changed ✓
+          </span>
+        )}
+        {err && <span className="font-sans text-sm text-soft-ink">{err}</span>}
+      </div>
+    </section>
+  );
 }
 
 export default function Profile() {
@@ -206,6 +294,8 @@ export default function Profile() {
             </span>
           )}
         </div>
+
+        <ChangePasswordSection hasPassword={!!user?.hasPassword} />
       </main>
     </div>
   );
