@@ -15,8 +15,9 @@ const TONES: Record<Tone, { backgroundColor: string; color: string }> = {
   blush: { backgroundColor: "rgba(185,138,120,0.16)", color: "#9c6a58" },
 };
 
-// Example "returns" — drawn from the kind of pages Yadegar surfaces. The words
-// are illustrative of the real product's voice (one quiet line, in your own words).
+// Example "returns" — FICTIONAL, illustrative of the kind of pages Yadegar
+// surfaces (one quiet line, in the writer's own words). Deliberately invented,
+// never a real user's writing, since they show on the public landing page.
 const RETURNS: {
   tag: string;
   tone: Tone;
@@ -27,46 +28,76 @@ const RETURNS: {
   {
     tag: "a forgotten page",
     tone: "sepia",
-    date: "September 2015",
+    date: "March 2017",
     quote:
-      "3:53am at the monastery. My body is exhausted — but I'm getting more comfortable being alone in the dark.",
+      "Couldn't sleep, so I sat on the fire escape and watched the city not need me at all. It was strangely kind.",
     note: "A page you'd forgotten you wrote.",
   },
   {
     tag: "what kept returning",
     tone: "sage",
-    date: "2015 — 2026",
-    quote: "Take a deep breath, Mahdis. You can do it.",
-    note: "The same quiet way you've always talked yourself back onto your feet.",
+    date: "2014 — 2024",
+    quote: "One more week, then I'll really begin.",
+    note: "The same gentle promise, made to yourself for ten years.",
   },
   {
     tag: "how far you've come",
     tone: "blush",
-    date: "2020 — today",
-    quote: "Why can't I dream big? What is blocking me?",
-    note: "A fear that, somewhere along the way, quietly let go.",
+    date: "2019 — today",
+    quote: "I don't think I'll ever feel at home in this city.",
+    note: "Years on, you simply stopped writing this.",
   },
   {
     tag: "something you knew",
     tone: "sepia",
-    date: "March 2018",
+    date: "August 2016",
     quote:
-      "When writing the story of your life, make sure you hold the pen.",
-    note: "A line you wrote years ago that still feels true.",
+      "Ready was never going to be a feeling. It's a door you walk through scared.",
+    note: "A line you wrote years ago that still holds.",
   },
   {
     tag: "a question you carried",
     tone: "sage",
-    date: "2016 — 2026",
-    quote: "Where is home? I still don't know — but I'm less afraid of not knowing.",
+    date: "2015 — 2025",
+    quote: "Am I doing enough? Am I enough?",
     note: "The same question, ten years on, asked more gently.",
   },
   {
     tag: "the words you saved",
     tone: "blush",
-    date: "2019",
-    quote: "We must wash our eyes and see differently. — Sohrab Sepehri",
+    date: "2018",
+    quote: "The wound is the place where the Light enters you. — Rumi",
     note: "A line you copied down, back when it first found you.",
+  },
+  {
+    tag: "a bright day",
+    tone: "sepia",
+    date: "July 2021",
+    quote:
+      "We danced in the kitchen until the rice burned. I want to keep this exact afternoon.",
+    note: "A small, good day you'd forgotten.",
+  },
+  {
+    tag: "what kept returning",
+    tone: "sage",
+    date: "2013 — 2023",
+    quote: "Be patient with yourself. You're still learning.",
+    note: "The same quiet way you've always talked yourself back onto your feet.",
+  },
+  {
+    tag: "how far you've come",
+    tone: "blush",
+    date: "2017 — today",
+    quote: "I cried in the office bathroom again and told no one.",
+    note: "A season you moved all the way through.",
+  },
+  {
+    tag: "something you knew",
+    tone: "sepia",
+    date: "October 2019",
+    quote:
+      "Maybe I don't have to fix this. Maybe I just have to feel it and let it pass.",
+    note: "A truth that took years to trust.",
   },
 ];
 
