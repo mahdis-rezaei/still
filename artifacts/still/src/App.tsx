@@ -40,6 +40,7 @@ import CollectionsPage from "@/pages/collections";
 import CollectionDetail from "@/pages/collection-detail";
 import Import from "@/pages/import";
 import Settings from "@/pages/settings";
+import Help from "@/pages/help";
 import Profile from "@/pages/profile";
 import Privacy from "@/pages/privacy";
 import Notifications from "@/pages/notifications";
@@ -109,6 +110,7 @@ function ProtectedApp() {
       <Route path="/collections/:id" component={CollectionDetail} />
       <Route path="/import" component={Import} />
       <Route path="/settings" component={Settings} />
+      <Route path="/help" component={Help} />
       <Route path="/settings/profile" component={Profile} />
       <Route path="/settings/notifications" component={Notifications} />
       <Route path="/settings/resurfacing" component={Resurfacing} />
