@@ -481,13 +481,18 @@ async function detectCrisis(
 // Whole-entry hard-floor check for date-based resurfacing (see
 // PASS_HARD_FLOOR_SYSTEM). Fails CLOSED: any technical error returns true so an
 // unclassifiable entry is withheld rather than risk surfacing floor content.
+// Runs on MODEL_LIGHT (Haiku) — validated by the classify-floor harness, which
+// requires every withhold case to still return hard_floor=true before the flip is
+// trusted. This is the resurfacing-eligibility floor only; the Pass-2 per-line
+// gate_hard_floors (on MODEL) independently keeps floor lines out of any surfaced
+// result, so even a miss here cannot put a floor LINE in front of the reader.
 async function detectHardFloor(
   text: string,
   log: { error: (obj: unknown, msg: string) => void },
 ): Promise<boolean> {
   try {
     const message = await client.messages.create({
-      model: MODEL,
+      model: MODEL_LIGHT,
       max_tokens: MAX_TOKENS_HARD_FLOOR,
       temperature: 0,
       system: PASS_HARD_FLOOR_SYSTEM,
