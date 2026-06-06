@@ -1438,6 +1438,8 @@ components:
           type: ["string", "null"]
         avatarColor:
           type: ["string", "null"]
+        hasPassword:
+          type: boolean
         onboardingCompleted:
           type: boolean
         emailVerified:

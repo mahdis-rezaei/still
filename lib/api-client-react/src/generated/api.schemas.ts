@@ -22,6 +22,7 @@ export interface AuthUser {
   avatarUrl?: string | null;
   /** @nullable */
   avatarColor?: string | null;
+  hasPassword?: boolean;
   onboardingCompleted: boolean;
   emailVerified: boolean;
 }
