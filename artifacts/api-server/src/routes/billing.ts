@@ -49,7 +49,22 @@ async function applySubscription(sub: Stripe.Subscription): Promise<void> {
     .where(eq(usersTable.stripeCustomerId, customerId));
 }
 
+function billingEnabled(): boolean {
+  return (
+    stripe != null &&
+    !!process.env.STRIPE_PRICE_MONTHLY &&
+    !!process.env.STRIPE_PRICE_ANNUAL
+  );
+}
+
 const router = Router();
+
+// GET /billing/config — public, unauthenticated. Lets the client show the real
+// purchase UI only once Stripe is actually wired (else a gentle "coming soon"),
+// so the Phase 2 page can ship before the keys are set without a dead CTA.
+router.get("/billing/config", (_req, res): void => {
+  res.json({ enabled: billingEnabled() });
+});
 
 // POST /billing/checkout { interval: "monthly" | "annual" } → { url }
 // Creates (or reuses) the user's Stripe customer and a subscription Checkout

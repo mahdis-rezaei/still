@@ -22,8 +22,23 @@ export default function Plan() {
   const [interval, setIntervalState] = useState<Interval>("annual");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Whether Stripe is wired on the server. Until then we show "coming soon"
+  // instead of a purchase button that can't complete.
+  const [billingEnabled, setBillingEnabled] = useState<boolean | null>(null);
 
   const isMember = user?.plan === "member";
+
+  useEffect(() => {
+    let alive = true;
+    customFetch<{ enabled?: boolean }>("/api/billing/config", {
+      responseType: "json",
+    })
+      .then((r) => alive && setBillingEnabled(r?.enabled === true))
+      .catch(() => alive && setBillingEnabled(false));
+    return () => {
+      alive = false;
+    };
+  }, []);
   const status =
     typeof window !== "undefined"
       ? new URLSearchParams(window.location.search).get("status")
@@ -135,53 +150,72 @@ export default function Plan() {
               across all your years, as often as you like.
             </p>
 
-            <div className="inline-flex rounded-full border border-border bg-surface/60 p-1 mb-6">
-              {(["annual", "monthly"] as Interval[]).map((v) => (
-                <button
-                  key={v}
-                  onClick={() => setIntervalState(v)}
-                  className={
-                    "px-4 py-1.5 rounded-full font-sans text-sm transition-colors " +
-                    (interval === v
-                      ? "bg-deep-brown text-background"
-                      : "text-soft-ink hover:text-ink")
-                  }
-                  data-testid={`interval-${v}`}
-                >
-                  {v === "annual" ? "Annual" : "Monthly"}
-                </button>
-              ))}
-            </div>
+            {billingEnabled === true ? (
+              <>
+                <div className="inline-flex rounded-full border border-border bg-surface/60 p-1 mb-6">
+                  {(["annual", "monthly"] as Interval[]).map((v) => (
+                    <button
+                      key={v}
+                      onClick={() => setIntervalState(v)}
+                      className={
+                        "px-4 py-1.5 rounded-full font-sans text-sm transition-colors " +
+                        (interval === v
+                          ? "bg-deep-brown text-background"
+                          : "text-soft-ink hover:text-ink")
+                      }
+                      data-testid={`interval-${v}`}
+                    >
+                      {v === "annual" ? "Annual" : "Monthly"}
+                    </button>
+                  ))}
+                </div>
 
-            <div className="border border-border rounded-xl bg-surface/60 p-6 max-w-[28rem]">
-              {interval === "annual" ? (
-                <p className="font-body text-2xl text-ink">
-                  $59<span className="text-base text-soft-ink"> / year</span>
-                  <span className="font-body text-sm text-faint-ink ml-2">
-                    (about $4.92/mo)
-                  </span>
+                <div className="border border-border rounded-xl bg-surface/60 p-6 max-w-[28rem]">
+                  {interval === "annual" ? (
+                    <p className="font-body text-2xl text-ink">
+                      $59<span className="text-base text-soft-ink"> / year</span>
+                      <span className="font-body text-sm text-faint-ink ml-2">
+                        (about $4.92/mo)
+                      </span>
+                    </p>
+                  ) : (
+                    <p className="font-body text-2xl text-ink">
+                      $8<span className="text-base text-soft-ink"> / month</span>
+                    </p>
+                  )}
+                  <button
+                    onClick={() => go("/api/billing/checkout", { interval })}
+                    disabled={busy}
+                    className="mt-5 font-sans text-sm rounded-full px-5 py-2.5 bg-deep-brown text-background hover:opacity-90 transition-opacity disabled:opacity-60"
+                    data-testid="become-member"
+                  >
+                    {busy ? "Taking you to checkout…" : "Become a member"}
+                  </button>
+                  {user?.usage && user.usage.limit != null && (
+                    <p className="font-body text-sm text-faint-ink mt-4">
+                      You've used {user.usage.used} of about {user.usage.limit}{" "}
+                      fresh returns this month. Revisiting what's already returned
+                      is always free.
+                    </p>
+                  )}
+                </div>
+              </>
+            ) : billingEnabled === false ? (
+              <div className="border border-border rounded-xl bg-surface/60 p-6 max-w-[28rem]">
+                <p className="font-body text-lg text-ink">Coming soon</p>
+                <p className="font-body text-soft-ink text-sm mt-1 leading-relaxed">
+                  Membership — unlimited fresh returns across your years — is
+                  almost ready. Your journal stays free either way.
                 </p>
-              ) : (
-                <p className="font-body text-2xl text-ink">
-                  $8<span className="text-base text-soft-ink"> / month</span>
-                </p>
-              )}
-              <button
-                onClick={() => go("/api/billing/checkout", { interval })}
-                disabled={busy}
-                className="mt-5 font-sans text-sm rounded-full px-5 py-2.5 bg-deep-brown text-background hover:opacity-90 transition-opacity disabled:opacity-60"
-                data-testid="become-member"
-              >
-                {busy ? "Taking you to checkout…" : "Become a member"}
-              </button>
-              {user?.usage && user.usage.limit != null && (
-                <p className="font-body text-sm text-faint-ink mt-4">
-                  You've used {user.usage.used} of about {user.usage.limit} fresh
-                  returns this month. Revisiting what's already returned is always
-                  free.
-                </p>
-              )}
-            </div>
+                {user?.usage && user.usage.limit != null && (
+                  <p className="font-body text-sm text-faint-ink mt-4">
+                    You've used {user.usage.used} of about {user.usage.limit} fresh
+                    returns this month. Revisiting what's already returned is always
+                    free.
+                  </p>
+                )}
+              </div>
+            ) : null}
           </>
         )}
 
