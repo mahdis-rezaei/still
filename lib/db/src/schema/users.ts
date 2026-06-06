@@ -34,7 +34,14 @@ export const usersTable = pgTable("users", {
     .notNull()
     .default("free"),
   planRenewsAt: timestamp("plan_renews_at", { withTimezone: true }),
-  stripeCustomerId: text("stripe_customer_id").unique(),
+  // NOT a DB-level UNIQUE on purpose: drizzle-kit push treats adding a unique
+  // constraint to a populated table as potentially-truncating and blocks on a
+  // non-interactive prompt (--force doesn't bypass it), which would stall — or
+  // worse, risk — the publish-time prod migration. The column is purely additive
+  // (all NULL until Stripe lands in Phase 2). One-customer-one-user is enforced in
+  // the Phase 2 webhook logic; if we want a DB guarantee later, add it then via an
+  // explicit CREATE UNIQUE INDEX CONCURRENTLY (safe, no rewrite).
+  stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
