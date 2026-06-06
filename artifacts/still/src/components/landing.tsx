@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { AmbientField } from "@/components/site-chrome";
+import { PricingCards } from "@/components/pricing-cards";
 
 // The public landing, an editorial scroll that lets someone *feel* Yadegar
 // before they understand it. Type-led, warm paper, restrained color (soft
@@ -246,6 +247,12 @@ export function Landing({
         </span>
         <div className="flex items-center gap-5">
           <Link
+            href="/pricing"
+            className="hidden sm:inline font-sans text-xs uppercase tracking-[0.18em] text-soft-ink hover:text-ink transition-colors"
+          >
+            Pricing
+          </Link>
+          <Link
             href="/why"
             className="hidden sm:inline font-sans text-xs uppercase tracking-[0.18em] text-soft-ink hover:text-ink transition-colors"
           >
@@ -426,51 +433,20 @@ export function Landing({
             </p>
           </Reveal>
           <Reveal>
-            <div className="grid md:grid-cols-2 gap-5 text-left">
-              <div className="border border-border rounded-2xl bg-surface/70 p-7">
-                <p className="font-sans text-xs uppercase tracking-[0.18em] text-faint-ink mb-2">
-                  Your journal
-                </p>
-                <p className="font-display text-3xl text-deep-brown">Free</p>
-                <p className="font-body text-soft-ink leading-relaxed mb-5">
-                  Forever.
-                </p>
-                <ul className="space-y-2 font-body text-soft-ink text-sm leading-relaxed">
-                  <li>Unlimited writing, keeping &amp; importing</li>
-                  <li>Your whole archive, private &amp; encrypted</li>
-                  <li>Export everything, anytime</li>
-                  <li>
-                    <span className="text-ink">4 fresh returns a month</span>{" "}
-                    (about one a week)
-                  </li>
-                  <li>Revisit anything that's returned, always free</li>
-                </ul>
-              </div>
-              <div className="border border-accent-sepia/40 rounded-2xl bg-surface p-7">
-                <p className="font-sans text-xs uppercase tracking-[0.18em] text-accent-sepia mb-2">
-                  Membership
-                </p>
-                <p className="font-display text-3xl text-deep-brown">
-                  $8<span className="text-lg text-soft-ink"> / mo</span>
-                </p>
-                <p className="font-body text-soft-ink leading-relaxed mb-5">
-                  or $59 a year, about $4.92/mo, 38% off.
-                </p>
-                <ul className="space-y-2 font-body text-soft-ink text-sm leading-relaxed">
-                  <li>Everything in the free journal</li>
-                  <li>
-                    <span className="text-ink">Unlimited fresh returns</span>{" "}
-                    across your years
-                  </li>
-                  <li>Read across all your time, whenever you like</li>
-                </ul>
-              </div>
-            </div>
+            <PricingCards />
           </Reveal>
           <Reveal>
             <p className="font-body text-faint-ink text-sm text-center mt-7 max-w-[34rem] mx-auto">
               We gate the AI, never your journal. Your words are always yours to
               write, keep, and take with you.
+            </p>
+            <p className="text-center mt-4">
+              <Link
+                href="/pricing"
+                className="font-sans text-sm text-accent-sepia hover:text-deep-brown border-b border-accent-sepia/40 pb-0.5 transition-colors"
+              >
+                See plans &amp; pricing questions →
+              </Link>
             </p>
           </Reveal>
         </div>

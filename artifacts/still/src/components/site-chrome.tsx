@@ -58,13 +58,22 @@ export function SiteNav({ showWhy = true }: { showWhy?: boolean }) {
         Yadegar
       </Link>
       {showWhy && (
-        <Link
-          href="/why"
-          className="font-sans text-xs uppercase tracking-[0.18em] text-soft-ink hover:text-ink transition-colors"
-          data-testid="link-why"
-        >
-          Why Yadegar
-        </Link>
+        <div className="flex items-center gap-5">
+          <Link
+            href="/pricing"
+            className="font-sans text-xs uppercase tracking-[0.18em] text-soft-ink hover:text-ink transition-colors"
+            data-testid="link-pricing"
+          >
+            Pricing
+          </Link>
+          <Link
+            href="/why"
+            className="font-sans text-xs uppercase tracking-[0.18em] text-soft-ink hover:text-ink transition-colors"
+            data-testid="link-why"
+          >
+            Why Yadegar
+          </Link>
+        </div>
       )}
     </nav>
   );

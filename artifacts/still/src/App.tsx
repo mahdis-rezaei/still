@@ -20,6 +20,7 @@ import History from "@/pages/history";
 import Login from "@/pages/login";
 import Why from "@/pages/why";
 import Philosophy from "@/pages/philosophy";
+import Pricing from "@/pages/pricing";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import Terms from "@/pages/terms";
 import VerifyEmail from "@/pages/verify-email";
@@ -154,6 +155,7 @@ function Router() {
     <Switch>
       <Route path="/login" component={LoginRoute} />
       <Route path="/why" component={Why} />
+      <Route path="/pricing" component={Pricing} />
       <Route path="/philosophy" component={Philosophy} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms" component={Terms} />
