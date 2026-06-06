@@ -2,26 +2,28 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useStill } from "@/lib/store";
 
-const SAMPLE_ENTRIES = `[2015-08-24]
-Today is Monday. I feel lost, lazy, messed up — up down down up. Mom and dad are at the airport. I don't have a job and dad has to support me. Relax Mahdis, relax. Take a deep breath. One, two, three.
+// Fictional sample entries — invented to demonstrate the engine (a recurring
+// thread, a forgotten page, a distance travelled), never a real person's diary.
+const SAMPLE_ENTRIES = `[2014-09-12]
+First week in a new city and I already feel invisible — everyone here seems to know exactly where they're going. One more week and I'll figure it out. One more week, then I'll really begin.
 
-[2015-11-18]
-3:53am at the monastery. They just woke us up. I had an awkward dream, probably because I was trying to find out why I'm so scared of being alone, especially alone in the dark. Yesterday's sitting was intense. My body is exhausted but I'm getting more comfortable.
+[2015-11-03]
+Couldn't sleep again, so I sat on the fire escape and watched the city not need me at all. It was strangely kind. I keep thinking I have to earn my place here. Maybe I just have to live here.
 
-[2018-03-29]
-It doesn't matter what anyone says you can or can't do. When writing the story of YOUR life, make sure YOU hold the pen. Be brave when writing YOUR script.
+[2017-06-20]
+Ready was never going to be a feeling. It's a door you walk through scared. I keep waiting to feel sure before I start, and the waiting is the only thing that's ever certain.
 
-[2018-08-06]
-You should believe in yourself. Mahdis you are extraordinary. You just need to take the first step. You can get good at anything you put your mind to.
+[2019-02-14]
+Cried in the office bathroom again and told no one. Am I doing enough? Am I enough? Be patient with yourself — you're still learning. (I keep saying that like it'll stick.)
 
-[2020-03-22]
-What do you want to accomplish in 2020? Why can't I dream big? What is blocking me? Why am I scared? What is wrong Mahdis? Something is blocking me.
+[2021-07-08]
+We danced in the kitchen until the rice burned. I want to keep this exact afternoon — the bad music, the open window, nowhere else I needed to be.
 
-[2021-08-12]
-You got this Warrior. You got this. I have come such a long way. My imposter syndrome is high but Mahdis, look how far you've come.
+[2023-04-30]
+Reread my old entries tonight. I used to write "I don't think I'll ever feel at home here" almost every month. I haven't written it in two years. I didn't even notice it leave.
 
-[2026-05-25]
-Hey you! What is it? I feel stressed. I feel like I'm moving so slow now, hiding behind the bushes. But why? I'm scared. You can do it Mahdis.`;
+[2024-10-15]
+Maybe I don't have to fix this. Maybe I just have to feel it and let it pass. Be patient with yourself — you've come such a long way.`;
 
 export default function Paste() {
   const [, setLocation] = useLocation();
