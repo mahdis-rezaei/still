@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
 import { useResendVerification } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { Avatar } from "@/components/avatar";
@@ -23,8 +24,18 @@ const LOOK_BACK_TABS = [
 export function AppNav() {
   const [location, setLocation] = useLocation();
   const { user, logout } = useAuth();
+  const queryClient = useQueryClient();
   const resend = useResendVerification();
   const [resent, setResent] = useState(false);
+
+  // Clicking the logo or the already-active nav item shouldn't dead-end: scroll to
+  // the top and soft-refresh the page's data (refetch active queries) — the
+  // standard "tap the active tab again" gesture. Not a full reload (that flashes
+  // and would feel heavy); just a calm refresh.
+  function refreshCurrent() {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    queryClient.invalidateQueries();
+  }
 
   // Account menu, one dropdown on the right (Settings · About · Profile · Sign
   // out) instead of scattering them across the top bar. Closes on outside click
@@ -111,6 +122,14 @@ export function AppNav() {
   const navLink = (href: string, label: string, active: boolean) => (
     <Link
       href={href}
+      onClick={(e) => {
+        // Exactly here already? Don't dead-click — scroll up + soft-refresh.
+        // (A sub-route like /look-back/revisit still navigates to the base.)
+        if (location === href) {
+          e.preventDefault();
+          refreshCurrent();
+        }
+      }}
       className={
         "font-sans text-sm transition-colors " +
         (active ? "text-ink" : "text-soft-ink hover:text-ink")
@@ -143,7 +162,7 @@ export function AppNav() {
     setMobileOpen(false);
     if (location === "/today") {
       e.preventDefault();
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      refreshCurrent();
     }
   }
 

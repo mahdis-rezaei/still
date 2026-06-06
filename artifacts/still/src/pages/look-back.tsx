@@ -6,6 +6,7 @@ import { RevisitATime } from "@/components/revisit-a-time";
 import { ThenAndNow } from "@/components/then-and-now";
 import { AForgottenPage } from "@/components/a-forgotten-page";
 import { YearInPagesTab } from "@/components/year-in-pages-tab";
+import { ReturnsLeftNote } from "@/components/returns-left-note";
 import { useLookBack } from "@/lib/use-look-back";
 
 // Look back, three ways your past returns to you, each its own route + page
@@ -37,6 +38,9 @@ export default function LookBack() {
       <AppNav />
 
       <main className="flex-1 w-full max-w-[680px] mx-auto px-6 py-12 md:py-16">
+        {/* Near-limit cue — shown only when low + enforced (see component). The
+            Look back lenses run the engine, so the gentle priming belongs here. */}
+        <ReturnsLeftNote />
         {lens === "returning" && (
           <Lens
             title="What keeps returning"
