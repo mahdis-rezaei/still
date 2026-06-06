@@ -135,6 +135,18 @@ export function AppNav() {
     </Link>
   );
 
+  // The wordmark is the home affordance (→ Today). When you're ALREADY on Today,
+  // a plain link does nothing and reads as broken (you tap and nothing happens),
+  // so instead scroll to the top — the logo always responds. Also closes the
+  // mobile menu if it's open.
+  function onWordmark(e: React.MouseEvent) {
+    setMobileOpen(false);
+    if (location === "/today") {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
+
   async function handleResend() {
     try {
       await resend.mutateAsync();
@@ -149,7 +161,9 @@ export function AppNav() {
         <div className="flex items-center gap-8">
           <Link
             href="/today"
-            className="font-display text-xl text-deep-brown tracking-tight"
+            onClick={onWordmark}
+            aria-label="Yadegar, home"
+            className="font-display text-xl text-deep-brown tracking-tight hover:text-ink transition-colors"
           >
             Yadegar
           </Link>
