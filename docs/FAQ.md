@@ -31,7 +31,7 @@ This FAQ explains every feature in plain language. Use the contents below to jum
 ## 1. Getting started & your account
 
 ### What is Yadegar, in one sentence?
-A quiet companion to journaling: write or paste in your entries, and Yadegar surfaces **one** thing worth returning to today: a recurring thread, a forgotten page, a distance you've travelled. Always in your own words, and never an "ambush."
+A quiet companion to journaling: write or paste in your entries, and Yadegar surfaces **one** thing worth returning to today: a recurring thread, a forgotten page, a distance you've travelled. Always in your own words, and never an "ambush." (Yadegar is said *yaa-deh-gar*, Persian for a keepsake, the thing that remains.)
 
 ### How do I create an account or sign in?
 On the sign-in screen you can either use **email + password**, or **"Continue with Google."** You can switch between signing in and registering on the same screen. A password needs to be at least 8 characters.
