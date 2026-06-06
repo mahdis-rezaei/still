@@ -126,7 +126,7 @@ export function AppNav() {
       key={href + label}
       href={href}
       className={
-        "font-sans text-sm transition-colors " +
+        "shrink-0 font-sans text-sm transition-colors " +
         (active ? "text-ink" : "text-soft-ink hover:text-ink")
       }
       data-testid={`subnav-${label.toLowerCase()}`}
@@ -299,7 +299,7 @@ export function AppNav() {
           aligned to the content column. (Library's own views, List/Calendar/
           Timeline, live in the page, and Search is the Library search box.) */}
       {exploreActive && (
-        <div className="w-full border-b border-border/40 bg-surface/30">
+        <div className="relative w-full border-b border-border/40 bg-surface/30">
           <div className="max-w-[680px] mx-auto px-6 py-3 flex items-center gap-5 md:gap-6 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {EXPLORE_TABS.map((t) =>
               subTab(
@@ -309,17 +309,26 @@ export function AppNav() {
               ),
             )}
           </div>
+          {/* soft right fade signals the row scrolls horizontally (mobile only) */}
+          <div
+            aria-hidden="true"
+            className="md:hidden pointer-events-none absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-background to-transparent"
+          />
         </div>
       )}
 
       {/* Look back sub-tabs, the same contextual second bar as Explore. */}
       {lookBackActive && (
-        <div className="w-full border-b border-border/40 bg-surface/30">
+        <div className="relative w-full border-b border-border/40 bg-surface/30">
           <div className="max-w-[680px] mx-auto px-6 py-3 flex items-center gap-5 md:gap-6 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {LOOK_BACK_TABS.map((t) =>
               subTab(t.href, t.label, lookBackTabActive(t.href)),
             )}
           </div>
+          <div
+            aria-hidden="true"
+            className="md:hidden pointer-events-none absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-background to-transparent"
+          />
         </div>
       )}
 
