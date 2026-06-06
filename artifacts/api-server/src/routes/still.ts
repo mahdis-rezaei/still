@@ -15,6 +15,13 @@ const client = new Anthropic({
 // Pinned to an exact version (never a floating alias) so a model auto-upgrade
 // can't silently change results.
 const MODEL = "claude-sonnet-4-6";
+// A cheaper, faster model for LOW-STAKES classification only — currently just the
+// library-shelf theme tag (neutral topical filing, never a safety or selection
+// decision). Everything that affects what surfaces (extract, score, the override
+// voice pass) AND every safety check (§3.1 crisis, the §3 whole-entry hard floor)
+// stays on MODEL until a fixture proves the lighter model holds the same line.
+// Pinned, not aliased, for the same no-silent-drift reason as MODEL.
+const MODEL_LIGHT = "claude-haiku-4-5-20251001";
 // PASS1 (extraction) output budget. A rich, time-spread pool produces a verbose
 // candidate list; 4096 still truncated it on a multi-hundred-entry archive (→
 // stop_reason "max_tokens" → invalid JSON → 500). 8192 gives ample headroom for
@@ -521,7 +528,7 @@ async function detectTheme(
 ): Promise<string> {
   try {
     const message = await client.messages.create({
-      model: MODEL,
+      model: MODEL_LIGHT,
       max_tokens: 60,
       temperature: 0,
       system: PASS_THEME_SYSTEM,
