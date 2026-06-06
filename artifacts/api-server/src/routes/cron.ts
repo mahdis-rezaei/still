@@ -156,7 +156,7 @@ router.post("/cron/run-nudges", async (req, res): Promise<void> => {
             });
             summary.memorySent++;
           } else {
-            const result = await runMemoryForUser(user.id, {});
+            const result = await runMemoryForUser(user.id, {}, { kind: "auto" });
             if (result.surfaced && result.memory) {
               const m = result.memory;
               const link = m.journalEntryId

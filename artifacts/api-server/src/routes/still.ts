@@ -1220,7 +1220,7 @@ router.post("/still/extract", async (req, res) => {
       const cached = await readCachedResult(key);
       if (cached) {
         req.log.info({ key }, "Extract cache hit — serving stored candidates, no model call");
-        res.json(cached);
+        res.json({ ...(cached as Record<string, unknown>), fromCache: true });
         return;
       }
     }
@@ -1239,7 +1239,7 @@ router.post("/still/extract", async (req, res) => {
       };
       req.log.info({ key }, "Crisis detected — returning support signal, skipping extraction");
       await writeCachedResult(key, crisisResult);
-      res.json(crisisResult);
+      res.json({ ...crisisResult, fromCache: false });
       return;
     }
 
@@ -1284,7 +1284,14 @@ router.post("/still/extract", async (req, res) => {
     const result = reconstructCandidates(raw, sentences);
 
     await writeCachedResult(key, result);
-    res.json(result);
+    res.json({
+      ...result,
+      fromCache: false,
+      usage: {
+        inputTokens: message.usage.input_tokens,
+        outputTokens: message.usage.output_tokens,
+      },
+    });
   } catch (err) {
     req.log.error({ err }, "Extract route error");
     res.status(500).json({ error: "Failed to extract candidates" });
@@ -1409,7 +1416,7 @@ router.post("/still/score", async (req, res) => {
       const cached = await readCachedResult(key);
       if (cached) {
         req.log.info({ key }, "Score cache hit — serving stored result, no model call");
-        res.json(cached);
+        res.json({ ...(cached as Record<string, unknown>), fromCache: true });
         return;
       }
     }
@@ -1535,7 +1542,14 @@ router.post("/still/score", async (req, res) => {
     }
 
     await writeCachedResult(key, result);
-    res.json(result);
+    res.json({
+      ...(result as Record<string, unknown>),
+      fromCache: false,
+      usage: {
+        inputTokens: message.usage.input_tokens,
+        outputTokens: message.usage.output_tokens,
+      },
+    });
   } catch (err) {
     req.log.error({ err }, "Score route error");
     res.status(500).json({ error: "Failed to score candidates" });
