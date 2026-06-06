@@ -43,6 +43,8 @@ import Import from "@/pages/import";
 import Settings from "@/pages/settings";
 import Profile from "@/pages/profile";
 import Plan from "@/pages/plan";
+import Shop from "@/pages/shop";
+import ShopProduct from "@/pages/shop-product";
 import Privacy from "@/pages/privacy";
 import Notifications from "@/pages/notifications";
 import Resurfacing from "@/pages/resurfacing";
@@ -52,6 +54,8 @@ import { StillProvider } from "@/lib/store";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { DevPanel } from "@/components/dev-panel";
 import { QuotaPromptProvider } from "@/components/quota-prompt-dialog";
+import { CartProvider } from "@/lib/use-cart";
+import { CartDrawer } from "@/components/cart-drawer";
 
 const queryClient = new QueryClient();
 
@@ -156,6 +160,8 @@ function Router() {
       <Route path="/login" component={LoginRoute} />
       <Route path="/why" component={Why} />
       <Route path="/pricing" component={Pricing} />
+      <Route path="/shop" component={Shop} />
+      <Route path="/shop/:handle" component={ShopProduct} />
       <Route path="/philosophy" component={Philosophy} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms" component={Terms} />
@@ -191,9 +197,12 @@ function App() {
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
             <AuthProvider>
               <SvgNoise />
-              <QuotaPromptProvider>
-                <Router />
-              </QuotaPromptProvider>
+              <CartProvider>
+                <QuotaPromptProvider>
+                  <Router />
+                </QuotaPromptProvider>
+                <CartDrawer />
+              </CartProvider>
               <DevPanel />
             </AuthProvider>
           </WouterRouter>
