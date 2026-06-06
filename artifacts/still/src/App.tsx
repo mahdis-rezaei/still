@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import {
   Switch,
   Route,
@@ -52,6 +52,10 @@ import { DevPanel } from "@/components/dev-panel";
 
 const queryClient = new QueryClient();
 
+// Help renders a heavy markdown stack (react-markdown + remark/rehype). Lazy-load
+// it so that runtime stays out of the main bundle and only loads when /help opens.
+const Help = lazy(() => import("@/pages/help"));
+
 function LoadingScreen() {
   return (
     <div className="min-h-[100dvh] flex items-center justify-center">
@@ -84,7 +88,8 @@ function ProtectedApp() {
   if (!user) return null; // redirecting to /login
 
   return (
-    <Switch>
+    <Suspense fallback={<LoadingScreen />}>
+      <Switch>
       <Route path="/onboarding" component={Onboarding} />
       <Route path="/">
         <Redirect to="/today" />
@@ -109,6 +114,7 @@ function ProtectedApp() {
       <Route path="/collections/:id" component={CollectionDetail} />
       <Route path="/import" component={Import} />
       <Route path="/settings" component={Settings} />
+      <Route path="/help" component={Help} />
       <Route path="/settings/profile" component={Profile} />
       <Route path="/settings/notifications" component={Notifications} />
       <Route path="/settings/resurfacing" component={Resurfacing} />
@@ -121,7 +127,8 @@ function ProtectedApp() {
       <Route path="/result" component={Result} />
       <Route path="/history" component={History} />
       <Route component={NotFound} />
-    </Switch>
+      </Switch>
+    </Suspense>
   );
 }
 

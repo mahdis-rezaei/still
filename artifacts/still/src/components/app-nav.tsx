@@ -189,6 +189,7 @@ export function AppNav() {
               >
                 {menuItem("/settings", "Settings")}
                 {menuItem("/why", "About Yadegar")}
+                {menuItem("/help", "Help & FAQ")}
                 {menuItem("/settings/profile", "My profile")}
                 <div className="my-1.5 border-t border-border/60" />
                 <button
@@ -253,6 +254,7 @@ export function AppNav() {
             <div className="my-1 border-t border-border/60" />
             {mobileItem("/settings", "Settings", isActive("/settings"))}
             {mobileItem("/why", "About Yadegar")}
+            {mobileItem("/help", "Help & FAQ", isActive("/help"))}
             {mobileItem("/settings/profile", "My profile")}
             <button
               onClick={async () => {
