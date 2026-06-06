@@ -110,7 +110,9 @@ Answer hard_floor=false when:
 - the entry is about ordinary life, feelings, events, relationships, work, meaning — even if it is sad or hard;
 - a meal or the body appears incidentally (e.g. "we cooked dinner together", "I went for a run and felt alive") without focus on weight/appearance/eating control.
 
-When genuinely UNCERTAIN whether the entry is substantially about these, choose hard_floor=true — it is better to withhold a page unnecessarily than to surface one that violates the floor.
+JUDGE THE FOCUS, NOT A SINGLE WORD. A lone passing remark about the body or weight — one line in an entry that is otherwise about mood, the day, work, family, or just getting through a hard night — does NOT meet the "centrally or substantially" bar. For example, an entry venting a messy low mood that includes "I feel annoyingly fat" among a list of mixed feelings, then moves on to job worries and steadying itself, is NOT a body/appearance entry → hard_floor=false. The floor fires only when the entry RETURNS to and DWELLS on weight/eating/appearance as its real subject (several lines, not one).
+
+When genuinely UNCERTAIN whether the entry is SUBSTANTIALLY about these (it keeps coming back to the body/eating/appearance, not just names it once), choose hard_floor=true — it is better to withhold a page unnecessarily than to surface one that violates the floor. A single incidental mention is not, by itself, that uncertainty.
 
 Output ONLY valid JSON, no preamble, no markdown fences, no reasoning. The first character must be "{":
 {"hard_floor": false, "reason": "one short phrase"}`;
