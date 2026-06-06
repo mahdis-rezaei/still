@@ -367,8 +367,11 @@ export function Landing({
             >
               یادگار
             </p>
-            <p className="font-body italic text-soft-ink mb-6">
+            <p className="font-body italic text-soft-ink mb-1">
               yadegar · Persian, noun
+            </p>
+            <p className="font-sans text-sm text-faint-ink mb-6">
+              said <span className="text-soft-ink">yaa-deh-gar</span>
             </p>
             <p className="font-body text-lg md:text-xl text-soft-ink leading-relaxed mb-5">
               A keepsake. A memento. The trace a person, or a time, leaves
