@@ -1,25 +1,80 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { AppNav } from "@/components/app-nav";
 import { useAuth } from "@/lib/auth";
 import { useUpdateProfile } from "@/lib/use-profile";
+import { Avatar } from "@/components/avatar";
+import { AVATAR_COLORS, avatarColorFor } from "@/lib/avatar";
+
+// Center-crop a chosen file to a square and shrink it to a small JPEG data URL,
+// so an avatar stays tiny (no object storage needed — it lives on the user row).
+function fileToAvatarDataUrl(file: File, max = 256): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("read failed"));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("decode failed"));
+      img.onload = () => {
+        const side = Math.min(img.width, img.height);
+        const sx = (img.width - side) / 2;
+        const sy = (img.height - side) / 2;
+        const canvas = document.createElement("canvas");
+        canvas.width = canvas.height = max;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return reject(new Error("no canvas"));
+        ctx.drawImage(img, sx, sy, side, side, 0, 0, max, max);
+        resolve(canvas.toDataURL("image/jpeg", 0.82));
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 export default function Profile() {
   const { user } = useAuth();
   const update = useUpdateProfile();
+  const fileRef = useRef<HTMLInputElement>(null);
+
   const [name, setName] = useState("");
+  const [color, setColor] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
-  // Seed the field once the user loads.
+  // Seed the form once the user loads.
   useEffect(() => {
     setName(user?.name ?? "");
-  }, [user?.name]);
+    setColor(user?.avatarColor ?? null);
+    setAvatarUrl(user?.avatarUrl ?? null);
+  }, [user?.name, user?.avatarColor, user?.avatarUrl]);
 
-  const dirty = (user?.name ?? "") !== name.trim();
+  const preview = { name, email: user?.email, avatarColor: color, avatarUrl };
+  const effectiveColor = color ?? avatarColorFor(preview);
+
+  const dirty =
+    (user?.name ?? "") !== name.trim() ||
+    (user?.avatarColor ?? null) !== color ||
+    (user?.avatarUrl ?? null) !== avatarUrl;
+
+  async function onPick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-picking the same file
+    if (!file) return;
+    try {
+      setAvatarUrl(await fileToAvatarDataUrl(file));
+    } catch {
+      /* ignore a bad image */
+    }
+  }
 
   async function save() {
     setSaved(false);
-    await update.mutateAsync({ name: name.trim() });
+    await update.mutateAsync({
+      name: name.trim(),
+      avatarColor: color,
+      avatarUrl,
+    });
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   }
@@ -39,6 +94,66 @@ export default function Profile() {
           Your profile
         </h1>
 
+        {/* Avatar + photo controls */}
+        <div className="flex items-center gap-5 mb-8">
+          <Avatar user={preview} size={84} colorOverride={effectiveColor} />
+          <div className="flex flex-col gap-1.5">
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="text-left font-sans text-sm text-soft-ink hover:text-ink transition-colors"
+              data-testid="button-upload-avatar"
+            >
+              {avatarUrl ? "Change photo" : "Upload a photo"}
+            </button>
+            {avatarUrl && (
+              <button
+                onClick={() => setAvatarUrl(null)}
+                className="text-left font-sans text-sm text-faint-ink hover:text-soft-ink transition-colors"
+              >
+                Remove photo
+              </button>
+            )}
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              onChange={onPick}
+              className="hidden"
+            />
+          </div>
+        </div>
+
+        {/* Colour — used for the initial when there's no photo. */}
+        <div className="mb-8">
+          <p className="block font-sans text-xs uppercase tracking-[0.18em] text-faint-ink mb-3">
+            Choose a colour
+          </p>
+          <div className="flex items-center gap-3">
+            {AVATAR_COLORS.map((c) => (
+              <button
+                key={c}
+                onClick={() => setColor(c)}
+                style={{ background: c }}
+                className={
+                  "w-9 h-9 rounded-full transition-transform " +
+                  (color === c
+                    ? "ring-2 ring-offset-2 ring-deep-brown scale-105"
+                    : "hover:scale-105")
+                }
+                aria-label={`avatar colour ${c}`}
+                data-testid={`avatar-color-${c}`}
+              />
+            ))}
+          </div>
+          {avatarUrl && (
+            <p className="font-body text-sm text-faint-ink mt-2">
+              Your photo is shown instead of the colour — remove it to use a
+              colour.
+            </p>
+          )}
+        </div>
+
+        {/* Display name */}
         <div className="mb-8">
           <label
             htmlFor="display-name"
@@ -62,6 +177,7 @@ export default function Profile() {
           </p>
         </div>
 
+        {/* Email (read-only) */}
         <div className="mb-10">
           <p className="block font-sans text-xs uppercase tracking-[0.18em] text-faint-ink mb-2">
             Email

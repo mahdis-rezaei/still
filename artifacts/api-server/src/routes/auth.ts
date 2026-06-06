@@ -72,6 +72,7 @@ function toAuthUser(u: User) {
     email: u.email,
     name: u.name,
     avatarUrl: u.avatarUrl,
+    avatarColor: u.avatarColor,
     onboardingCompleted: u.onboardingCompleted,
     emailVerified: u.emailVerified,
   };
@@ -165,19 +166,51 @@ router.get("/auth/me", requireAuth, (req, res): void => {
   res.json(toAuthUser(req.user!));
 });
 
-// Update the signed-in user's profile (just the display name for now). Trimmed,
-// capped, and an empty value clears it (the UI falls back to the email).
+// Update the signed-in user's profile — display name, avatar colour, and/or an
+// uploaded avatar (stored as a small data: URL in avatar_url). Each field is
+// applied only when present in the body; empty values clear it.
 router.patch("/auth/me", requireAuth, async (req, res): Promise<void> => {
   try {
-    const raw = (req.body ?? {}) as { name?: unknown };
-    if (typeof raw.name !== "string") {
-      res.status(400).json({ error: "name must be a string" });
-      return;
+    const raw = (req.body ?? {}) as {
+      name?: unknown;
+      avatarColor?: unknown;
+      avatarUrl?: unknown;
+    };
+    const updates: Record<string, unknown> = { updatedAt: new Date() };
+
+    if ("name" in raw) {
+      if (typeof raw.name !== "string") {
+        res.status(400).json({ error: "name must be a string" });
+        return;
+      }
+      updates.name = raw.name.trim().slice(0, 80) || null;
     }
-    const name = raw.name.trim().slice(0, 80);
+    if ("avatarColor" in raw) {
+      if (raw.avatarColor !== null && typeof raw.avatarColor !== "string") {
+        res.status(400).json({ error: "avatarColor must be a string or null" });
+        return;
+      }
+      updates.avatarColor = raw.avatarColor
+        ? String(raw.avatarColor).slice(0, 32)
+        : null;
+    }
+    if ("avatarUrl" in raw) {
+      if (raw.avatarUrl !== null && typeof raw.avatarUrl !== "string") {
+        res.status(400).json({ error: "avatarUrl must be a string or null" });
+        return;
+      }
+      const v = raw.avatarUrl ? String(raw.avatarUrl) : null;
+      // Cap the stored avatar so a giant data: URL can't bloat the row.
+      if (v && v.length > 400_000) {
+        res.status(413).json({ error: "image too large" });
+        return;
+      }
+      updates.avatarUrl = v;
+    }
+
     const [user] = await db
       .update(usersTable)
-      .set({ name: name || null, updatedAt: new Date() })
+      .set(updates)
       .where(eq(usersTable.id, req.userId!))
       .returning();
     res.json(toAuthUser(user));

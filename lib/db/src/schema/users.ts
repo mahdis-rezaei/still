@@ -11,6 +11,7 @@ export const usersTable = pgTable("users", {
   passwordHash: text("password_hash"),
   googleId: text("google_id").unique(),
   avatarUrl: text("avatar_url"),
+  avatarColor: text("avatar_color"),
   timezone: text("timezone").notNull().default("America/Los_Angeles"),
   onboardingCompleted: boolean("onboarding_completed")
     .notNull()

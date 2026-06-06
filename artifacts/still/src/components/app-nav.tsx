@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useResendVerification } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
+import { Avatar } from "@/components/avatar";
 
 // Explore = your archive + keepsakes, shown as in-page sub-tabs (not a dropdown).
 const EXPLORE_TABS = [
@@ -146,7 +147,10 @@ export function AppNav() {
             }
             data-testid="account-menu-trigger"
           >
-            {user?.name || user?.email || "Account"}
+            <Avatar user={user} size={26} />
+            <span className="hidden sm:inline">
+              {user?.name || user?.email || "Account"}
+            </span>
             <span className="text-xs text-faint-ink">⌄</span>
           </button>
           {menuOpen && (
