@@ -439,7 +439,10 @@ export function Landing({
                   <li>Unlimited writing, keeping &amp; importing</li>
                   <li>Your whole archive, private &amp; encrypted</li>
                   <li>Export everything, anytime</li>
-                  <li>A few fresh returns each month</li>
+                  <li>
+                    <span className="text-ink">4 fresh returns a month</span>{" "}
+                    (about one a week)
+                  </li>
                   <li>Revisit anything that's returned, always free</li>
                 </ul>
               </div>
