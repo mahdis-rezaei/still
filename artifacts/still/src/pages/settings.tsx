@@ -89,6 +89,21 @@ export default function Settings() {
           </Link>
         </section>
 
+        <section className="mb-10">
+          <p className="font-sans text-xs uppercase tracking-[0.18em] text-faint-ink mb-3">
+            Help
+          </p>
+          <Link
+            href="/help"
+            className="block border border-border rounded-xl bg-surface/60 p-5 hover:border-accent-sepia transition-colors"
+          >
+            <p className="font-body text-lg text-ink">Help &amp; FAQ</p>
+            <p className="font-body text-soft-ink text-sm mt-1">
+              Answers to common questions about every part of Yadegar.
+            </p>
+          </Link>
+        </section>
+
         <button
           onClick={async () => {
             await logout();
