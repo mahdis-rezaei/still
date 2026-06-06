@@ -213,6 +213,7 @@ export function AppNav() {
               >
                 {menuItem("/settings", "Settings")}
                 {menuItem("/settings/profile", "My profile")}
+                {menuItem("/settings/plan", "Membership")}
                 {menuItem("/help", "Help & FAQ")}
                 {menuItem("/why", "About Yadegar")}
                 <div className="my-1.5 border-t border-border/60" />
@@ -278,6 +279,7 @@ export function AppNav() {
             <div className="my-1 border-t border-border/60" />
             {mobileItem("/settings", "Settings", isActive("/settings"))}
             {mobileItem("/settings/profile", "My profile")}
+            {mobileItem("/settings/plan", "Membership", isActive("/settings/plan"))}
             {mobileItem("/help", "Help & FAQ", isActive("/help"))}
             {mobileItem("/why", "About Yadegar")}
             <button
