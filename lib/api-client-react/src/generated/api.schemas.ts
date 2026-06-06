@@ -38,6 +38,11 @@ export interface AuthUser {
     /** Whether the free limit is actually enforced (vs shadow). */
     enforced?: boolean;
   };
+  /**
+   * Session bearer token, returned by login/register only to native clients
+   * (header X-Yadegar-Client: mobile). Web uses the httpOnly cookie instead.
+   */
+  token?: string;
 }
 
 export interface VerifyEmailInput {

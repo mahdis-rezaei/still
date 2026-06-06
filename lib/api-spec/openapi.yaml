@@ -1465,6 +1465,8 @@ components:
             - used
             - limit
             - atLimit
+        token:
+          type: string
       required:
         - id
         - email
