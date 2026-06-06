@@ -18,9 +18,7 @@ const LOOK_BACK_TABS = [
   { href: "/look-back/revisit", label: "Revisit a time" },
   { href: "/look-back/keepsake", label: "Your Year in Pages" },
 ];
-// The quiet top bar for the signed-in app. Three calm destinations by intent —
-// Today (write), Look back (be visited by your past), Explore (your archive) —
-// with account/settings on the right. A contextual second bar appears under
+// The quiet top bar for the signed-in app. Three calm destinations by intent, // Today (write), Look back (be visited by your past), Explore (your archive), // with account/settings on the right. A contextual second bar appears under
 // Explore for its sub-tabs. Plus a soft "confirm your email" banner.
 export function AppNav() {
   const [location, setLocation] = useLocation();
@@ -28,7 +26,7 @@ export function AppNav() {
   const resend = useResendVerification();
   const [resent, setResent] = useState(false);
 
-  // Account menu — one dropdown on the right (Settings · About · Profile · Sign
+  // Account menu, one dropdown on the right (Settings · About · Profile · Sign
   // out) instead of scattering them across the top bar. Closes on outside click
   // or Escape.
   const [menuOpen, setMenuOpen] = useState(false);
@@ -63,7 +61,7 @@ export function AppNav() {
     </Link>
   );
 
-  // Mobile menu — on phones the inline nav doesn't fit, so it collapses into a
+  // Mobile menu, on phones the inline nav doesn't fit, so it collapses into a
   // hamburger. Closes on navigation or Escape.
   const [mobileOpen, setMobileOpen] = useState(false);
   useEffect(() => setMobileOpen(false), [location]);
@@ -244,7 +242,7 @@ export function AppNav() {
         </div>
       </nav>
 
-      {/* Mobile menu panel — the full nav + account actions, hamburger-driven. */}
+      {/* Mobile menu panel, the full nav + account actions, hamburger-driven. */}
       {mobileOpen && (
         <div className="md:hidden w-full border-b border-border/60 bg-surface">
           <div className="px-6 py-2 flex flex-col">
@@ -271,9 +269,9 @@ export function AppNav() {
         </div>
       )}
 
-      {/* Explore sub-tabs — contextual second bar (in-page tabs, not a dropdown),
-          aligned to the content column. (Library's own views — List/Calendar/
-          Timeline — live in the page, and Search is the Library search box.) */}
+      {/* Explore sub-tabs, contextual second bar (in-page tabs, not a dropdown),
+          aligned to the content column. (Library's own views, List/Calendar/
+          Timeline, live in the page, and Search is the Library search box.) */}
       {exploreActive && (
         <div className="w-full border-b border-border/40 bg-surface/30">
           <div className="max-w-[680px] mx-auto px-6 py-3 flex items-center gap-5 md:gap-6 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -288,7 +286,7 @@ export function AppNav() {
         </div>
       )}
 
-      {/* Look back sub-tabs — the same contextual second bar as Explore. */}
+      {/* Look back sub-tabs, the same contextual second bar as Explore. */}
       {lookBackActive && (
         <div className="w-full border-b border-border/40 bg-surface/30">
           <div className="max-w-[680px] mx-auto px-6 py-3 flex items-center gap-5 md:gap-6 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -303,7 +301,7 @@ export function AppNav() {
         <div className="w-full bg-[#F3EAD7] border-b border-accent-sepia/20 px-6 md:px-8 py-2.5 text-center">
           <span className="font-sans text-xs text-deep-brown/80">
             {resent ? (
-              "Sent — check your inbox to confirm your email."
+              "Sent, check your inbox to confirm your email."
             ) : (
               <>
                 Confirm your email to keep your pages safe.{" "}

@@ -1,11 +1,10 @@
 // Pull plain text out of a .docx upload *in the browser*, so the import API
-// contract stays "rawText in" — no binary upload, nothing new for the server to
+// contract stays "rawText in", no binary upload, nothing new for the server to
 // decrypt or store. mammoth reads Word's actual text in document order, so it is
 // faithful for English and right-to-left scripts (e.g. Farsi) alike.
 //
 // PDF is intentionally NOT supported. A PDF stores positioned glyphs, not text,
-// so any extraction reorders/space-splits words and badly mangles RTL text —
-// unacceptable for a journal we promise never to alter. The faithful paths are
+// so any extraction reorders/space-splits words and badly mangles RTL text, // unacceptable for a journal we promise never to alter. The faithful paths are
 // paste and .docx (Google Doc / Word -> Download -> .docx).
 import * as mammoth from "mammoth/mammoth.browser";
 

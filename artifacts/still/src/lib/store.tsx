@@ -45,7 +45,7 @@ function parseEntries(raw: string): Record<string, string> {
 }
 
 // Lossless variant for the persistence path: splits a batch on [YYYY-MM-DD]
-// markers but stores each block's text EXACTLY as written — no trimming,
+// markers but stores each block's text EXACTLY as written, no trimming,
 // no normalization. Only the date marker itself and the single line break
 // that ends the marker line are dropped (they are format, not content).
 export function parseEntriesVerbatim(

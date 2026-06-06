@@ -10,7 +10,7 @@ import { AppNav } from "@/components/app-nav";
 
 type Interval = "monthly" | "annual";
 
-// Phase 2 — the membership page. Free users see the pitch + a monthly/annual
+// Phase 2, the membership page. Free users see the pitch + a monthly/annual
 // toggle and start Stripe Checkout; members manage/cancel through the Stripe
 // Billing Portal. The plan itself flips via the webhook (source of truth), so
 // after Checkout we just refetch /auth/me. Honest about the pre-Stripe state: if
@@ -76,7 +76,7 @@ export default function Plan() {
       const e = err as { status?: number };
       setError(
         e?.status === 503
-          ? "Membership isn't quite ready yet — it's coming very soon."
+          ? "Membership isn't quite ready yet, it's coming very soon."
           : "Something went wrong. Please try again in a moment.",
       );
     } finally {
@@ -111,13 +111,13 @@ export default function Plan() {
         {status === "success" && (
           <p className="font-body text-lg text-deep-brown leading-relaxed mb-6">
             {isMember
-              ? "Welcome — your years are open to you now."
-              : "Welcome — your years are open to you now. Just finishing the last details…"}
+              ? "Welcome, your years are open to you now."
+              : "Welcome, your years are open to you now. Just finishing the last details…"}
           </p>
         )}
         {status === "cancelled" && (
           <p className="font-body text-soft-ink leading-relaxed mb-6">
-            No problem — nothing changed. Your journal is yours, free, as always.
+            No problem, nothing changed. Your journal is yours, free, as always.
           </p>
         )}
 
@@ -145,8 +145,8 @@ export default function Plan() {
         ) : (
           <>
             <p className="font-body text-soft-ink leading-relaxed mb-8 max-w-[34rem]">
-              Your journal — writing, keeping, importing, and revisiting the pages
-              that return to you — is always free. Membership adds unlimited{" "}
+              Your journal is always free: writing, keeping, importing, and
+              revisiting the pages that return to you. Membership adds unlimited{" "}
               <span className="text-ink">fresh returns</span>: Yadegar reading
               across all your years, whenever you like.
             </p>
@@ -217,7 +217,7 @@ export default function Plan() {
               <div className="border border-border rounded-xl bg-surface/60 p-6 max-w-[28rem]">
                 <p className="font-body text-lg text-ink">Coming soon</p>
                 <p className="font-body text-soft-ink text-sm mt-1 leading-relaxed">
-                  Membership — unlimited fresh returns across your years — is
+                  Membership, unlimited fresh returns across your years, is
                   almost ready. Your journal stays free either way.
                 </p>
                 {user?.usage && user.usage.limit != null && (

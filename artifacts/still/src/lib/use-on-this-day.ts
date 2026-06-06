@@ -16,7 +16,7 @@ export interface OnThisDayMemory {
   onThisExactDay: boolean;
 }
 
-// "A year ago today" / "7 years ago, around this day" — honest about whether
+// "A year ago today" / "7 years ago, around this day", honest about whether
 // it's the exact calendar day or merely near it. Shared by the Today section
 // and the Look Back browse.
 export function onThisDayLabel(m: {
@@ -47,7 +47,7 @@ export function useOnThisDay() {
   });
 }
 
-// The VOICED on-this-day surface — the engine scoped to this date's entries, so
+// The VOICED on-this-day surface, the engine scoped to this date's entries, so
 // the lead reads in Yadegar's voice instead of a raw excerpt. Slower than the raw
 // list (a model read on first compute, then cached), so it's fetched separately
 // and loaded progressively: the raw list renders instantly, this enriches it.

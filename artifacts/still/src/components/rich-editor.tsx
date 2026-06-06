@@ -12,13 +12,13 @@ import {
 } from "@/lib/speech-recognition";
 
 // A deliberately minimal contentEditable composer for the literary formatting
-// set — emphasis, two heading levels, lists, blockquote, and a few muted text
+// set, emphasis, two heading levels, lists, blockquote, and a few muted text
 // colors. No editor library: the toolbar drives document.execCommand and we emit
 // the raw HTML up to the parent, which sends it to the server. The SERVER is the
 // trust boundary (it sanitizes and derives the plain-text body the engine
 // reads), so this component only has to produce HTML and stay calm and quiet.
 
-// Muted, on-brand swatches only — no loud colors (per the product's design
+// Muted, on-brand swatches only, no loud colors (per the product's design
 // ethos). Values are desaturated earth tones that sit on warm paper.
 const SWATCHES: { name: string; value: string }[] = [
   { name: "Ink", value: "#25211C" },
@@ -101,7 +101,7 @@ export const RichEditor = forwardRef<RichEditorHandle, Props>(
     // wants to dictate," so onend restarts it until they explicitly stop.
     const wantListenRef = useRef(false);
 
-    // Seed once on mount. Never write innerHTML from React again — that would
+    // Seed once on mount. Never write innerHTML from React again, that would
     // reset the caret on every keystroke.
     useEffect(() => {
       const el = elRef.current;
@@ -138,7 +138,7 @@ export const RichEditor = forwardRef<RichEditorHandle, Props>(
       try {
         document.execCommand("styleWithCSS", false, "true");
       } catch {
-        // Older engines may not support styleWithCSS — color still works.
+        // Older engines may not support styleWithCSS, color still works.
       }
       document.execCommand(command, false, value);
       emit();
@@ -150,7 +150,7 @@ export const RichEditor = forwardRef<RichEditorHandle, Props>(
       try {
         current = (document.queryCommandValue("formatBlock") || "").toLowerCase();
       } catch {
-        // ignore — fall through to setting the tag
+        // ignore, fall through to setting the tag
       }
       exec("formatBlock", current === tag.toLowerCase() ? "P" : tag);
     }
@@ -385,7 +385,7 @@ export const RichEditor = forwardRef<RichEditorHandle, Props>(
             )}
             <p className="font-sans text-xs text-faint-ink mt-1">
               Speak and your words appear above. Dictation is handled by your
-              browser's speech service — Yadegar doesn't record the audio.
+              browser's speech service, Yadegar doesn't record the audio.
             </p>
           </div>
         )}

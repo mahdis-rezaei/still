@@ -94,7 +94,7 @@ export default function Privacy() {
           </p>
           <p>
             To find what's worth returning to, Yadegar reads your words with an AI
-            model — privately, only to choose a page to bring back. Your writing is
+            model, privately, only to choose a page to bring back. Your writing is
             never used to train it, never shown to anyone else, and never sold.
           </p>
           <p>
@@ -103,7 +103,7 @@ export default function Privacy() {
           </p>
         </div>
 
-        {/* About your data — what's stored, where, and how it's protected. */}
+        {/* About your data, what's stored, where, and how it's protected. */}
         <div className="mt-8 border border-border rounded-2xl bg-surface/50 p-6">
           <p className="font-sans text-xs uppercase tracking-[0.18em] text-faint-ink mb-4">
             About your data
@@ -119,15 +119,15 @@ export default function Privacy() {
               ],
               [
                 "Your pages",
-                "Every entry — its words, formatting, and date — is encrypted at rest (AES-256-GCM) before it touches the database. The API only ever returns your pages to you, signed in; there is no public endpoint, so they're never reachable without your session.",
+                "Every entry, its words, formatting, and date, is encrypted at rest (AES-256-GCM) before it touches the database. The API only ever returns your pages to you, signed in; there is no public endpoint, so they're never reachable without your session.",
               ],
               [
                 "Your photos",
-                "Photos you add to a page are encrypted and kept in private object storage — never on a public CDN. The app fetches each one server-side with a private key and decrypts it only for you.",
+                "Photos you add to a page are encrypted and kept in private object storage, never on a public CDN. The app fetches each one server-side with a private key and decrypts it only for you.",
               ],
               [
                 "Reminders",
-                "If you turn on nudges, only your timezone and cadence are stored — never the content of a page — to time them.",
+                "If you turn on nudges, only your timezone and cadence are stored, never the content of a page, to time them.",
               ],
             ].map(([term, desc]) => (
               <div key={term} className="grid sm:grid-cols-[8.5rem_1fr] gap-1 sm:gap-4">
@@ -141,7 +141,7 @@ export default function Privacy() {
           <p className="font-body text-soft-ink text-sm leading-relaxed mt-5 pt-4 border-t border-border/60">
             Your pages are never shared with third parties or used to train
             anyone's models. Deleting your account permanently removes everything
-            — your profile, all pages, and any photos — immediately and
+, your profile, all pages, and any photos, immediately and
             irreversibly.
           </p>
         </div>
@@ -168,7 +168,7 @@ export default function Privacy() {
           <div>
             <p className="font-body text-ink mb-1">Export my journals</p>
             <p className="font-sans text-xs text-faint-ink mb-4">
-              Your journals belong to you — leaving is easier than arriving. Take
+              Your journals belong to you, leaving is easier than arriving. Take
               them in any format, anytime.
             </p>
 

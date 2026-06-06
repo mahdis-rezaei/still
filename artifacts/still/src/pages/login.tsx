@@ -10,7 +10,7 @@ type View = "hero" | "signin" | "register";
 function errorFromQuery(search: string): string | null {
   const code = new URLSearchParams(search).get("error");
   if (code === "google_unconfigured")
-    return "Google sign-in isn't set up yet — use your email below.";
+    return "Google sign-in isn't set up yet, use your email below.";
   if (code === "google_failed")
     return "Google sign-in didn't complete. Please try again.";
   return null;

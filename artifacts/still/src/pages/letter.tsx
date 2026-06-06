@@ -28,7 +28,7 @@ export default function Letter() {
 
   const hasPages = !!data && data.pageCount > 0;
 
-  // The years you've actually written — for the year-jump dropdown and to bound
+  // The years you've actually written, for the year-jump dropdown and to bound
   // the prev/next arrows to real years (so you never walk into an empty one).
   const years = useMemo(() => {
     const set = new Set<number>();
@@ -59,7 +59,7 @@ export default function Letter() {
       </div>
 
       <main className="flex-1 w-full px-6 py-12 md:py-20">
-        {/* Navigation + print — hidden in the printed PDF. Sits a touch wider
+        {/* Navigation + print, hidden in the printed PDF. Sits a touch wider
             than the 640px book column so the controls fit on one line. */}
         <div className="print:hidden max-w-[760px] mx-auto flex flex-wrap items-center justify-between gap-x-5 gap-y-3 mb-12">
           <div className="flex items-center gap-3 md:gap-4">
@@ -158,7 +158,7 @@ export default function Letter() {
                 : " Here they are."}
             </p>
 
-            {/* The pages that stayed (favorites) — else the whole year, gathered. */}
+            {/* The pages that stayed (favorites), else the whole year, gathered. */}
             {(() => {
               const fav = data!.favorites;
               const sections =
@@ -210,7 +210,7 @@ export default function Letter() {
               <p className="font-body text-soft-ink leading-relaxed text-center mt-16 pt-10 border-t border-border/60">
                 You also wrote {data!.reflectionCount}{" "}
                 {data!.reflectionCount === 1 ? "reflection" : "reflections"} this
-                year — letters to the person who wrote these pages.
+                year, letters to the person who wrote these pages.
               </p>
             )}
           </article>

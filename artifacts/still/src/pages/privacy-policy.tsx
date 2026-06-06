@@ -1,6 +1,6 @@
 import { AmbientField, SiteNav } from "@/components/site-chrome";
 
-// DRAFT legal copy in Yadegar's voice — honest and plain. Have a human/lawyer
+// DRAFT legal copy in Yadegar's voice, honest and plain. Have a human/lawyer
 // review before a public launch, and replace the contact address + governing
 // law with real values. Last updated date is shown to readers.
 
@@ -46,7 +46,7 @@ export default function PrivacyPolicy() {
         <Section title="What we store">
           <p>
             Your account details (email, and a name if you provide one) and the
-            content you create or import — journal entries, reflections, and the
+            content you create or import, journal entries, reflections, and the
             memories Yadegar returns to you. Passwords are stored only as a salted
             hash; we never see your password.
           </p>
@@ -90,7 +90,7 @@ export default function PrivacyPolicy() {
         <Section title="Your rights">
           <p>
             You can export everything you've written at any time, and delete your
-            account and all associated data permanently — both from Settings →
+            account and all associated data permanently, both from Settings →
             Privacy. Deletion is immediate and irreversible.
           </p>
         </Section>

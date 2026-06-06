@@ -5,7 +5,7 @@ function plural(n: number, word: string): string {
 }
 
 // A quiet archival card: continuity, not consistency. No streaks, no "you missed
-// a day" — only the accumulation of a life on the page. Renders nothing for an
+// a day", only the accumulation of a life on the page. Renders nothing for an
 // empty archive.
 export function ContinuityCard() {
   const { data } = useContinuity();

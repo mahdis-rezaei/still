@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { customFetch } from "@workspace/api-client-react";
 
-// "Your Year in Pages" is the most shareable, high-emotion artifact — so we
+// "Your Year in Pages" is the most shareable, high-emotion artifact, so we
 // surface it like Spotify Wrapped, at the two natural "look at my year" moments:
 //   • New Year (late Dec features the year just lived; Jan features the one that
 //     just ended), and
@@ -72,7 +72,7 @@ export function YearInPagesBanner() {
         className="font-sans text-sm text-deep-brown hover:text-ink transition-colors"
         data-testid="banner-year-in-pages"
       >
-        {occasion.text} —{" "}
+        {occasion.text}.{" "}
         <span className="underline underline-offset-2">
           look back on a year →
         </span>

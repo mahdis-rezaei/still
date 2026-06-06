@@ -5,7 +5,7 @@ import { AppNav } from "@/components/app-nav";
 import { PageHeader } from "@/components/page";
 
 // Search is CLIENT-SIDE on purpose: entry bodies are encrypted at rest, so the
-// server can't search them — which keeps your words private. We match in the
+// server can't search them, which keeps your words private. We match in the
 // browser over the archive we already load.
 
 const SOURCE_FILTERS: { value: string; label: string; test: (e: Entry) => boolean }[] = [
@@ -31,7 +31,7 @@ function longDate(d: string): string {
   });
 }
 
-// Everything a query can match against: words, names, places — and the date,
+// Everything a query can match against: words, names, places, and the date,
 // long-form ("June", "2016") and ISO.
 function haystack(e: Entry): string {
   const parts = [e.title ?? "", e.body ?? "", e.entryDate ?? ""];
@@ -103,7 +103,7 @@ export default function Search() {
       <main className="flex-1 w-full max-w-[720px] mx-auto px-6 py-12 md:py-16">
         <PageHeader
           title="Search your life"
-          subtitle="A word, a name, a place, a year. Your pages stay private — this searches them right here in your browser."
+          subtitle="A word, a name, a place, a year. Your pages stay private, this searches them right here in your browser."
         />
 
         <div className="flex flex-col sm:flex-row gap-3 mb-8">

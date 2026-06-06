@@ -27,7 +27,7 @@ export async function sendEmail(opts: {
   if (!key) {
     logger.warn(
       { to: opts.to, subject: opts.subject },
-      "RESEND_API_KEY not set — skipping email send",
+      "RESEND_API_KEY not set, skipping email send",
     );
     return;
   }
@@ -61,11 +61,11 @@ function shell(bodyHtml: string, footerHtml?: string): string {
     <div style="background:#FFFDF8;border:1px solid #E6DCC9;border-radius:18px;padding:34px 30px;color:#3A2F25;line-height:1.6;">
       <div style="text-align:center;margin-bottom:26px;">
         <div style="font-size:26px;color:#3A2F25;">Yadegar</div>
-        <div style="font-size:12px;color:#A59B8D;font-style:italic;margin-top:5px;">a keepsake — the thing that remains</div>
+        <div style="font-size:12px;color:#A59B8D;font-style:italic;margin-top:5px;">a keepsake, the thing that remains</div>
       </div>
       ${bodyHtml}
     </div>
-    <p style="text-align:center;color:#A59B8D;font-size:12px;font-family:Helvetica,Arial,sans-serif;line-height:1.55;margin:16px 10px 0;">${footerHtml ?? "Yadegar — a companion to a lifelong journaling practice."}</p>
+    <p style="text-align:center;color:#A59B8D;font-size:12px;font-family:Helvetica,Arial,sans-serif;line-height:1.55;margin:16px 10px 0;">${footerHtml ?? "Yadegar, a companion to a lifelong journaling practice."}</p>
   </div>
 </div>`;
 }
@@ -85,7 +85,7 @@ function button(href: string, label: string): string {
   return `<p style="margin:22px 0;"><a href="${href}" style="background:#3A2F25;color:#F7F1E6;text-decoration:none;padding:12px 24px;border-radius:999px;font-family:Helvetica,Arial,sans-serif;font-size:14px;display:inline-block;">${label}</a></p>`;
 }
 
-// Nudge footer — why they're getting it + how to turn it off (a real gap before).
+// Nudge footer, why they're getting it + how to turn it off (a real gap before).
 function manageFooter(): string {
   return `You're getting this because your nudges are on. <a href="${appBase()}/settings/notifications" style="color:#8A6F4D;text-decoration:none;">Manage them</a>.`;
 }
@@ -100,24 +100,24 @@ export function welcomeEmail(opts: { name?: string | null }): {
   const body = [
     para(hi),
     para(
-      "I'm Mahdis — I made Yadegar. I'd kept journals for years and wanted something that could quietly hand one page back to me: a thread that kept returning, a day I'd forgotten — always in my own words, and never pushing.",
+      "I'm Mahdis. I made Yadegar. I'd kept journals for years and wanted something that could quietly hand one page back to me: a thread that kept returning, a day I'd forgotten, always in my own words, and never pushing.",
     ),
     para(
-      "There's no streak to keep and no feed to scroll. Write when you want. Everything stays private and encrypted. Yadegar brings back one thing worth sitting with when it's honest — and stays quiet when it isn't.",
+      "There's no streak to keep and no feed to scroll. Write when you want. Everything stays private and encrypted. Yadegar brings back one thing worth sitting with when it's honest, and stays quiet when it isn't.",
     ),
     para(
-      "If anything feels off, or you just want to tell me how it's landing, just hit reply — I read everything.",
+      "If anything feels off, or you just want to tell me how it's landing, just hit reply, and I read everything.",
     ),
-    para("— Mahdis"),
+    para("Mahdis"),
   ].join("");
   return {
     subject: "Welcome to Yadegar",
     html: shell(body),
     text:
       `${hi}\n\n` +
-      "I'm Mahdis — I made Yadegar. I'd kept journals for years and wanted something that could quietly hand one page back to me: a thread that kept returning, a day I'd forgotten — always in my own words, and never pushing.\n\n" +
-      "There's no streak to keep and no feed to scroll. Write when you want. Everything stays private and encrypted. Yadegar brings back one thing worth sitting with when it's honest — and stays quiet when it isn't.\n\n" +
-      "If anything feels off, or you just want to tell me how it's landing, just hit reply — I read everything.\n\n— Mahdis\n",
+      "I'm Mahdis. I made Yadegar. I'd kept journals for years and wanted something that could quietly hand one page back to me: a thread that kept returning, a day I'd forgotten, always in my own words, and never pushing.\n\n" +
+      "There's no streak to keep and no feed to scroll. Write when you want. Everything stays private and encrypted. Yadegar brings back one thing worth sitting with when it's honest, and stays quiet when it isn't.\n\n" +
+      "If anything feels off, or you just want to tell me how it's landing, just hit reply, and I read everything.\n\nMahdis\n",
   };
 }
 
@@ -130,20 +130,20 @@ export function membershipWelcomeEmail(opts: { name?: string | null }): {
   const hi = opts.name ? `${opts.name},` : "Hello,";
   const url = `${appBase()}/today`;
   const lines = [
-    "Thank you for becoming a member of Yadegar. It genuinely means a lot — a small, honest project like this stays alive because of people like you.",
-    "Your years are open now: bring a page back whenever the moment calls, and Yadegar will keep reading across all of them — for the threads that return, the pages you'd forgotten, and the distance you've travelled.",
-    "Nothing about your journal changes. Writing, keeping, importing, and revisiting what's already come back to you were always free, and always will be — membership simply lifts the limit on new returns.",
+    "Thank you for becoming a member of Yadegar. It genuinely means a lot. A small, honest project like this stays alive because of people like you.",
+    "Your years are open now: bring a page back whenever the moment calls, and Yadegar will keep reading across all of them, for the threads that return, the pages you'd forgotten, and the distance you've travelled.",
+    "Nothing about your journal changes. Writing, keeping, importing, and revisiting what's already come back to you were always free, and always will be. Membership simply lifts the limit on new returns.",
     "You can manage or cancel anytime from Settings → Membership, and your pages remain entirely yours either way.",
   ];
   const body =
     para(hi) +
     lines.map(para).join("") +
     button(url, "Bring a page back") +
-    para("— Mahdis");
+    para("Mahdis");
   return {
     subject: "Welcome to Yadegar membership",
     html: shell(body),
-    text: `${hi}\n\n${lines.join("\n\n")}\n\nBring a page back: ${url}\n\n— Mahdis\n`,
+    text: `${hi}\n\n${lines.join("\n\n")}\n\nBring a page back: ${url}\n\nMahdis\n`,
   };
 }
 
@@ -156,7 +156,7 @@ export function verificationEmail(link: string): {
     subject: "Confirm your email · Yadegar",
     html: wrap(
       "One quick thing.",
-      `${para("Confirm this is your email so your pages stay tied to you — and so we can help you back in if you're ever locked out.")}${button(link, "Confirm email")}<p style="font-size:13px;color:#6F675C;">Or paste this link: ${link}</p>`,
+      `${para("Confirm this is your email so your pages stay tied to you, and so we can help you back in if you're ever locked out.")}${button(link, "Confirm email")}<p style="font-size:13px;color:#6F675C;">Or paste this link: ${link}</p>`,
     ),
     text: `Confirm this is your email so your pages stay tied to you:\n${link}\n`,
   };
@@ -171,7 +171,7 @@ export function writingNudgeEmail(link: string): {
     subject: "A page is waiting · Yadegar",
     html: wrap(
       "What wants to be written today?",
-      `${para("No streak to keep, nothing to catch up on. Just a quiet moment, if you have one — one honest line is enough.")}${button(link, "Write today")}`,
+      `${para("No streak to keep, nothing to catch up on. Just a quiet moment, if you have one, one honest line is enough.")}${button(link, "Write today")}`,
       manageFooter(),
     ),
     text: `What wants to be written today? Write today: ${link}\n`,
@@ -202,7 +202,7 @@ export function memoryNudgeEmail(opts: {
   };
 }
 
-// A date-based "on this day" return — no engine, just a page from this same day
+// A date-based "on this day" return, no engine, just a page from this same day
 // in a past year. Warm and quiet: a page placed on the desk, never a demand.
 export function onThisDayNudgeEmail(opts: {
   monthYear: string; // e.g. "June 2018"
@@ -226,7 +226,7 @@ export function onThisDayNudgeEmail(opts: {
   };
 }
 
-// A Memory Capsule has reached its delivery date — a letter the user sealed for
+// A Memory Capsule has reached its delivery date, a letter the user sealed for
 // a later self. Quiet and a little wondrous; the words wait behind a tap.
 export function capsuleEmail(link: string): {
   subject: string;
@@ -237,7 +237,7 @@ export function capsuleEmail(link: string): {
     subject: "A page from your past arrived · Yadegar",
     html: wrap(
       "A page from your past arrived today.",
-      `${para("You sealed this for a later you — and that's today. It's waiting to be opened.")}${button(link, "Open it")}`,
+      `${para("You sealed this for a later you, and that's today. It's waiting to be opened.")}${button(link, "Open it")}`,
     ),
     text: `A page from your past arrived today. You sealed it for a later you. Open it: ${link}\n`,
   };
@@ -252,7 +252,7 @@ export function passwordResetEmail(link: string): {
     subject: "Reset your password · Yadegar",
     html: wrap(
       "Reset your password.",
-      `${para("Use the button below to set a new password. It expires in an hour. If you didn't ask for this, you can safely ignore this email — nothing will change.")}${button(link, "Set a new password")}<p style="font-size:13px;color:#6F675C;">Or paste this link: ${link}</p>`,
+      `${para("Use the button below to set a new password. It expires in an hour. If you didn't ask for this, you can safely ignore this email, nothing will change.")}${button(link, "Set a new password")}<p style="font-size:13px;color:#6F675C;">Or paste this link: ${link}</p>`,
     ),
     text: `Reset your Yadegar password (expires in 1 hour): ${link}\n\nIf you didn't request this, ignore this email.\n`,
   };

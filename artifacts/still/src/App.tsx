@@ -122,7 +122,7 @@ function ProtectedApp() {
       <Route path="/settings/notifications" component={Notifications} />
       <Route path="/settings/resurfacing" component={Resurfacing} />
       <Route path="/settings/privacy" component={Privacy} />
-      {/* Legacy prototype flow (engine read-across) — not in the primary nav. */}
+      {/* Legacy prototype flow (engine read-across), not in the primary nav. */}
       <Route path="/home" component={Home} />
       <Route path="/paste" component={Paste} />
       <Route path="/entries" component={Entries} />

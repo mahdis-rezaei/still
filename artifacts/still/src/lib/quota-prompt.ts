@@ -2,7 +2,7 @@
 // quota gate answers an over-limit fresh return with HTTP 402 + body
 // { error: "quota_exceeded", code, message, usage }. Rather than each run surface
 // rendering its own thing, any caller routes a thrown request error through
-// handleQuotaError(), which — if it's the quota 402 — raises ONE shared upgrade
+// handleQuotaError(), which, if it's the quota 402, raises ONE shared upgrade
 // prompt (QuotaPromptProvider). This is wired now but DORMANT in shadow mode: the
 // server returns 402 only once STILL_QUOTA_ENFORCED=1, so today it never fires.
 

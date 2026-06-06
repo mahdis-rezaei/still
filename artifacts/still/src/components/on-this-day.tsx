@@ -11,13 +11,13 @@ import { DateMemoryCard } from "@/components/date-memory-card";
 import { MemoryCard } from "@/components/memory-card";
 
 // The On This Day section on Today. Stays SILENT (renders nothing) when there's
-// nothing from this day in years past — never an empty box, never a nudge to
+// nothing from this day in years past, never an empty box, never a nudge to
 // look. A quiet link leads to the fuller Look Back browse. In "protected"
 // memory-sensitivity, it doesn't auto-surface at all (nothing returns unbidden).
 //
 // The LEAD is voiced: the engine, scoped to just this date's entries, frames one
 // line in Yadegar's voice (Facebook-Memories, but warm). Because that's a model
-// read (slow on first compute, cached after), it loads PROGRESSIVELY — the raw
+// read (slow on first compute, cached after), it loads PROGRESSIVELY, the raw
 // most-recent page shows instantly and is replaced by the voiced card when ready,
 // so the section is never blank or blocking. A collapsible year ladder lets you
 // step through each year on this date (birthdays, anniversaries).
@@ -74,7 +74,7 @@ export function OnThisDay() {
         </div>
       )}
 
-      {/* Year ladder — step through each year on this date. */}
+      {/* Year ladder, step through each year on this date. */}
       {years.length > 1 && (
         <div className="mt-4">
           <button

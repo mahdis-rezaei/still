@@ -17,7 +17,7 @@ export default function ForgotPassword() {
       // Always succeeds (the server never reveals whether the email exists).
       await request.mutateAsync({ data: { email: email.trim() } });
     } catch {
-      /* ignore — we show the same message regardless */
+      /* ignore, we show the same message regardless */
     } finally {
       setBusy(false);
       setSent(true);

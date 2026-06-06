@@ -1,4 +1,4 @@
-// The avatar palette — muted, on-brand tones (echoing the rich-text colours).
+// The avatar palette, muted, on-brand tones (echoing the rich-text colours).
 // A chosen colour is stored on the user; without one we derive a stable colour
 // from the name so every avatar still looks intentional.
 export const AVATAR_COLORS = [

@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { AmbientField } from "@/components/site-chrome";
 
-// The public landing — an editorial scroll that lets someone *feel* Yadegar
+// The public landing, an editorial scroll that lets someone *feel* Yadegar
 // before they understand it. Type-led, warm paper, restrained color (soft
 // tinted lens chips), the Persian word as a hero element. No stock photography.
 
@@ -15,7 +15,7 @@ const TONES: Record<Tone, { backgroundColor: string; color: string }> = {
   blush: { backgroundColor: "rgba(185,138,120,0.16)", color: "#9c6a58" },
 };
 
-// Example "returns" — FICTIONAL, illustrative of the kind of pages Yadegar
+// Example "returns", FICTIONAL, illustrative of the kind of pages Yadegar
 // surfaces (one quiet line, in the writer's own words). Deliberately invented,
 // never a real user's writing, since they show on the public landing page.
 const RETURNS: {
@@ -36,14 +36,14 @@ const RETURNS: {
   {
     tag: "what kept returning",
     tone: "sage",
-    date: "2014 — 2024",
+    date: "2014 to 2024",
     quote: "One more week, then I'll really begin.",
     note: "The same gentle promise, made to yourself for ten years.",
   },
   {
     tag: "how far you've come",
     tone: "blush",
-    date: "2019 — today",
+    date: "2019 to today",
     quote: "I don't think I'll ever feel at home in this city.",
     note: "Years on, you simply stopped writing this.",
   },
@@ -58,7 +58,7 @@ const RETURNS: {
   {
     tag: "a question you carried",
     tone: "sage",
-    date: "2015 — 2025",
+    date: "2015 to 2025",
     quote: "Am I doing enough? Am I enough?",
     note: "The same question, ten years on, asked more gently.",
   },
@@ -66,7 +66,7 @@ const RETURNS: {
     tag: "the words you saved",
     tone: "blush",
     date: "2018",
-    quote: "The wound is the place where the Light enters you. — Rumi",
+    quote: "The wound is the place where the Light enters you. (Rumi)",
     note: "A line you copied down, back when it first found you.",
   },
   {
@@ -80,14 +80,14 @@ const RETURNS: {
   {
     tag: "what kept returning",
     tone: "sage",
-    date: "2013 — 2023",
+    date: "2013 to 2023",
     quote: "Be patient with yourself. You're still learning.",
     note: "The same quiet way you've always talked yourself back onto your feet.",
   },
   {
     tag: "how far you've come",
     tone: "blush",
-    date: "2017 — today",
+    date: "2017 to today",
     quote: "I cried in the office bathroom again and told no one.",
     note: "A season you moved all the way through.",
   },
@@ -105,7 +105,7 @@ const STEPS: { n: string; t: string; d: string }[] = [
   {
     n: "01",
     t: "Write",
-    d: "Write today's page, or bring in years of old ones. It doesn't need to be wise — only honest.",
+    d: "Write today's page, or bring in years of old ones. It doesn't need to be wise, only honest.",
   },
   {
     n: "02",
@@ -115,7 +115,7 @@ const STEPS: { n: string; t: string; d: string }[] = [
   {
     n: "03",
     t: "Return",
-    d: "When you ask, Yadegar reads across your years and places one page back in front of you — or stays quiet when nothing honest surfaces.",
+    d: "When you ask, Yadegar reads across your years and places one page back in front of you, or stays quiet when nothing honest surfaces.",
   },
   {
     n: "04",
@@ -179,7 +179,7 @@ function DemoCard({ r }: { r: (typeof RETURNS)[number] }) {
   );
 }
 
-// Interactive taste of the engine — click to surface one return, cycle through
+// Interactive taste of the engine, click to surface one return, cycle through
 // more. Curated examples (no live model call); same voice as the real product.
 function ReturnDemo({ onCreate }: { onCreate: () => void }) {
   const [revealed, setRevealed] = useState(false);
@@ -286,11 +286,11 @@ export function Landing({
             Yadegar
           </h1>
           <p className="font-body italic text-lg md:text-xl text-accent-sepia mb-7">
-            Persian: a keepsake — the thing that remains
+            Persian: a keepsake, the thing that remains
           </p>
           <p className="font-body text-lg md:text-xl text-soft-ink leading-relaxed mb-10 max-w-[34rem] mx-auto">
             A companion to a lifelong journaling practice. It reads across your
-            years and brings back one page worth returning to — gently, and
+            years and brings back one page worth returning to, gently, and
             always in your own words.
           </p>
           <div className="flex items-center justify-center gap-3">
@@ -311,7 +311,7 @@ export function Landing({
         </motion.div>
       </header>
 
-      {/* What comes back — example returns */}
+      {/* What comes back, example returns */}
       <section className="px-6 py-20 md:py-24 bg-[#F1EADD]">
         <div className="max-w-[720px] mx-auto">
           <Reveal>
@@ -371,7 +371,7 @@ export function Landing({
               yadegar · Persian, noun
             </p>
             <p className="font-body text-lg md:text-xl text-soft-ink leading-relaxed mb-5">
-              A keepsake. A memento. The trace a person — or a time — leaves
+              A keepsake. A memento. The trace a person, or a time, leaves
               behind. The thing that remains.
             </p>
             <p className="font-body text-soft-ink leading-relaxed">
@@ -392,7 +392,7 @@ export function Landing({
               myself. One that would last decades.”
             </p>
             <p className="font-body text-soft-ink leading-relaxed text-center mb-7">
-              I've kept a journal through every version of myself — and lost some
+              I've kept a journal through every version of myself, and lost some
               of them along the way. Yadegar is for the pages that remain.
             </p>
             <p className="text-center">
@@ -416,10 +416,10 @@ export function Landing({
               Free to keep. Yours to deepen.
             </h2>
             <p className="font-body text-soft-ink text-center leading-relaxed mb-10 max-w-[34rem] mx-auto">
-              Your journal is always free — write, keep, import, export, and
+              Your journal is always free: write, keep, import, export, and
               revisit the pages that return to you, without limit. Membership
-              lifts the cap on new returns: Yadegar reading across your years, as
-              often as you like.
+              lifts the cap on new returns: Yadegar reading across your years,
+              whenever you like.
             </p>
           </Reveal>
           <Reveal>
@@ -437,7 +437,7 @@ export function Landing({
                   <li>Your whole archive, private &amp; encrypted</li>
                   <li>Export everything, anytime</li>
                   <li>A few fresh returns each month</li>
-                  <li>Revisit anything that's returned — always free</li>
+                  <li>Revisit anything that's returned, always free</li>
                 </ul>
               </div>
               <div className="border border-accent-sepia/40 rounded-2xl bg-surface p-7">
@@ -448,7 +448,7 @@ export function Landing({
                   $8<span className="text-lg text-soft-ink"> / mo</span>
                 </p>
                 <p className="font-body text-soft-ink leading-relaxed mb-5">
-                  or $59 a year — about $4.92/mo, 38% off.
+                  or $59 a year, about $4.92/mo, 38% off.
                 </p>
                 <ul className="space-y-2 font-body text-soft-ink text-sm leading-relaxed">
                   <li>Everything in the free journal</li>
@@ -477,7 +477,7 @@ export function Landing({
             Meet the person you used to be.
           </h2>
           <p className="font-body text-soft-ink mb-9 max-w-[30rem] mx-auto">
-            Free to start — membership when you're ready. Private by default,
+            Free to start, membership when you're ready. Private by default,
             encrypted, and always in your own words.
           </p>
           <div className="flex items-center justify-center gap-3">

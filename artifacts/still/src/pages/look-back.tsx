@@ -8,13 +8,13 @@ import { AForgottenPage } from "@/components/a-forgotten-page";
 import { YearInPagesTab } from "@/components/year-in-pages-tab";
 import { useLookBack } from "@/lib/use-look-back";
 
-// Look back — three ways your past returns to you, each its own route + page
+// Look back, three ways your past returns to you, each its own route + page
 // (the sub-tab bar lives in AppNav, mirroring Explore). Grouped by who drives it:
-//   • What keeps returning — Yadegar brings you something (a thread, or a
+//   • What keeps returning, Yadegar brings you something (a thread, or a
 //     forgotten page)
-//   • Revisit a time — you pick a moment (read it back + the pages, and how far
+//   • Revisit a time, you pick a moment (read it back + the pages, and how far
 //     you've come)
-//   • Your Year in Pages — the keepsake you make
+//   • Your Year in Pages, the keepsake you make
 type Lens = "returning" | "revisit" | "keepsake";
 
 export default function LookBack() {
@@ -40,7 +40,7 @@ export default function LookBack() {
         {lens === "returning" && (
           <Lens
             title="What keeps returning"
-            lead="Across years of pages, the same things quietly resurface — a worry, a hope, a line you keep coming back to without noticing. Yadegar reads your whole archive and brings back one thread worth sitting with."
+            lead="Across years of pages, the same things quietly resurface, a worry, a hope, a line you keep coming back to without noticing. Yadegar reads your whole archive and brings back one thread worth sitting with."
           >
             <WhatKeepsReturning />
 
@@ -49,7 +49,7 @@ export default function LookBack() {
                 A page you'd forgotten
               </h2>
               <p className="font-body text-soft-ink mb-4 leading-relaxed">
-                Or let an old page find you — one that's slipped out of view,
+                Or let an old page find you, one that's slipped out of view,
                 read back in Yadegar's voice.
               </p>
               <AForgottenPage forgotten={forgotten} onChanged={refresh} />
@@ -70,7 +70,7 @@ export default function LookBack() {
         {lens === "revisit" && (
           <Lens
             title="Revisit a time"
-            lead="Pick a month and year, and Yadegar reads that stretch of your life back to you in your own words — then lays out the pages so you can read them again. A way to return somewhere on purpose."
+            lead="Pick a month and year, and Yadegar reads that stretch of your life back to you in your own words, then lays out the pages so you can read them again. A way to return somewhere on purpose."
           >
             <RevisitATime />
 
@@ -80,7 +80,7 @@ export default function LookBack() {
               </h2>
               <p className="font-body text-soft-ink mb-4 leading-relaxed">
                 Or choose a past year, and Yadegar holds it up against where you
-                are now — the distance you've travelled since.
+                are now, the distance you've travelled since.
               </p>
               <ThenAndNow />
             </section>
@@ -90,7 +90,7 @@ export default function LookBack() {
         {lens === "keepsake" && (
           <Lens
             title="Your Year in Pages"
-            lead="A whole year of your writing, gathered into one place — to read straight through, print, or keep as a book. The keepsake at the heart of Yadegar."
+            lead="A whole year of your writing, gathered into one place, to read straight through, print, or keep as a book. The keepsake at the heart of Yadegar."
           >
             <YearInPagesTab />
           </Lens>

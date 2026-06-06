@@ -15,7 +15,7 @@ export interface DateMemory {
   yearsAgo: number;
 }
 
-// The Look Back browse payload — every date-based way a page returns, gathered.
+// The Look Back browse payload, every date-based way a page returns, gathered.
 // Mirrors GET /memories/look-back. Hand-written until codegen is run.
 export interface LookBack {
   onThisDay: OnThisDayMemory[];

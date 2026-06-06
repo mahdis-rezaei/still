@@ -7,7 +7,7 @@ import { Avatar } from "@/components/avatar";
 import { AVATAR_COLORS, avatarColorFor } from "@/lib/avatar";
 
 // Center-crop a chosen file to a square and shrink it to a small JPEG data URL,
-// so an avatar stays tiny (no object storage needed — it lives on the user row).
+// so an avatar stays tiny (no object storage needed, it lives on the user row).
 function fileToAvatarDataUrl(file: File, max = 256): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -32,7 +32,7 @@ function fileToAvatarDataUrl(file: File, max = 256): Promise<string> {
   });
 }
 
-// Change-password — its own little form (separate save from the profile fields).
+// Change-password, its own little form (separate save from the profile fields).
 // Hidden for Google-only accounts, which have no password.
 function ChangePasswordSection({ hasPassword }: { hasPassword: boolean }) {
   const change = useChangePassword();
@@ -48,7 +48,7 @@ function ChangePasswordSection({ hasPassword }: { hasPassword: boolean }) {
           Password
         </p>
         <p className="font-body text-soft-ink">
-          You sign in with Google — there's no password to change.
+          You sign in with Google, there's no password to change.
         </p>
       </section>
     );
@@ -68,7 +68,7 @@ function ChangePasswordSection({ hasPassword }: { hasPassword: boolean }) {
       setDone(true);
       setTimeout(() => setDone(false), 3000);
     } catch {
-      setErr("Couldn't change it — check that your current password is right.");
+      setErr("Couldn't change it, check that your current password is right.");
     }
   }
 
@@ -211,7 +211,7 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Colour — used for the initial when there's no photo. */}
+        {/* Colour, used for the initial when there's no photo. */}
         <div className="mb-8">
           <p className="block font-sans text-xs uppercase tracking-[0.18em] text-faint-ink mb-3">
             Choose a colour
@@ -235,7 +235,7 @@ export default function Profile() {
           </div>
           {avatarUrl && (
             <p className="font-body text-sm text-faint-ink mt-2">
-              Your photo is shown instead of the colour — remove it to use a
+              Your photo is shown instead of the colour, remove it to use a
               colour.
             </p>
           )}
@@ -272,7 +272,7 @@ export default function Profile() {
           </p>
           <p className="font-body text-lg text-soft-ink">{user?.email}</p>
           <p className="font-body text-sm text-faint-ink mt-1">
-            Your sign-in identity — it can't be changed here.
+            Your sign-in identity, it can't be changed here.
           </p>
         </div>
 
@@ -290,7 +290,7 @@ export default function Profile() {
           )}
           {update.isError && (
             <span className="font-sans text-sm text-soft-ink">
-              Couldn't save — try again.
+              Couldn't save, try again.
             </span>
           )}
         </div>

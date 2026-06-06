@@ -13,7 +13,7 @@ import {
 import { AppNav } from "@/components/app-nav";
 
 const CONFIDENCE_HINT: Record<string, string> = {
-  unknown: "no date found — add one",
+  unknown: "no date found, add one",
   low: "unsure of this date",
 };
 
@@ -35,7 +35,7 @@ export default function Import() {
   const [busy, setBusy] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   // Which year is being viewed in the review (a scan/navigation filter, NOT a
-  // selection — "Keep" always keeps every checked page across all years).
+  // selection, "Keep" always keeps every checked page across all years).
   const [yearTab, setYearTab] = useState<string>("all");
   // Ids of pages expanded to their full text in the review.
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -44,7 +44,7 @@ export default function Import() {
   function friendlyImportError(err: unknown): string {
     const msg = err instanceof Error ? err.message : String(err);
     if (/413|too large|payload/i.test(msg)) {
-      return "That's a lot of journal at once. Try bringing it in a few chunks — a year or two at a time — or upload it as a .txt file instead.";
+      return "That's a lot of journal at once. Try bringing it in a few chunks, a year or two at a time, or upload it as a .txt file instead.";
     }
     return "Couldn't read that. Please try again, or paste the text instead.";
   }
@@ -165,7 +165,7 @@ export default function Import() {
     return { years, undated };
   }, [review]);
 
-  // The pages shown for the current year filter (a view only — selection is
+  // The pages shown for the current year filter (a view only, selection is
   // tracked per page via the checkboxes and is unaffected by this filter).
   const visibleEntries = useMemo(() => {
     const all = review?.entries ?? [];
@@ -213,7 +213,7 @@ export default function Import() {
               {review.parsedCount === 0
                 ? "Try pasting again, or add a date line like [2018-03-29] before each entry."
                 : yearSpan
-                  ? `Spanning ${yearSpan}. Everything is selected to keep — scan below, fix any dates, and uncheck anything you'd rather skip.`
+                  ? `Spanning ${yearSpan}. Everything is selected to keep, scan below, fix any dates, and uncheck anything you'd rather skip.`
                   : "Review them below. Fix any dates, uncheck anything you'd rather not keep, then save."}
             </p>
 
@@ -238,7 +238,7 @@ export default function Import() {
               </div>
             )}
 
-            {/* Year navigation — a way to scan a long archive one year at a time. */}
+            {/* Year navigation, a way to scan a long archive one year at a time. */}
             {yearTabs.years.length > 1 && (
               <div className="flex flex-wrap gap-2 mb-8">
                 {(
@@ -378,7 +378,7 @@ export default function Import() {
               Bring old pages into Yadegar
             </h1>
             <p className="font-body text-soft-ink mb-8">
-              Paste a journal archive, or upload a file — plain text (.txt, .md)
+              Paste a journal archive, or upload a file, plain text (.txt, .md)
               or a Word/Google Doc export (.docx). You can review everything
               before saving.
             </p>
@@ -423,10 +423,10 @@ export default function Import() {
 
             <p className="font-sans text-xs text-faint-ink mt-6 leading-relaxed">
               Have a Google Doc? Choose File → Download → Microsoft Word (.docx)
-              and upload that — your words come through exactly, in any language.
+              and upload that, your words come through exactly, in any language.
               We don't take PDFs: a PDF stores glyphs, not text, so it can't be
               read back without altering your words. Scanned images and photos of
-              handwriting can't be read either — paste those instead.
+              handwriting can't be read either, paste those instead.
             </p>
           </>
         )}

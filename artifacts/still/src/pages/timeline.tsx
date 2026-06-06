@@ -70,7 +70,7 @@ export default function Timeline() {
       <main className="flex-1 w-full max-w-[760px] mx-auto px-6 py-12 md:py-16">
         <PageHeader
           title="The timeline of you"
-          subtitle="Your life as you wrote it — oldest page to newest. Only your own words; nothing inferred."
+          subtitle="Your life as you wrote it, oldest page to newest. Only your own words; nothing inferred."
         />
         <LibraryViews current="timeline" />
 

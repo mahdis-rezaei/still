@@ -1,13 +1,13 @@
 import { useLocation } from "wouter";
 import { AmbientField, SiteNav } from "@/components/site-chrome";
 
-// The values behind Yadegar — stated plainly, in the product's own voice. Trust
+// The values behind Yadegar, stated plainly, in the product's own voice. Trust
 // is the moat; this page is where the promises live. A calm reading page, same
 // chrome as the maker's note.
 const TENETS: { title: string; body: string }[] = [
   {
     title: "Your words belong to you.",
-    body: "Everything you write is yours. We encrypt your pages, never sell them, never train on them, never show them to anyone. You can export everything — more easily than you imported it — or delete it entirely, at any time. Leaving is always easy; that's how you know it's safe to stay.",
+    body: "Everything you write is yours. We encrypt your pages, never sell them, never train on them, never show them to anyone. You can export everything, more easily than you imported it, or delete it entirely, at any time. Leaving is always easy; that's how you know it's safe to stay.",
   },
   {
     title: "Memory is not productivity.",
@@ -15,7 +15,7 @@ const TENETS: { title: string; body: string }[] = [
   },
   {
     title: "Reflection matters more than optimization.",
-    body: "Yadegar will not coach you, rate you, or tell you how to be better. It keeps your pages, and every so often brings one back — a thread, a forgotten page, a distance traveled — always pointing to your own words.",
+    body: "Yadegar will not coach you, rate you, or tell you how to be better. It keeps your pages, and every so often brings one back, a thread, a forgotten page, a distance traveled, always pointing to your own words.",
   },
   {
     title: "AI never interprets your life.",
@@ -23,7 +23,7 @@ const TENETS: { title: string; body: string }[] = [
   },
   {
     title: "The page has not changed. You have.",
-    body: "That is the quiet magic of returning to old journals. The words stayed exactly where you left them; the person reading them grew. Yadegar exists to keep you in conversation with who you were — and who you're becoming.",
+    body: "That is the quiet magic of returning to old journals. The words stayed exactly where you left them; the person reading them grew. Yadegar exists to keep you in conversation with who you were, and who you're becoming.",
   },
 ];
 

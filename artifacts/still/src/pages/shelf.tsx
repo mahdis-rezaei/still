@@ -25,7 +25,7 @@ export default function Shelf() {
       <main className="flex-1 w-full max-w-[680px] mx-auto px-6 py-12 md:py-16">
         <PageHeader
           title="Your shelf"
-          subtitle="A few pages you wanted close — the ones that feel alive right now. Favorites are everything that mattered; the shelf is what's near."
+          subtitle="A few pages you wanted close, the ones that feel alive right now. Favorites are everything that mattered; the shelf is what's near."
         />
 
         {isLoading ? (

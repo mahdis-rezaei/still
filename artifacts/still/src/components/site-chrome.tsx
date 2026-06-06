@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 
-// A soft, warm field of color washes behind the page — three blurred blobs in
+// A soft, warm field of color washes behind the page, three blurred blobs in
 // Yadegar's palette (sepia, blush, a faint sage), drifting almost imperceptibly.
 export function AmbientField() {
   return (

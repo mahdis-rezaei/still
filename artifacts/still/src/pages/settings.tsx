@@ -49,7 +49,7 @@ export default function Settings() {
               </>
             ) : (
               <>
-                <p className="font-body text-lg text-ink">Your journal — free</p>
+                <p className="font-body text-lg text-ink">Your journal, free</p>
                 <p className="font-body text-soft-ink text-sm mt-1 leading-relaxed">
                   Writing, keeping, importing, and revisiting the pages that return
                   to you are always free and unlimited.
@@ -78,7 +78,7 @@ export default function Settings() {
           >
             <p className="font-body text-lg text-ink">Reminders</p>
             <p className="font-body text-soft-ink text-sm mt-1">
-              A gentle nudge to write, or a page brought back — your cadence, off
+              A gentle nudge to write, or a page brought back, your cadence, off
               by default.
             </p>
           </Link>
@@ -94,7 +94,7 @@ export default function Settings() {
           >
             <p className="font-body text-lg text-ink">Muted periods</p>
             <p className="font-body text-soft-ink text-sm mt-1">
-              Fence off a season you'd rather not have return — without deleting
+              Fence off a season you'd rather not have return, without deleting
               a thing.
             </p>
           </Link>
@@ -110,11 +110,11 @@ export default function Settings() {
           >
             <p className="font-body text-lg text-ink">Privacy &amp; your pages</p>
             <p className="font-body text-soft-ink text-sm mt-1">
-              Export everything, or delete your account — anytime.
+              Export everything, or delete your account, anytime.
             </p>
           </Link>
           <p className="font-body text-sm text-faint-ink mt-3 leading-relaxed">
-            Your pages are private. Yadegar never shares your journals — they're
+            Your pages are private. Yadegar never shares your journals, they're
             encrypted at rest, and yours to export or delete whenever you like.
           </p>
           <Link

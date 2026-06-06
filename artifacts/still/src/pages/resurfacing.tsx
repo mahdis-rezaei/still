@@ -20,7 +20,7 @@ const SENSITIVITY: {
   {
     value: "open",
     title: "Open",
-    body: "Yadegar may bring a page back on its own — a gentle nudge, and “on this day” pages when you visit.",
+    body: "Yadegar may bring a page back on its own, a gentle nudge, and “on this day” pages when you visit.",
   },
   {
     value: "gentle",
@@ -30,7 +30,7 @@ const SENSITIVITY: {
   {
     value: "protected",
     title: "Protected",
-    body: "Nothing returns unbidden. Pages come back only when you go looking — Look back, Calendar, Search, or “Bring a page back.”",
+    body: "Nothing returns unbidden. Pages come back only when you go looking, Look back, Calendar, Search, or “Bring a page back.”",
   },
 ];
 
@@ -96,7 +96,7 @@ export default function Resurfacing() {
       <main className="flex-1 w-full max-w-[680px] mx-auto px-6 py-12 md:py-16">
         <PageHeader
           title="What returns"
-          subtitle="You decide what comes back. Some seasons are harder to revisit than others — these are yours to set."
+          subtitle="You decide what comes back. Some seasons are harder to revisit than others, these are yours to set."
         />
 
         {/* Memory sensitivity */}

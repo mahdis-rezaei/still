@@ -8,7 +8,7 @@ import { MemoryCard } from "@/components/memory-card";
 
 // "How far you've come" (Then & now). You pick a PAST year; the engine reads that
 // window together with your recent pages and surfaces the distance between then
-// and now — the distance/arc mode, steered by you. It's a scoped engine run, so
+// and now, the distance/arc mode, steered by you. It's a scoped engine run, so
 // it rides the same async queue + reading state as Bring a page back. Stays quiet
 // when the window is thin or nothing honest surfaces.
 export function ThenAndNow() {
@@ -93,7 +93,7 @@ export function ThenAndNow() {
               <p className="font-body text-soft-ink leading-relaxed">
                 {result.reason === "not_enough"
                   ? "Not enough from that year yet to draw the line."
-                  : "Nothing honest surfaced between then and now — and that's okay."}
+                  : "Nothing honest surfaced between then and now, and that's okay."}
               </p>
             </div>
           )}

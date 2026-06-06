@@ -4,7 +4,7 @@ import { runMemoryRequest } from "@/lib/run-job";
 import { localTodayISO } from "@/lib/use-on-this-day";
 import { MemoryCard } from "@/components/memory-card";
 
-// "This time of year" — the voiced nostalgia for Look Back: the engine reads your
+// "This time of year", the voiced nostalgia for Look Back: the engine reads your
 // pages from around now (this day ±3 and this month) across prior years and
 // frames one. The wider-window companion to Today's strict exact-day surface; a
 // thread/arc is welcome here. Auto-runs on open (reads in the background, then

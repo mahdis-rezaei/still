@@ -98,7 +98,7 @@ export default function CollectionDetail() {
   const isEmpty = !!data && data.items.length === 0;
 
   // Auto-suggest fill: scan the archive (client-side, decrypted) for pages that
-  // mention the collection's name and aren't in it yet — so "Mom" populates in a
+  // mention the collection's name and aren't in it yet, so "Mom" populates in a
   // click instead of page-by-page. Word-boundary match (so "Mom" != "moment").
   const existingIds = useMemo(
     () => new Set((data?.items ?? []).map((i) => i.entryId)),
@@ -198,7 +198,7 @@ export default function CollectionDetail() {
                 </div>
               ))}
 
-            {/* Auto-suggest fill — not for the hand-paired "before & after" kind. */}
+            {/* Auto-suggest fill, not for the hand-paired "before & after" kind. */}
             {data.kind !== "pair" && (
               <section
                 className={
@@ -209,7 +209,7 @@ export default function CollectionDetail() {
               >
                 {isEmpty && (
                   <p className="font-body text-soft-ink mb-6 leading-relaxed">
-                    Nothing here yet. Gather the pages that belong — start with
+                    Nothing here yet. Gather the pages that belong, start with
                     the ones that mention “{data.name}”.
                   </p>
                 )}

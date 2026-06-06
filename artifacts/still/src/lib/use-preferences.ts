@@ -24,7 +24,7 @@ export function useSetMemorySensitivity() {
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["preferences"] });
-      // Protected hides the in-app On This Day surface — refresh it.
+      // Protected hides the in-app On This Day surface, refresh it.
       qc.invalidateQueries({ queryKey: ["on-this-day"] });
     },
   });

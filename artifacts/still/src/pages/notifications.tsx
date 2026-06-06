@@ -68,7 +68,7 @@ export default function Notifications() {
         </h1>
         <p className="font-body text-soft-ink leading-relaxed mb-10 max-w-[34rem]">
           Gentle, never guilt. No streaks, no "you missed a day." Just a quiet
-          note now and then — and only when there's something honest to send.
+          note now and then, and only when there's something honest to send.
           Both are off unless you turn them on.
         </p>
 
@@ -80,7 +80,7 @@ export default function Notifications() {
               <div>
                 <p className="font-body text-lg text-ink">A nudge to write</p>
                 <p className="font-body text-sm text-soft-ink">
-                  “What wants to be written today?” — a small invitation, by email.
+                  “What wants to be written today?”, a small invitation, by email.
                 </p>
               </div>
               <Segmented
@@ -94,7 +94,7 @@ export default function Notifications() {
                 <p className="font-body text-lg text-ink">A page brought back</p>
                 <p className="font-body text-sm text-soft-ink">
                   Yadegar reads across your years and emails you one page worth
-                  returning to — or stays quiet when nothing honest surfaces.
+                  returning to, or stays quiet when nothing honest surfaces.
                 </p>
               </div>
               <Segmented

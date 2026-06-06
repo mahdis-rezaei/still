@@ -52,7 +52,7 @@ export function DevPanel() {
           {/* Pass 1 candidates */}
           <div className="mb-4">
             <div className="text-yellow-300 font-bold mb-2">
-              PASS 1 — Candidates ({extractResult?.candidates.length ?? 0})
+              PASS 1, Candidates ({extractResult?.candidates.length ?? 0})
             </div>
             {(extractResult?.candidates ?? []).length === 0 && (
               <div className="text-gray-500 italic">No candidates extracted.</div>
@@ -115,7 +115,7 @@ export function DevPanel() {
           {/* Pass 2 result */}
           {scoreResult && (
             <div className="border-t border-gray-700 pt-3">
-              <div className="text-yellow-300 font-bold mb-2">PASS 2 — Final result</div>
+              <div className="text-yellow-300 font-bold mb-2">PASS 2, Final result</div>
               {scoreResult.label && (
                 <div className="text-[10px] mb-1">
                   <span className="text-gray-400">label: </span>

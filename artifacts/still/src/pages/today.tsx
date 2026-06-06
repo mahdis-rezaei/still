@@ -62,7 +62,7 @@ export default function Today() {
   const queryClient = useQueryClient();
   const createEntry = useCreateEntry();
   const updateEntry = useUpdateEntry();
-  // How many pages you've kept TODAY — drives a persistent confirmation under
+  // How many pages you've kept TODAY, drives a persistent confirmation under
   // the composer so a just-written page never feels like it vanished on refresh
   // (Today isn't a feed; your pages live in the Library). Reads from the cached
   // list, so it survives reloads and updates live after each save.
@@ -89,7 +89,7 @@ export default function Today() {
 
   // Reading a large archive is a two-pass model read and can take a couple of
   // minutes. Without feedback that long wait reads as "broken," so we show calm,
-  // time-aware reassurance while the run is pending (no raw stopwatch — that
+  // time-aware reassurance while the run is pending (no raw stopwatch, that
   // makes the wait feel anxious).
   const [elapsed, setElapsed] = useState(0);
   useEffect(() => {
@@ -144,7 +144,7 @@ export default function Today() {
         // stay quiet rather than showing an error card the user didn't ask for.
         if (result.surfaced) setRun(result);
       } catch {
-        // stale/expired job — clear silently.
+        // stale/expired job, clear silently.
       } finally {
         localStorage.removeItem(RUN_JOB_KEY);
         setPending(false);
@@ -245,7 +245,7 @@ export default function Today() {
 
   // The deliberate "I'm finished" gesture. Auto-save already keeps your words
   // safe as you type; this just flushes anything pending, then opens a fresh
-  // page — the satisfying close, without a manual-only save's risk of loss.
+  // page, the satisfying close, without a manual-only save's risk of loss.
   async function keepPage() {
     if (timerRef.current) clearTimeout(timerRef.current);
     const hadText = !!latestRef.current.trim();
@@ -265,7 +265,7 @@ export default function Today() {
       <AppNav />
 
       <main className="flex-1 w-full max-w-[680px] mx-auto px-6 py-12 md:py-16">
-        {/* Seasonal "Your Year in Pages" — quiet around New Year, dismissible. */}
+        {/* Seasonal "Your Year in Pages", quiet around New Year, dismissible. */}
         <YearInPagesBanner />
 
         {/* Header: the day on the left, the (secondary) memory affordance right. */}
@@ -295,10 +295,10 @@ export default function Today() {
                 {elapsed < 10
                   ? "Reading through your pages…"
                   : elapsed < 35
-                    ? "Still reading — looking across the years…"
+                    ? "Still reading, looking across the years…"
                     : elapsed < 90
-                      ? "Your archive is large, so this takes a moment. Hang tight — Yadegar is still reading."
-                      : "Almost there — a long archive takes a little longer to read."}
+                      ? "Your archive is large, so this takes a moment. Hang tight, Yadegar is still reading."
+                      : "Almost there, a long archive takes a little longer to read."}
               </p>
             </div>
           </section>
@@ -326,17 +326,17 @@ export default function Today() {
                       ? "Write or bring in a few pages first, and Yadegar will have something to return."
                       : run.reason === "error"
                         ? "Something interrupted the reading. Try again in a moment."
-                        : "Nothing honest surfaced this time. That's okay — Yadegar is better quiet than false."}
+                        : "Nothing honest surfaced this time. That's okay, Yadegar is better quiet than false."}
                 </p>
               </div>
             )}
           </section>
         )}
 
-        {/* Date-based returns from this day in years past — quiet when empty. */}
+        {/* Date-based returns from this day in years past, quiet when empty. */}
         <OnThisDay />
 
-        {/* Today's page — a real writing surface, anchored like a sheet. */}
+        {/* Today's page, a real writing surface, anchored like a sheet. */}
         <div className="rounded-2xl border border-border bg-surface/80 shadow-sm p-6 md:p-8 min-h-[56vh] flex flex-col">
           <p className="font-sans text-xs uppercase tracking-[0.18em] text-faint-ink mb-4">
             Today's page
@@ -383,7 +383,7 @@ export default function Today() {
             data-testid="link-library"
           >
             {keptToday > 0
-              ? `You've kept ${keptToday} page${keptToday === 1 ? "" : "s"} today — ${
+              ? `You've kept ${keptToday} page${keptToday === 1 ? "" : "s"} today, ${
                   keptToday === 1 ? "it's" : "they're"
                 } in your Library →`
               : "Your pages live in your Library →"}

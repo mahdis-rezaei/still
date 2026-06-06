@@ -13,8 +13,8 @@ import {
 
 // The one shared upgrade prompt for the free-tier quota. Mounted once at the app
 // root; any run surface that hits the quota 402 raises it via triggerQuotaPrompt
-// (see lib/quota-prompt). DORMANT in shadow mode — the server only returns 402
-// once enforcement is on — so this never appears until membership is purchasable.
+// (see lib/quota-prompt). DORMANT in shadow mode, the server only returns 402
+// once enforcement is on, so this never appears until membership is purchasable.
 //
 // On-brand: it never scolds and never walls the journal. It names the one thing
 // that's limited (bringing a NEW page back) and reassures that revisiting what has
@@ -44,7 +44,7 @@ export function QuotaPromptProvider({ children }: { children: ReactNode }) {
           </DialogHeader>
 
           <p className="font-body text-sm text-soft-ink leading-relaxed">
-            Your journal is always yours — writing, keeping, and revisiting the
+            Your journal is always yours, writing, keeping, and revisiting the
             pages that have come back to you stay free and unlimited. Membership,
             for unlimited fresh returns across your years, is coming soon.
           </p>
