@@ -131,7 +131,7 @@ export function membershipWelcomeEmail(opts: { name?: string | null }): {
   const url = `${appBase()}/today`;
   const lines = [
     "Thank you for becoming a member of Yadegar. It genuinely means a lot — a small, honest project like this stays alive because of people like you.",
-    "Your years are open now: bring a page back as often as you like, and Yadegar will keep reading across all of them — for the threads that return, the pages you'd forgotten, and the distance you've travelled.",
+    "Your years are open now: bring a page back whenever the moment calls, and Yadegar will keep reading across all of them — for the threads that return, the pages you'd forgotten, and the distance you've travelled.",
     "Nothing about your journal changes. Writing, keeping, importing, and revisiting what's already come back to you were always free, and always will be — membership simply lifts the limit on new returns.",
     "You can manage or cancel anytime from Settings → Membership, and your pages remain entirely yours either way.",
   ];

@@ -359,7 +359,10 @@ The one thing that genuinely costs us to run: a **fresh return** — when you as
 **Four a month** — about one a week — plus a small bonus in your first month so you can get a feel for it. **Re-opening a page that's already come back to you is always free** and never counts. If you reach the limit, nothing about your journal locks; you simply can't ask for a brand-new return until next month (or you can become a member).
 
 ### How much is membership, and what does it include?
-**$8 / month**, or **$59 / year** (that's about **$4.92/month — 38% off** the monthly price). Membership gives you **unlimited fresh returns** across all your years, as often as you like. Everything else was already free.
+**$8 / month**, or **$59 / year** (that's about **$4.92/month — 38% off** the monthly price). Membership gives you **unlimited fresh returns** across all your years, whenever you like. Everything else was already free.
+
+### Is "unlimited" really unlimited?
+For any real journaling practice, yes — bring a page back whenever the moment calls and you'll never hit a wall. There's a high **fair-use ceiling** in the background, purely to stop runaway automated use (each fresh return is a genuine AI read with a real cost), but it sits far above any human pace, so a normal member never meets it. If you somehow do, nothing is lost — your pages stay open and new returns resume next cycle. And if that's honestly your pace, reply to any Yadegar email and we'll sort it out.
 
 ### Why subscribe instead of a one-time price?
 A fresh return is an ongoing cost each time Yadegar reads your archive, so a subscription is the honest way to match what we charge to what it costs to run — rather than over-charging once and hoping, or quietly degrading the thing that makes Yadegar worth keeping.

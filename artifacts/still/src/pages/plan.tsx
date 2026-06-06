@@ -148,7 +148,7 @@ export default function Plan() {
               Your journal — writing, keeping, importing, and revisiting the pages
               that return to you — is always free. Membership adds unlimited{" "}
               <span className="text-ink">fresh returns</span>: Yadegar reading
-              across all your years, as often as you like.
+              across all your years, whenever you like.
             </p>
 
             {billingEnabled === true ? (

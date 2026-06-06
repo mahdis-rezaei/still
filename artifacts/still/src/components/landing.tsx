@@ -456,7 +456,7 @@ export function Landing({
                     <span className="text-ink">Unlimited fresh returns</span>{" "}
                     across your years
                   </li>
-                  <li>Read across all your time, as often as you like</li>
+                  <li>Read across all your time, whenever you like</li>
                 </ul>
               </div>
             </div>

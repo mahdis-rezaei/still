@@ -60,27 +60,32 @@ async function quotaGate(
 ): Promise<void> {
   try {
     const summary = await assertCanRunMemory(req.user!);
-    if (summary.atLimit) {
+    if (summary.overCap) {
       // Visible in logs whether or not we're enforcing, so we can watch real
-      // demand against the cap before the wall goes up.
+      // demand against the cap (free allowance OR member fair-use) before any wall.
       req.log.info(
         {
           userId: req.userId,
+          plan: summary.plan,
           used: summary.used,
-          limit: summary.limit,
           enforced: QUOTA_ENFORCED,
         },
-        "Fresh-return quota at/over limit",
+        "Fresh-return quota at/over cap",
       );
     }
     next();
   } catch (err) {
     if (err instanceof QuotaExceeded) {
+      // A free user hit their monthly allowance; a member hit the fair-use ceiling
+      // — different, gentler copy for someone who's already paying.
+      const message =
+        err.summary.plan === "member"
+          ? "You've brought back an unusual number of pages this month — to keep the engine healthy we've paused new returns for a little while. Everything you've saved stays open, and new returns resume next cycle. (Reply to any Yadegar email if this is genuinely your pace and we'll sort it out.)"
+          : "You've used this month's returns. Revisiting what's already returned to you is always free — and Yadegar can keep reading across your years.";
       res.status(402).json({
         error: "quota_exceeded",
         code: "quota_exceeded",
-        message:
-          "You've used this month's returns. Revisiting what's already returned to you is always free — and Yadegar can keep reading across your years.",
+        message,
         usage: {
           plan: err.summary.plan,
           used: err.summary.used,
