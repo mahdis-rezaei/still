@@ -25,6 +25,19 @@ export interface AuthUser {
   hasPassword?: boolean;
   onboardingCompleted: boolean;
   emailVerified: boolean;
+  /** Billing plan. Hand-patched (codegen is broken in this repo). */
+  plan?: "free" | "member";
+  /** @nullable */
+  planRenewsAt?: string | null;
+  /** This month's fresh-return usage. limit null = unlimited (member). */
+  usage?: {
+    used: number;
+    /** @nullable */
+    limit: number | null;
+    atLimit: boolean;
+    /** Whether the free limit is actually enforced (vs shadow). */
+    enforced?: boolean;
+  };
 }
 
 export interface VerifyEmailInput {

@@ -156,7 +156,7 @@ router.post("/cron/run-nudges", async (req, res): Promise<void> => {
             });
             summary.memorySent++;
           } else {
-            const result = await runMemoryForUser(user.id, {});
+            const result = await runMemoryForUser(user.id, {}, { kind: "auto" });
             if (result.surfaced && result.memory) {
               const m = result.memory;
               const link = m.journalEntryId
@@ -227,7 +227,11 @@ router.post("/cron/run-nudges", async (req, res): Promise<void> => {
 // Deployment every few minutes). Authenticated by x-cron-secret == CRON_SECRET.
 // Classifies a batch of entries that still need a date-resurfacing safety verdict
 // (resurface_safety IS NULL), so the date-based surfacer stays a pure DB query.
-// Optional ?limit=N bounds the batch. Idempotent; the backlog drains over ticks.
+// LAZY by default: only entries whose month-day anniversary is approaching are
+// classified (the rest stay NULL → withheld → classified just before their window;
+// see resurface-safety.ts), so an imported archive is tagged pay-as-used instead of
+// all at once. Optional ?limit=N bounds the batch; ?all=1 bypasses the anniversary
+// window for a one-off full backfill. Idempotent; the backlog drains over ticks.
 router.post("/cron/tag-resurface-safety", async (req, res): Promise<void> => {
   const auth = requireCronSecret(req);
   if (!auth.ok) {
@@ -238,9 +242,12 @@ router.post("/cron/tag-resurface-safety", async (req, res): Promise<void> => {
   const limitRaw = Number((req.query as { limit?: string }).limit);
   const limit =
     Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 500) : undefined;
+  // Default (lazy) classifies only entries whose anniversary is approaching;
+  // ?all=1 is the one-off full-backfill escape hatch (classify the whole archive).
+  const all = (req.query as { all?: string }).all === "1";
 
   try {
-    const summary = await tagPendingEntries(req.log, limit);
+    const summary = await tagPendingEntries(req.log, limit, { dueOnly: !all });
     res.json(summary);
   } catch (err) {
     req.log.error({ err }, "Cron tag-resurface-safety error");

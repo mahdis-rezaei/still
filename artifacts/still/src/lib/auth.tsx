@@ -30,7 +30,7 @@ const AuthContext = createContext<AuthState | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
 
-  // GET /auth/me — a 401 means "not signed in", which is an expected state,
+  // GET /auth/me, a 401 means "not signed in", which is an expected state,
   // not a failure to retry. We treat any error as user = null.
   const meQuery = useGetCurrentUser({
     query: {

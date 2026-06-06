@@ -31,6 +31,7 @@ import {
   passwordResetEmail,
 } from "../lib/email";
 import { rateLimit, ipKey } from "../lib/rate-limit";
+import { getUsageSummary, QUOTA_ENFORCED } from "../lib/quota";
 
 const VERIFY_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
 const RESET_TTL_MS = 1000 * 60 * 60; // 1 hour
@@ -77,6 +78,8 @@ function toAuthUser(u: User) {
     hasPassword: u.passwordHash != null,
     onboardingCompleted: u.onboardingCompleted,
     emailVerified: u.emailVerified,
+    plan: u.plan,
+    planRenewsAt: u.planRenewsAt,
   };
 }
 
@@ -169,8 +172,22 @@ router.post("/auth/logout", async (req, res): Promise<void> => {
   res.status(204).end();
 });
 
-router.get("/auth/me", requireAuth, (req, res): void => {
-  res.json(toAuthUser(req.user!));
+router.get("/auth/me", requireAuth, async (req, res): Promise<void> => {
+  // Include this month's fresh-return usage so the client can show the allowance
+  // and a gentle near-limit nudge. A single indexed row read — no model call.
+  const usage = await getUsageSummary(req.user!);
+  res.json({
+    ...toAuthUser(req.user!),
+    usage: {
+      used: usage.used,
+      limit: usage.limit,
+      atLimit: usage.atLimit,
+      // Whether the limit is actually enforced (vs shadow). The client only shows
+      // "returns left" cues when this is true, so it never implies a wall that
+      // isn't there yet.
+      enforced: QUOTA_ENFORCED,
+    },
+  });
 });
 
 // Update the signed-in user's profile — display name, avatar colour, and/or an

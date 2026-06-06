@@ -5,7 +5,7 @@ import {
   type AuthUser,
 } from "@workspace/api-client-react";
 
-// PATCH /auth/me — update the display name, avatar colour, and/or photo.
+// PATCH /auth/me, update the display name, avatar colour, and/or photo.
 // Hand-written (not codegen) per the repo's generated-files caveat; on success
 // it primes the same query cache the auth context reads, so the nav + settings
 // reflect the change immediately.
@@ -28,7 +28,7 @@ export function useUpdateProfile() {
   });
 }
 
-// POST /auth/change-password — verify the current password and set a new one.
+// POST /auth/change-password, verify the current password and set a new one.
 // 204 on success; the server returns a 400/401 with a message otherwise.
 export function useChangePassword() {
   return useMutation({

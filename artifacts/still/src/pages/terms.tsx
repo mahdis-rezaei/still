@@ -1,6 +1,6 @@
 import { AmbientField, SiteNav } from "@/components/site-chrome";
 
-// DRAFT legal copy — have a human/lawyer review before public launch and set a
+// DRAFT legal copy, have a human/lawyer review before public launch and set a
 // real contact address and governing law.
 
 const LAST_UPDATED = "June 2, 2026";
@@ -42,7 +42,7 @@ export default function Terms() {
           </p>
         </Section>
 
-        <Section title="What Yadegar is — and isn't">
+        <Section title="What Yadegar is, and isn't">
           <p>
             Yadegar is a reflective journaling companion. It is{" "}
             <strong>not</strong> a medical, mental-health, therapy, or crisis

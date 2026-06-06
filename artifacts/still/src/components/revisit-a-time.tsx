@@ -19,7 +19,7 @@ function snippet(body: string): string {
   return s.length > 160 ? s.slice(0, 160) + "…" : s;
 }
 
-// "Revisit a time" — you pick a month and year; the engine surfaces the one line
+// "Revisit a time", you pick a month and year; the engine surfaces the one line
 // worth returning to from it (voice first), then the period's pages are listed
 // below to read. Directed time-travel with the AI as your guide.
 export function RevisitATime() {
@@ -156,7 +156,7 @@ export function RevisitATime() {
 
       {!pending && pages && pages.length === 0 && (
         <p className="font-body text-soft-ink leading-relaxed mt-3">
-          No pages from that month — try another.
+          No pages from that month, try another.
         </p>
       )}
     </div>

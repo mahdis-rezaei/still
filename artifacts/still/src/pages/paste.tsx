@@ -2,10 +2,10 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useStill } from "@/lib/store";
 
-// Fictional sample entries — invented to demonstrate the engine (a recurring
+// Fictional sample entries, invented to demonstrate the engine (a recurring
 // thread, a forgotten page, a distance travelled), never a real person's diary.
 const SAMPLE_ENTRIES = `[2014-09-12]
-First week in a new city and I already feel invisible — everyone here seems to know exactly where they're going. One more week and I'll figure it out. One more week, then I'll really begin.
+First week in a new city and I already feel invisible, everyone here seems to know exactly where they're going. One more week and I'll figure it out. One more week, then I'll really begin.
 
 [2015-11-03]
 Couldn't sleep again, so I sat on the fire escape and watched the city not need me at all. It was strangely kind. I keep thinking I have to earn my place here. Maybe I just have to live here.
@@ -14,16 +14,16 @@ Couldn't sleep again, so I sat on the fire escape and watched the city not need 
 Ready was never going to be a feeling. It's a door you walk through scared. I keep waiting to feel sure before I start, and the waiting is the only thing that's ever certain.
 
 [2019-02-14]
-Cried in the office bathroom again and told no one. Am I doing enough? Am I enough? Be patient with yourself — you're still learning. (I keep saying that like it'll stick.)
+Cried in the office bathroom again and told no one. Am I doing enough? Am I enough? Be patient with yourself, you're still learning. (I keep saying that like it'll stick.)
 
 [2021-07-08]
-We danced in the kitchen until the rice burned. I want to keep this exact afternoon — the bad music, the open window, nowhere else I needed to be.
+We danced in the kitchen until the rice burned. I want to keep this exact afternoon, the bad music, the open window, nowhere else I needed to be.
 
 [2023-04-30]
 Reread my old entries tonight. I used to write "I don't think I'll ever feel at home here" almost every month. I haven't written it in two years. I didn't even notice it leave.
 
 [2024-10-15]
-Maybe I don't have to fix this. Maybe I just have to feel it and let it pass. Be patient with yourself — you've come such a long way.`;
+Maybe I don't have to fix this. Maybe I just have to feel it and let it pass. Be patient with yourself, you've come such a long way.`;
 
 export default function Paste() {
   const [, setLocation] = useLocation();

@@ -39,9 +39,9 @@ function buildRecallLine(
   }
   const base = MODE_RECALL[mode ?? ""] ?? "something";
   if (mode === "thread" && label) {
-    return `Yadegar found ${base} — "${truncateLabel(label)}" — ${dateStr}.`;
+    return `Yadegar found ${base}, "${truncateLabel(label)}", ${dateStr}.`;
   }
-  return `Yadegar found ${base} — ${dateStr}.`;
+  return `Yadegar found ${base}, ${dateStr}.`;
 }
 
 export default function Home() {
@@ -61,7 +61,7 @@ export default function Home() {
         A companion for your past selves.
       </p>
       <p className="text-lg text-soft-ink leading-relaxed mb-12 max-w-md mx-auto">
-        Paste old journal entries. Yadegar finds one thing worth returning to today — a forgotten page, something that kept returning, how far you've come — and stays quiet when nothing honest surfaces.
+        Paste old journal entries. Yadegar finds one thing worth returning to today, a forgotten page, something that kept returning, how far you've come, and stays quiet when nothing honest surfaces.
       </p>
 
       {hasSaved ? (
@@ -130,7 +130,7 @@ export default function Home() {
             Read across time
           </Link>
           <span className="text-sm font-sans text-faint-ink">
-            A quick read — your writing is read once and not kept.
+            A quick read, your writing is read once and not kept.
           </span>
           <button
             onClick={() => setLocation("/entries")}

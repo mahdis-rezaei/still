@@ -127,7 +127,7 @@ export default function EntryDetail() {
     setLocation("/library");
   }
 
-  // Take this page with you — a plain-text copy, entry plus any reflections.
+  // Take this page with you, a plain-text copy, entry plus any reflections.
   function exportEntry() {
     if (!entry) return;
     const lines = [longDate(entry.entryDate)];
@@ -236,7 +236,7 @@ export default function EntryDetail() {
             ) : (
               <>
                 {entry.bodyRich ? (
-                  // Server-sanitized HTML — safe to render.
+                  // Server-sanitized HTML, safe to render.
                   <div
                     className="rich-content font-body text-lg md:text-xl text-ink leading-relaxed"
                     dangerouslySetInnerHTML={{ __html: entry.bodyRich }}

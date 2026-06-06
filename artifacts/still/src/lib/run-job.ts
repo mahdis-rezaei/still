@@ -1,4 +1,5 @@
 import { customFetch, type MemoryRunResult } from "@workspace/api-client-react";
+import { handleQuotaError } from "./quota-prompt";
 
 // Shared client for the async memory engine (ADR 0002). A run-style endpoint may
 // answer synchronously (a result) or asynchronously (a { jobId } to poll); these
@@ -23,12 +24,20 @@ export async function runMemoryRequest(
   url: string,
   body: Record<string, unknown>,
 ): Promise<MemoryRunResult> {
-  const resp = await customFetch<MemoryRunResult & { jobId?: string }>(url, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
-    responseType: "json",
-  });
-  if (resp && typeof resp.jobId === "string") return pollRunJob(resp.jobId);
-  return resp as MemoryRunResult;
+  try {
+    const resp = await customFetch<MemoryRunResult & { jobId?: string }>(url, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+      responseType: "json",
+    });
+    if (resp && typeof resp.jobId === "string") return pollRunJob(resp.jobId);
+    return resp as MemoryRunResult;
+  } catch (err) {
+    // Over the free quota (only when enforcement is on): raise the shared upgrade
+    // prompt and resolve to a benign "quota" result so the surface stays calm
+    // instead of showing a generic error. Any other error propagates as before.
+    if (handleQuotaError(err)) return { surfaced: false, reason: "quota" };
+    throw err;
+  }
 }

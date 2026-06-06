@@ -74,7 +74,7 @@ function highlightFragment(
     const m = re.exec(fullText);
     if (m) return spanAt(fullText, m.index, m[0].length);
   } catch {
-    // Malformed regex — fall through to no highlight.
+    // Malformed regex, fall through to no highlight.
   }
 
   return null;

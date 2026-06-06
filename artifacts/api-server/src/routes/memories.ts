@@ -7,10 +7,16 @@ import {
   type ReturnedMemory,
 } from "@workspace/db";
 import { UpdateMemoryBody, RunMemoryBody } from "@workspace/api-zod";
+import type { Request, Response, NextFunction } from "express";
 import { requireAuth } from "../lib/auth";
 import { rateLimit } from "../lib/rate-limit";
 import { runMemoryForUser } from "../lib/memory-engine";
 import { enqueueMemoryJob, getMemoryJob } from "../lib/memory-jobs";
+import {
+  assertCanRunMemory,
+  QuotaExceeded,
+  QUOTA_ENFORCED,
+} from "../lib/quota";
 
 // ADR 0002: when on, long reads run as background jobs (enqueue + poll) instead
 // of blocking the request. Off → the synchronous path below, byte-identical to
@@ -40,6 +46,59 @@ const runLimiter = rateLimit({
   message: "You've brought back many pages just now — give it a little while.",
 });
 
+// Free-tier quota gate for the billable run paths (Phase 1). Runs AFTER runLimiter
+// and requireAuth (so req.user is set). The counter itself lives in usage.ts and
+// only increments on a real model call (re-rolls collapsed) — this gate just reads
+// it and decides whether the NEXT user run is allowed. SHADOW by default: it never
+// blocks, so behavior is byte-identical until STILL_QUOTA_ENFORCED=1, at which
+// point a free user past their monthly allowance gets a gentle 402 (quota_exceeded)
+// — never a 500, and the journal/returns shelf stay fully reachable.
+async function quotaGate(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const summary = await assertCanRunMemory(req.user!);
+    if (summary.overCap) {
+      // Visible in logs whether or not we're enforcing, so we can watch real
+      // demand against the cap (free allowance OR member fair-use) before any wall.
+      req.log.info(
+        {
+          userId: req.userId,
+          plan: summary.plan,
+          used: summary.used,
+          enforced: QUOTA_ENFORCED,
+        },
+        "Fresh-return quota at/over cap",
+      );
+    }
+    next();
+  } catch (err) {
+    if (err instanceof QuotaExceeded) {
+      // A free user hit their monthly allowance; a member hit the fair-use ceiling
+      // — different, gentler copy for someone who's already paying.
+      const message =
+        err.summary.plan === "member"
+          ? "You've brought back an unusual number of pages this month — to keep the engine healthy we've paused new returns for a little while. Everything you've saved stays open, and new returns resume next cycle. (Reply to any Yadegar email if this is genuinely your pace and we'll sort it out.)"
+          : "You've used this month's returns. Revisiting what's already returned to you is always free — and Yadegar can keep reading across your years.";
+      res.status(402).json({
+        error: "quota_exceeded",
+        code: "quota_exceeded",
+        message,
+        usage: {
+          plan: err.summary.plan,
+          used: err.summary.used,
+          limit: err.summary.limit,
+          periodStart: err.summary.periodStart,
+        },
+      });
+      return;
+    }
+    next(err);
+  }
+}
+
 // The public shape — never leak userId, engineRunId, or the full engine trace.
 function toMemory(row: ReturnedMemory) {
   return {
@@ -59,7 +118,7 @@ function toMemory(row: ReturnedMemory) {
 
 // POST /memories/run — the heart of the product (delegates to the shared
 // engine helper, also used by the cron-driven memory nudge).
-router.post("/memories/run", runLimiter, async (req, res): Promise<void> => {
+router.post("/memories/run", runLimiter, quotaGate, async (req, res): Promise<void> => {
   const parsed = RunMemoryBody.safeParse(req.body ?? {});
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid run input" });
@@ -171,6 +230,7 @@ router.get("/memories/jobs/:id", async (req, res): Promise<void> => {
 router.post(
   "/memories/then-and-now",
   runLimiter,
+  quotaGate,
   async (req, res): Promise<void> => {
     const body = (req.body ?? {}) as { year?: unknown; month?: unknown };
     const year = Number(body.year);
@@ -263,6 +323,7 @@ router.post(
 router.post(
   "/memories/this-time-of-year",
   runLimiter,
+  quotaGate,
   async (req, res): Promise<void> => {
     const dateStr = (req.body as { date?: string })?.date;
     const target =
@@ -316,6 +377,7 @@ router.post(
 router.post(
   "/memories/revisit",
   runLimiter,
+  quotaGate,
   async (req, res): Promise<void> => {
     const body = (req.body as { year?: unknown; month?: unknown }) ?? {};
     const year = Number(body.year);

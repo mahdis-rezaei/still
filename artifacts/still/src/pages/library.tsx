@@ -142,7 +142,7 @@ export default function Library() {
     queryClient.invalidateQueries({ queryKey: getListEntriesQueryKey() });
   }
 
-  // Selection mode — tick pages (or "select all" within the current filters) and
+  // Selection mode, tick pages (or "select all" within the current filters) and
   // remove them in one go. A two-step confirm guards the delete.
   const bulkDelete = useBulkDeleteEntries();
   const [selecting, setSelecting] = useState(false);
@@ -284,7 +284,7 @@ export default function Library() {
               </button>
             </div>
 
-            {/* A quiet filing line — narrow the shelf by year, month, or kind. */}
+            {/* A quiet filing line, narrow the shelf by year, month, or kind. */}
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-8 font-sans text-sm text-soft-ink">
               <span className="text-faint-ink">Showing</span>
               <select
@@ -398,7 +398,7 @@ export default function Library() {
               <p className="font-body text-soft-ink py-4">
                 {query.trim()
                   ? `No pages match “${query.trim()}”.`
-                  : "No pages here yet — try widening the filters."}
+                  : "No pages here yet, try widening the filters."}
               </p>
             )}
 

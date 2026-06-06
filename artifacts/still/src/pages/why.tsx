@@ -2,7 +2,7 @@ import { useLocation } from "wouter";
 import { motion, useScroll, useReducedMotion } from "framer-motion";
 import { AmbientField, SiteNav } from "@/components/site-chrome";
 
-// The maker's note — Mahdis's words, unchanged. Set as a short film in
+// The maker's note, Mahdis's words, unchanged. Set as a short film in
 // movements: stanzas (tight within, generous between), divider rules between
 // acts, the Sohrab Sepehri line as a pull-quote, and the two whispered inner
 // voices set apart. Calm per-stanza reveal (not per line), static under
@@ -12,7 +12,7 @@ type Block =
   | { kind: "stanza"; lines: string[]; lead?: boolean }
   | { kind: "quote"; text: string }
   | { kind: "whisper"; lines: string[] }
-  | { kind: "reveal" } // the name reveal — "...I called this Yadegar."
+  | { kind: "reveal" } // the name reveal, "...I called this Yadegar."
   | { kind: "rule" };
 
 const NOTE: Block[] = [
@@ -322,7 +322,7 @@ export default function Why() {
 
         <div className="h-px bg-border my-14" />
 
-        <p className="font-body italic text-xl text-soft-ink mb-10">— Mahdis</p>
+        <p className="font-body italic text-xl text-soft-ink mb-10">Mahdis</p>
 
         <button
           onClick={() => setLocation("/login")}
@@ -403,14 +403,14 @@ function Block({ block, reduce }: { block: Block; reduce: boolean }) {
             <em className="italic text-deep-brown">Yadegar</em>.
           </p>
           <p className="font-body text-lg md:text-xl text-soft-ink leading-relaxed">
-            In Persian, it means a keepsake — the thing that remains.
+            In Persian, it means a keepsake, the thing that remains.
           </p>
         </div>
       </Reveal>
     );
   }
 
-  // stanza — tight spacing within; the opening one sits a shade darker.
+  // stanza, tight spacing within; the opening one sits a shade darker.
   return (
     <Reveal reduce={reduce}>
       <div className="space-y-1.5">

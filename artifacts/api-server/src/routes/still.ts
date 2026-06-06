@@ -15,6 +15,13 @@ const client = new Anthropic({
 // Pinned to an exact version (never a floating alias) so a model auto-upgrade
 // can't silently change results.
 const MODEL = "claude-sonnet-4-6";
+// A cheaper, faster model for LOW-STAKES classification only — currently just the
+// library-shelf theme tag (neutral topical filing, never a safety or selection
+// decision). Everything that affects what surfaces (extract, score, the override
+// voice pass) AND every safety check (§3.1 crisis, the §3 whole-entry hard floor)
+// stays on MODEL until a fixture proves the lighter model holds the same line.
+// Pinned, not aliased, for the same no-silent-drift reason as MODEL.
+const MODEL_LIGHT = "claude-haiku-4-5-20251001";
 // PASS1 (extraction) output budget. A rich, time-spread pool produces a verbose
 // candidate list; 4096 still truncated it on a multi-hundred-entry archive (→
 // stop_reason "max_tokens" → invalid JSON → 500). 8192 gives ample headroom for
@@ -29,6 +36,16 @@ const MAX_TOKENS_PASS1 = 8192;
 const MAX_TOKENS_PASS2 = 16000;
 // The crisis safety check only returns a tiny {crisis, reason} JSON.
 const MAX_TOKENS_CRISIS = 600;
+// Per-entry read window (Phase 0 COGS/latency bound). A single pathologically
+// long entry inflates token cost and latency without improving the find — the
+// engine reasons over sentences, and signal saturates well before tens of
+// thousands of characters. Entries longer than this are sentence-sampled (head +
+// tail kept verbatim, the middle thinned at an even stride). The cap is high
+// enough that ordinary entries pass through byte-for-byte (so the calibrated eval
+// board is unchanged); only oversized entries are reshaped. The §3.1 CRISIS check
+// is deliberately NOT windowed — it reads the writer's present state in full so a
+// crisis line can never be sampled away (safety is never truncated).
+const READ_WINDOW_ENTRY_CHARS = 12000;
 // The whole-entry hard-floor check returns a tiny {hard_floor, reason} JSON.
 const MAX_TOKENS_HARD_FLOOR = 200;
 
@@ -93,7 +110,9 @@ Answer hard_floor=false when:
 - the entry is about ordinary life, feelings, events, relationships, work, meaning — even if it is sad or hard;
 - a meal or the body appears incidentally (e.g. "we cooked dinner together", "I went for a run and felt alive") without focus on weight/appearance/eating control.
 
-When genuinely UNCERTAIN whether the entry is substantially about these, choose hard_floor=true — it is better to withhold a page unnecessarily than to surface one that violates the floor.
+JUDGE THE FOCUS, NOT A SINGLE WORD. A lone passing remark about the body or weight — one line in an entry that is otherwise about mood, the day, work, family, or just getting through a hard night — does NOT meet the "centrally or substantially" bar. For example, an entry venting a messy low mood that includes "I feel annoyingly fat" among a list of mixed feelings, then moves on to job worries and steadying itself, is NOT a body/appearance entry → hard_floor=false. The floor fires only when the entry RETURNS to and DWELLS on weight/eating/appearance as its real subject (several lines, not one).
+
+When genuinely UNCERTAIN whether the entry is SUBSTANTIALLY about these (it keeps coming back to the body/eating/appearance, not just names it once), choose hard_floor=true — it is better to withhold a page unnecessarily than to surface one that violates the floor. A single incidental mention is not, by itself, that uncertainty.
 
 Output ONLY valid JSON, no preamble, no markdown fences, no reasoning. The first character must be "{":
 {"hard_floor": false, "reason": "one short phrase"}`;
@@ -464,13 +483,18 @@ async function detectCrisis(
 // Whole-entry hard-floor check for date-based resurfacing (see
 // PASS_HARD_FLOOR_SYSTEM). Fails CLOSED: any technical error returns true so an
 // unclassifiable entry is withheld rather than risk surfacing floor content.
+// Runs on MODEL_LIGHT (Haiku) — validated by the classify-floor harness, which
+// requires every withhold case to still return hard_floor=true before the flip is
+// trusted. This is the resurfacing-eligibility floor only; the Pass-2 per-line
+// gate_hard_floors (on MODEL) independently keeps floor lines out of any surfaced
+// result, so even a miss here cannot put a floor LINE in front of the reader.
 async function detectHardFloor(
   text: string,
   log: { error: (obj: unknown, msg: string) => void },
 ): Promise<boolean> {
   try {
     const message = await client.messages.create({
-      model: MODEL,
+      model: MODEL_LIGHT,
       max_tokens: MAX_TOKENS_HARD_FLOOR,
       temperature: 0,
       system: PASS_HARD_FLOOR_SYSTEM,
@@ -511,7 +535,7 @@ async function detectTheme(
 ): Promise<string> {
   try {
     const message = await client.messages.create({
-      model: MODEL,
+      model: MODEL_LIGHT,
       max_tokens: 60,
       temperature: 0,
       system: PASS_THEME_SYSTEM,
@@ -1064,6 +1088,92 @@ function splitSentences(text: string): string[] {
   return out;
 }
 
+// Sentence-sample `text` down to ~maxChars: keep whole sentences from the head
+// (they set context) and the tail (the most recent feeling) verbatim, then fill
+// the remaining budget from the middle at an even stride. Whole sentences only —
+// via splitSentences — so a thought is never cut mid-clause; selected sentences
+// are emitted in original order. Used only for entries past READ_WINDOW_ENTRY_CHARS.
+function sampleSentences(text: string, maxChars: number): string {
+  const sentences = splitSentences(text);
+  const len = (i: number): number => sentences[i].length + 1;
+
+  // Too few sentences to sample meaningfully — keep as many from the front as fit.
+  if (sentences.length <= 4) {
+    const out: string[] = [];
+    let used = 0;
+    for (const s of sentences) {
+      if (used + s.length + 1 > maxChars && out.length > 0) break;
+      out.push(s);
+      used += s.length + 1;
+    }
+    return out.join(" ").trim();
+  }
+
+  const keep = new Set<number>();
+
+  // Head — consecutive sentences from the opening.
+  let budget = maxChars * 0.45;
+  let i = 0;
+  while (i < sentences.length && budget - len(i) > 0) {
+    keep.add(i);
+    budget -= len(i);
+    i += 1;
+  }
+  const headEnd = i; // first index NOT kept as head
+
+  // Tail — consecutive sentences from the close.
+  budget = maxChars * 0.2;
+  let j = sentences.length - 1;
+  while (j >= headEnd && budget - len(j) > 0) {
+    keep.add(j);
+    budget -= len(j);
+    j -= 1;
+  }
+  const tailStart = j + 1; // first index kept as tail
+
+  // Middle — even stride across the un-kept span to fill the rest of the budget.
+  const span = tailStart - headEnd;
+  if (span > 0) {
+    budget = maxChars * 0.35;
+    let midChars = 0;
+    for (let k = headEnd; k < tailStart; k += 1) midChars += len(k);
+    const avg = midChars / span;
+    const affordable = Math.max(1, Math.floor(budget / Math.max(1, avg)));
+    const stride = Math.max(1, Math.ceil(span / affordable));
+    for (let k = headEnd; k < tailStart; k += stride) keep.add(k);
+  }
+
+  return [...keep]
+    .sort((a, b) => a - b)
+    .map((idx) => sentences[idx])
+    .join(" ")
+    .trim();
+}
+
+// Bound each entry's text to the per-entry read window. Fast path: if NO block is
+// oversized, return the input UNCHANGED so ordinary entries (and every existing
+// fixture) hit the exact same downstream segmentation as before. Only when a block
+// exceeds the cap do we reconstruct — windowing the oversized block(s) and emitting
+// every block under an explicit [date] header (an unknown date resolves to the
+// import/metadata fallback, exactly as segmentEntries would apply it, so the
+// non-truncating reconstruction stays date-equivalent to the original). Applied on
+// the EXTRACT path only; the crisis check reads the present state in full.
+function windowEntries(raw: string, fallbackDate?: string | null): string {
+  const blocks = parseEntryBlocks(raw);
+  if (!blocks.some((b) => b.text.length > READ_WINDOW_ENTRY_CHARS)) return raw;
+  return blocks
+    .map((b) => {
+      const date = b.date === "unknown" && fallbackDate ? fallbackDate : b.date;
+      const text =
+        b.text.length > READ_WINDOW_ENTRY_CHARS
+          ? sampleSentences(b.text, READ_WINDOW_ENTRY_CHARS)
+          : b.text.trim();
+      return `[${date}]\n${text}`;
+    })
+    .join("\n\n")
+    .trim();
+}
+
 function segmentEntries(
   raw: string,
   fallbackDate?: string | null,
@@ -1220,7 +1330,7 @@ router.post("/still/extract", async (req, res) => {
       const cached = await readCachedResult(key);
       if (cached) {
         req.log.info({ key }, "Extract cache hit — serving stored candidates, no model call");
-        res.json(cached);
+        res.json({ ...(cached as Record<string, unknown>), fromCache: true });
         return;
       }
     }
@@ -1239,17 +1349,23 @@ router.post("/still/extract", async (req, res) => {
       };
       req.log.info({ key }, "Crisis detected — returning support signal, skipping extraction");
       await writeCachedResult(key, crisisResult);
-      res.json(crisisResult);
+      res.json({ ...crisisResult, fromCache: false });
       return;
     }
 
-    const { sentences, prompt } = segmentEntries(parsed.data.entries, fallbackDate);
+    // Bound pathologically long entries before segmentation (Phase 0 COGS/latency
+    // cap). No-op for ordinary entries — the crisis check above already ran on the
+    // full present state, so safety is unaffected.
+    const windowed = windowEntries(parsed.data.entries, fallbackDate);
+    const { sentences, prompt } = segmentEntries(windowed, fallbackDate);
 
     const message = await client.messages.create({
       model: MODEL,
       max_tokens: MAX_TOKENS_PASS1,
       temperature: 0,
-      system: PASS1_SYSTEM,
+      system: [
+        { type: "text", text: PASS1_SYSTEM, cache_control: { type: "ephemeral" } },
+      ],
       messages: [{ role: "user", content: prompt }],
     });
 
@@ -1284,7 +1400,16 @@ router.post("/still/extract", async (req, res) => {
     const result = reconstructCandidates(raw, sentences);
 
     await writeCachedResult(key, result);
-    res.json(result);
+    res.json({
+      ...result,
+      fromCache: false,
+      usage: {
+        inputTokens: message.usage.input_tokens,
+        outputTokens: message.usage.output_tokens,
+        cacheReadTokens: message.usage.cache_read_input_tokens ?? 0,
+        cacheCreationTokens: message.usage.cache_creation_input_tokens ?? 0,
+      },
+    });
   } catch (err) {
     req.log.error({ err }, "Extract route error");
     res.status(500).json({ error: "Failed to extract candidates" });
@@ -1309,7 +1434,9 @@ async function surfaceOverrideCandidate(
     model: MODEL,
     max_tokens: MAX_TOKENS_PASS2,
     temperature: 0,
-    system: PASS2_SYSTEM,
+    system: [
+        { type: "text", text: PASS2_SYSTEM, cache_control: { type: "ephemeral" } },
+      ],
     messages: [{ role: "user", content: JSON.stringify({ candidates: [annotated] }) }],
   });
   const block = message.content[0];
@@ -1409,7 +1536,7 @@ router.post("/still/score", async (req, res) => {
       const cached = await readCachedResult(key);
       if (cached) {
         req.log.info({ key }, "Score cache hit — serving stored result, no model call");
-        res.json(cached);
+        res.json({ ...(cached as Record<string, unknown>), fromCache: true });
         return;
       }
     }
@@ -1418,7 +1545,9 @@ router.post("/still/score", async (req, res) => {
       model: MODEL,
       max_tokens: MAX_TOKENS_PASS2,
       temperature: 0,
-      system: PASS2_SYSTEM,
+      system: [
+        { type: "text", text: PASS2_SYSTEM, cache_control: { type: "ephemeral" } },
+      ],
       messages: [{ role: "user", content: payload }],
     });
 
@@ -1535,7 +1664,16 @@ router.post("/still/score", async (req, res) => {
     }
 
     await writeCachedResult(key, result);
-    res.json(result);
+    res.json({
+      ...(result as Record<string, unknown>),
+      fromCache: false,
+      usage: {
+        inputTokens: message.usage.input_tokens,
+        outputTokens: message.usage.output_tokens,
+        cacheReadTokens: message.usage.cache_read_input_tokens ?? 0,
+        cacheCreationTokens: message.usage.cache_creation_input_tokens ?? 0,
+      },
+    });
   } catch (err) {
     req.log.error({ err }, "Score route error");
     res.status(500).json({ error: "Failed to score candidates" });

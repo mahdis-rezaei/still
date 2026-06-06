@@ -18,6 +18,8 @@ import {
 import { notMutedSql } from "./resurface-mutes";
 import { diversifiedPoolIds, capPoolByTimeSpread } from "./diversity";
 import { buildAffinityProfile } from "./affinity";
+import { recordRun } from "./usage";
+import { notifyIfAtLimit } from "./quota";
 
 const ENGINE_BASE = `http://127.0.0.1:${process.env.PORT}/api`;
 
@@ -49,7 +51,26 @@ async function callEngine(
   // keys exactly.
   dateThemes?: Record<string, string[]>,
 ): Promise<
-  { crisis: { supportMessage?: string } } | { score: Record<string, unknown> }
+  | {
+      crisis: { supportMessage?: string };
+      modelCalled: boolean;
+      usage: {
+        inputTokens: number;
+        outputTokens: number;
+        cacheReadTokens: number;
+        cacheCreationTokens: number;
+      };
+    }
+  | {
+      score: Record<string, unknown>;
+      modelCalled: boolean;
+      usage: {
+        inputTokens: number;
+        outputTokens: number;
+        cacheReadTokens: number;
+        cacheCreationTokens: number;
+      };
+    }
 > {
   const q = fresh ? "?fresh=1" : "";
   const exRes = await fetch(`${ENGINE_BASE}/still/extract${q}`, {
@@ -64,8 +85,31 @@ async function callEngine(
       [k: string]: unknown;
     }[];
     crisis?: { supportMessage?: string } | null;
+    fromCache?: boolean;
+    usage?: {
+      inputTokens?: number;
+      outputTokens?: number;
+      cacheReadTokens?: number;
+      cacheCreationTokens?: number;
+    };
   };
-  if (extract.crisis) return { crisis: extract.crisis };
+  const exInput = extract.usage?.inputTokens ?? 0;
+  const exOutput = extract.usage?.outputTokens ?? 0;
+  const exCacheRead = extract.usage?.cacheReadTokens ?? 0;
+  const exCacheCreate = extract.usage?.cacheCreationTokens ?? 0;
+  const exCalled = extract.fromCache === false;
+  if (extract.crisis) {
+    return {
+      crisis: extract.crisis,
+      modelCalled: exCalled,
+      usage: {
+        inputTokens: exInput,
+        outputTokens: exOutput,
+        cacheReadTokens: exCacheRead,
+        cacheCreationTokens: exCacheCreate,
+      },
+    };
+  }
 
   const candidates = (extract.candidates ?? []).map((c) => {
     if (!dateThemes) return c;
@@ -85,7 +129,29 @@ async function callEngine(
     body: JSON.stringify({ candidates, context }),
   });
   if (!scRes.ok) throw new Error(`score HTTP ${scRes.status}`);
-  return { score: (await scRes.json()) as Record<string, unknown> };
+  const score = (await scRes.json()) as Record<string, unknown> & {
+    fromCache?: boolean;
+    usage?: {
+      inputTokens?: number;
+      outputTokens?: number;
+      cacheReadTokens?: number;
+      cacheCreationTokens?: number;
+    };
+  };
+  const scInput = score.usage?.inputTokens ?? 0;
+  const scOutput = score.usage?.outputTokens ?? 0;
+  const scCacheRead = score.usage?.cacheReadTokens ?? 0;
+  const scCacheCreate = score.usage?.cacheCreationTokens ?? 0;
+  return {
+    score,
+    modelCalled: exCalled || score.fromCache === false,
+    usage: {
+      inputTokens: exInput + scInput,
+      outputTokens: exOutput + scOutput,
+      cacheReadTokens: exCacheRead + scCacheRead,
+      cacheCreationTokens: exCacheCreate + scCacheCreate,
+    },
+  };
 }
 
 export interface MemoryRunOutcome {
@@ -111,6 +177,9 @@ export async function runMemoryForUser(
     // surface, which may render on every Today-page load.
     preview?: boolean;
   },
+  // Metering hint: "auto" (cron nudges, On-This-Day previews) records cost but
+  // never consumes the user's return quota. Defaults to a user-initiated run.
+  meta?: { kind?: "user" | "auto" },
 ): Promise<MemoryRunOutcome> {
   const filters = [
     eq(journalEntriesTable.userId, userId),
@@ -244,6 +313,23 @@ export async function runMemoryForUser(
     context,
     dateThemes,
   );
+
+  // Meter the run — cache misses only (recordRun no-ops on a cache hit). Cost
+  // accrues on every real model call; quota (freshReturns) only for a
+  // user-initiated, non-re-roll return. Fire-and-forget: never fail a run on it.
+  const runKind = meta?.kind === "auto" || opts.preview ? "auto" : "user";
+  recordRun(userId, {
+    modelCalled: out.modelCalled,
+    inputTokens: out.usage.inputTokens,
+    outputTokens: out.usage.outputTokens,
+    cacheReadTokens: out.usage.cacheReadTokens,
+    cacheCreationTokens: out.usage.cacheCreationTokens,
+    kind: runKind,
+  })
+    // After the count is recorded, a user run that just reached the free limit
+    // gets the one high-intent membership email (no-op in shadow / for members).
+    .then(() => (runKind === "user" ? notifyIfAtLimit(userId) : undefined))
+    .catch(() => {});
 
   if ("crisis" in out) {
     return {

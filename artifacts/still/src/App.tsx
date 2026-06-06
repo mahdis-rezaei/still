@@ -20,6 +20,7 @@ import History from "@/pages/history";
 import Login from "@/pages/login";
 import Why from "@/pages/why";
 import Philosophy from "@/pages/philosophy";
+import Pricing from "@/pages/pricing";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import Terms from "@/pages/terms";
 import VerifyEmail from "@/pages/verify-email";
@@ -41,6 +42,7 @@ import CollectionDetail from "@/pages/collection-detail";
 import Import from "@/pages/import";
 import Settings from "@/pages/settings";
 import Profile from "@/pages/profile";
+import Plan from "@/pages/plan";
 import Privacy from "@/pages/privacy";
 import Notifications from "@/pages/notifications";
 import Resurfacing from "@/pages/resurfacing";
@@ -49,6 +51,7 @@ import Onboarding from "@/pages/onboarding";
 import { StillProvider } from "@/lib/store";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { DevPanel } from "@/components/dev-panel";
+import { QuotaPromptProvider } from "@/components/quota-prompt-dialog";
 
 const queryClient = new QueryClient();
 
@@ -116,10 +119,11 @@ function ProtectedApp() {
       <Route path="/settings" component={Settings} />
       <Route path="/help" component={Help} />
       <Route path="/settings/profile" component={Profile} />
+      <Route path="/settings/plan" component={Plan} />
       <Route path="/settings/notifications" component={Notifications} />
       <Route path="/settings/resurfacing" component={Resurfacing} />
       <Route path="/settings/privacy" component={Privacy} />
-      {/* Legacy prototype flow (engine read-across) — not in the primary nav. */}
+      {/* Legacy prototype flow (engine read-across), not in the primary nav. */}
       <Route path="/home" component={Home} />
       <Route path="/paste" component={Paste} />
       <Route path="/entries" component={Entries} />
@@ -151,6 +155,7 @@ function Router() {
     <Switch>
       <Route path="/login" component={LoginRoute} />
       <Route path="/why" component={Why} />
+      <Route path="/pricing" component={Pricing} />
       <Route path="/philosophy" component={Philosophy} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms" component={Terms} />
@@ -186,7 +191,9 @@ function App() {
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
             <AuthProvider>
               <SvgNoise />
-              <Router />
+              <QuotaPromptProvider>
+                <Router />
+              </QuotaPromptProvider>
               <DevPanel />
             </AuthProvider>
           </WouterRouter>

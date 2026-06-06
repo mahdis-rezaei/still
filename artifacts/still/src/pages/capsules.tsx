@@ -113,7 +113,7 @@ export default function Capsules() {
       <main className="flex-1 w-full max-w-[680px] mx-auto px-6 py-12 md:py-16">
         <PageHeader
           title="Send to your future self"
-          subtitle="Write a page and seal it for a later you. Once sealed, it can't be changed — a letter that waits."
+          subtitle="Write a page and seal it for a later you. Once sealed, it can't be changed, a letter that waits."
         />
 
         {/* Compose */}

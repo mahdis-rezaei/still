@@ -19,7 +19,7 @@ const OPTIONS: {
   {
     key: "have",
     label: "I already have years of journals",
-    note: "Bring them in — paste or upload, and Yadegar will read across them.",
+    note: "Bring them in, paste or upload, and Yadegar will read across them.",
     to: "/import",
   },
   {
@@ -37,7 +37,7 @@ const OPTIONS: {
   {
     key: "explore",
     label: "Let me see how it feels first",
-    note: "A few sample pages to explore — press “Bring a page back” to watch Yadegar return one. Remove them anytime.",
+    note: "A few sample pages to explore, press “Bring a page back” to watch Yadegar return one. Remove them anytime.",
     to: "/today",
     seed: true,
   },

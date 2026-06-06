@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "wouter";
 import { useListEntries } from "@workspace/api-client-react";
 
-// "Your Year in Pages" — a whole year of writing, gathered into something to read,
+// "Your Year in Pages", a whole year of writing, gathered into something to read,
 // print, or keep as a book. The year is PICKED from the years you've actually
 // written (defaulting to your most recent one), rather than a hardcoded "last
 // year" that left people wondering why a particular year showed up.
@@ -63,7 +63,7 @@ export function YearInPagesTab() {
       >
         <p className="font-display text-3xl text-deep-brown">{year} →</p>
         <p className="font-sans text-sm text-soft-ink mt-1">
-          Open this year as a single, readable letter — then print it or make a
+          Open this year as a single, readable letter, then print it or make a
           book.
         </p>
       </Link>

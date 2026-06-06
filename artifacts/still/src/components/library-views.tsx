@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 
-// Ways to view the Library — the same pages, different lenses. List is the
+// Ways to view the Library, the same pages, different lenses. List is the
 // default; Calendar jumps to a date; Timeline shows the sweep. Search isn't here:
 // it's the Library's own search box (search is a function, not a view).
 const VIEWS = [

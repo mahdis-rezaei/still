@@ -3,14 +3,14 @@ import { type MemoryRunResult } from "@workspace/api-client-react";
 import { runMemoryRequest } from "@/lib/run-job";
 import { MemoryCard } from "@/components/memory-card";
 
-// "What keeps returning" — the pattern lens: the engine roams your whole archive
+// "What keeps returning", the pattern lens: the engine roams your whole archive
 // for a thread / line that keeps coming back across your years. Button-to-surface
 // (so it never writes silently on every visit), then the voiced result. On a deep
 // archive the engine leans toward a cross-time thread; on a thinner one it finds
 // the line that keeps mattering.
 //
 // Caching: the first read uses the cached run (instant once the engine's extract/
-// score caches are warm — a cold run over a big archive is a ~2-pass model read
+// score caches are warm, a cold run over a big archive is a ~2-pass model read
 // that can take a couple of minutes). Re-rolls ("look again" / "show another")
 // pass `fresh` to bypass the run cache so they actually vary instead of handing
 // back the identical cached pick.
@@ -20,7 +20,7 @@ export function WhatKeepsReturning() {
 
   // A cold run is a two-pass model read across the whole archive and can take a
   // couple of minutes. Without feedback that wait reads as "broken," so we show
-  // calm, time-aware reassurance (no raw stopwatch — that makes it feel anxious).
+  // calm, time-aware reassurance (no raw stopwatch, that makes it feel anxious).
   const [elapsed, setElapsed] = useState(0);
   useEffect(() => {
     if (!pending) {
@@ -63,10 +63,10 @@ export function WhatKeepsReturning() {
             {elapsed < 10
               ? "Reading across your years…"
               : elapsed < 35
-                ? "Still reading — looking for what keeps coming back…"
+                ? "Still reading, looking for what keeps coming back…"
                 : elapsed < 90
-                  ? "Your archive is large, so this takes a moment. Hang tight — Yadegar is still reading."
-                  : "Almost there — a long archive takes a little longer to read."}
+                  ? "Your archive is large, so this takes a moment. Hang tight, Yadegar is still reading."
+                  : "Almost there, a long archive takes a little longer to read."}
           </p>
         </div>
       )}
@@ -102,7 +102,7 @@ export function WhatKeepsReturning() {
       {!pending && result && !result.surfaced && result.reason !== "error" && (
         <div>
           <p className="font-body text-soft-ink leading-relaxed">
-            Nothing clear keeps returning just yet — as your pages gather years,
+            Nothing clear keeps returning just yet, as your pages gather years,
             the threads will show.
           </p>
           <button

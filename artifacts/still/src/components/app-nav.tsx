@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
 import { useResendVerification } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { Avatar } from "@/components/avatar";
@@ -18,17 +19,25 @@ const LOOK_BACK_TABS = [
   { href: "/look-back/revisit", label: "Revisit a time" },
   { href: "/look-back/keepsake", label: "Your Year in Pages" },
 ];
-// The quiet top bar for the signed-in app. Three calm destinations by intent —
-// Today (write), Look back (be visited by your past), Explore (your archive) —
-// with account/settings on the right. A contextual second bar appears under
+// The quiet top bar for the signed-in app. Three calm destinations by intent, // Today (write), Look back (be visited by your past), Explore (your archive), // with account/settings on the right. A contextual second bar appears under
 // Explore for its sub-tabs. Plus a soft "confirm your email" banner.
 export function AppNav() {
   const [location, setLocation] = useLocation();
   const { user, logout } = useAuth();
+  const queryClient = useQueryClient();
   const resend = useResendVerification();
   const [resent, setResent] = useState(false);
 
-  // Account menu — one dropdown on the right (Settings · About · Profile · Sign
+  // Clicking the logo or the already-active nav item shouldn't dead-end: scroll to
+  // the top and soft-refresh the page's data (refetch active queries) — the
+  // standard "tap the active tab again" gesture. Not a full reload (that flashes
+  // and would feel heavy); just a calm refresh.
+  function refreshCurrent() {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    queryClient.invalidateQueries();
+  }
+
+  // Account menu, one dropdown on the right (Settings · About · Profile · Sign
   // out) instead of scattering them across the top bar. Closes on outside click
   // or Escape.
   const [menuOpen, setMenuOpen] = useState(false);
@@ -63,7 +72,7 @@ export function AppNav() {
     </Link>
   );
 
-  // Mobile menu — on phones the inline nav doesn't fit, so it collapses into a
+  // Mobile menu, on phones the inline nav doesn't fit, so it collapses into a
   // hamburger. Closes on navigation or Escape.
   const [mobileOpen, setMobileOpen] = useState(false);
   useEffect(() => setMobileOpen(false), [location]);
@@ -113,6 +122,14 @@ export function AppNav() {
   const navLink = (href: string, label: string, active: boolean) => (
     <Link
       href={href}
+      onClick={(e) => {
+        // Exactly here already? Don't dead-click — scroll up + soft-refresh.
+        // (A sub-route like /look-back/revisit still navigates to the base.)
+        if (location === href) {
+          e.preventDefault();
+          refreshCurrent();
+        }
+      }}
       className={
         "font-sans text-sm transition-colors " +
         (active ? "text-ink" : "text-soft-ink hover:text-ink")
@@ -128,7 +145,7 @@ export function AppNav() {
       key={href + label}
       href={href}
       className={
-        "font-sans text-sm transition-colors " +
+        "shrink-0 font-sans text-sm transition-colors " +
         (active ? "text-ink" : "text-soft-ink hover:text-ink")
       }
       data-testid={`subnav-${label.toLowerCase()}`}
@@ -136,6 +153,18 @@ export function AppNav() {
       {label}
     </Link>
   );
+
+  // The wordmark is the home affordance (→ Today). When you're ALREADY on Today,
+  // a plain link does nothing and reads as broken (you tap and nothing happens),
+  // so instead scroll to the top — the logo always responds. Also closes the
+  // mobile menu if it's open.
+  function onWordmark(e: React.MouseEvent) {
+    setMobileOpen(false);
+    if (location === "/today") {
+      e.preventDefault();
+      refreshCurrent();
+    }
+  }
 
   async function handleResend() {
     try {
@@ -151,9 +180,23 @@ export function AppNav() {
         <div className="flex items-center gap-8">
           <Link
             href="/today"
-            className="font-display text-xl text-deep-brown tracking-tight"
+            onClick={onWordmark}
+            aria-label="Yadegar, home"
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            Yadegar
+            {/* The Persian glyph as a small logomark, echoing the landing hero.
+                Decorative (the English wordmark + aria-label carry the name). */}
+            <span
+              className="font-display text-base text-accent-sepia/70 leading-none"
+              dir="rtl"
+              lang="fa"
+              aria-hidden="true"
+            >
+              یادگار
+            </span>
+            <span className="font-display text-xl text-deep-brown tracking-tight leading-none">
+              Yadegar
+            </span>
           </Link>
           <div className="hidden md:flex items-center gap-5 md:gap-6">
             {navLink("/today", "Today", isActive("/today"))}
@@ -188,9 +231,10 @@ export function AppNav() {
                 className="absolute right-0 mt-2 w-52 rounded-xl border border-border bg-surface shadow-lg py-1.5 z-50"
               >
                 {menuItem("/settings", "Settings")}
-                {menuItem("/why", "About Yadegar")}
-                {menuItem("/help", "Help & FAQ")}
                 {menuItem("/settings/profile", "My profile")}
+                {menuItem("/settings/plan", "Membership")}
+                {menuItem("/help", "Help & FAQ")}
+                {menuItem("/why", "About Yadegar")}
                 <div className="my-1.5 border-t border-border/60" />
                 <button
                   onClick={async () => {
@@ -244,7 +288,7 @@ export function AppNav() {
         </div>
       </nav>
 
-      {/* Mobile menu panel — the full nav + account actions, hamburger-driven. */}
+      {/* Mobile menu panel, the full nav + account actions, hamburger-driven. */}
       {mobileOpen && (
         <div className="md:hidden w-full border-b border-border/60 bg-surface">
           <div className="px-6 py-2 flex flex-col">
@@ -253,9 +297,10 @@ export function AppNav() {
             {mobileItem("/library", "Explore", exploreActive)}
             <div className="my-1 border-t border-border/60" />
             {mobileItem("/settings", "Settings", isActive("/settings"))}
-            {mobileItem("/why", "About Yadegar")}
-            {mobileItem("/help", "Help & FAQ", isActive("/help"))}
             {mobileItem("/settings/profile", "My profile")}
+            {mobileItem("/settings/plan", "Membership", isActive("/settings/plan"))}
+            {mobileItem("/help", "Help & FAQ", isActive("/help"))}
+            {mobileItem("/why", "About Yadegar")}
             <button
               onClick={async () => {
                 setMobileOpen(false);
@@ -271,11 +316,11 @@ export function AppNav() {
         </div>
       )}
 
-      {/* Explore sub-tabs — contextual second bar (in-page tabs, not a dropdown),
-          aligned to the content column. (Library's own views — List/Calendar/
-          Timeline — live in the page, and Search is the Library search box.) */}
+      {/* Explore sub-tabs, contextual second bar (in-page tabs, not a dropdown),
+          aligned to the content column. (Library's own views, List/Calendar/
+          Timeline, live in the page, and Search is the Library search box.) */}
       {exploreActive && (
-        <div className="w-full border-b border-border/40 bg-surface/30">
+        <div className="relative w-full border-b border-border/40 bg-surface/30">
           <div className="max-w-[680px] mx-auto px-6 py-3 flex items-center gap-5 md:gap-6 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {EXPLORE_TABS.map((t) =>
               subTab(
@@ -285,17 +330,26 @@ export function AppNav() {
               ),
             )}
           </div>
+          {/* soft right fade signals the row scrolls horizontally (mobile only) */}
+          <div
+            aria-hidden="true"
+            className="md:hidden pointer-events-none absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-background to-transparent"
+          />
         </div>
       )}
 
-      {/* Look back sub-tabs — the same contextual second bar as Explore. */}
+      {/* Look back sub-tabs, the same contextual second bar as Explore. */}
       {lookBackActive && (
-        <div className="w-full border-b border-border/40 bg-surface/30">
+        <div className="relative w-full border-b border-border/40 bg-surface/30">
           <div className="max-w-[680px] mx-auto px-6 py-3 flex items-center gap-5 md:gap-6 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {LOOK_BACK_TABS.map((t) =>
               subTab(t.href, t.label, lookBackTabActive(t.href)),
             )}
           </div>
+          <div
+            aria-hidden="true"
+            className="md:hidden pointer-events-none absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-background to-transparent"
+          />
         </div>
       )}
 
@@ -303,7 +357,7 @@ export function AppNav() {
         <div className="w-full bg-[#F3EAD7] border-b border-accent-sepia/20 px-6 md:px-8 py-2.5 text-center">
           <span className="font-sans text-xs text-deep-brown/80">
             {resent ? (
-              "Sent — check your inbox to confirm your email."
+              "Sent, check your inbox to confirm your email."
             ) : (
               <>
                 Confirm your email to keep your pages safe.{" "}

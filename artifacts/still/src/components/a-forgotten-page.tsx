@@ -5,7 +5,7 @@ import { MemoryCard } from "@/components/memory-card";
 import { DateMemoryCard } from "@/components/date-memory-card";
 import { type DateMemory } from "@/lib/use-look-back";
 
-// "A page you'd forgotten" — an old page that's slipped out of view, read back in
+// "A page you'd forgotten", an old page that's slipped out of view, read back in
 // Yadegar's voice (not just a raw excerpt, which is what made this feel dead).
 // Button-gated (so it never fires the engine just by being on screen), then
 // "show another →" rotates through the forgotten set. If the engine stays silent
@@ -22,7 +22,7 @@ export function AForgottenPage({
   const [voice, setVoice] = useState<MemoryRunResult | null>(null);
   const current = i >= 0 ? forgotten[i] : undefined;
 
-  // Voicing one page is a model read too — show calm, time-aware reassurance so
+  // Voicing one page is a model read too, show calm, time-aware reassurance so
   // a few seconds' wait never reads as "stuck" (matches Today / what-keeps-returning).
   const [elapsed, setElapsed] = useState(0);
   useEffect(() => {
@@ -67,7 +67,7 @@ export function AForgottenPage({
   if (forgotten.length === 0) {
     return (
       <p className="font-body text-soft-ink leading-relaxed">
-        Nothing's slipped far enough out of view yet — as your pages gather
+        Nothing's slipped far enough out of view yet, as your pages gather
         years, forgotten ones will surface here.
       </p>
     );
@@ -90,7 +90,7 @@ export function AForgottenPage({
           <p className="font-body text-soft-ink leading-relaxed">
             {elapsed < 12
               ? "Reading a page you'd set down…"
-              : "Still reading — finding the words for it…"}
+              : "Still reading, finding the words for it…"}
           </p>
         </div>
       )}
@@ -99,7 +99,7 @@ export function AForgottenPage({
         <MemoryCard memory={voice.memory} />
       )}
 
-      {/* Engine stayed silent on a thin page — show the page itself, never blank. */}
+      {/* Engine stayed silent on a thin page, show the page itself, never blank. */}
       {!pending && voice && !voice.surfaced && current && (
         <DateMemoryCard
           heading="You haven't seen this in a while"

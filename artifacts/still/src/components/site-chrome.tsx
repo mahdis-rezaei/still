@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 
-// A soft, warm field of color washes behind the page — three blurred blobs in
+// A soft, warm field of color washes behind the page, three blurred blobs in
 // Yadegar's palette (sepia, blush, a faint sage), drifting almost imperceptibly.
 export function AmbientField() {
   return (
@@ -58,13 +58,22 @@ export function SiteNav({ showWhy = true }: { showWhy?: boolean }) {
         Yadegar
       </Link>
       {showWhy && (
-        <Link
-          href="/why"
-          className="font-sans text-xs uppercase tracking-[0.18em] text-soft-ink hover:text-ink transition-colors"
-          data-testid="link-why"
-        >
-          Why Yadegar
-        </Link>
+        <div className="flex items-center gap-5">
+          <Link
+            href="/pricing"
+            className="font-sans text-xs uppercase tracking-[0.18em] text-soft-ink hover:text-ink transition-colors"
+            data-testid="link-pricing"
+          >
+            Pricing
+          </Link>
+          <Link
+            href="/why"
+            className="font-sans text-xs uppercase tracking-[0.18em] text-soft-ink hover:text-ink transition-colors"
+            data-testid="link-why"
+          >
+            Why Yadegar
+          </Link>
+        </div>
       )}
     </nav>
   );

@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { AmbientField } from "@/components/site-chrome";
+import { PricingCards } from "@/components/pricing-cards";
 
-// The public landing — an editorial scroll that lets someone *feel* Yadegar
+// The public landing, an editorial scroll that lets someone *feel* Yadegar
 // before they understand it. Type-led, warm paper, restrained color (soft
 // tinted lens chips), the Persian word as a hero element. No stock photography.
 
@@ -15,7 +16,7 @@ const TONES: Record<Tone, { backgroundColor: string; color: string }> = {
   blush: { backgroundColor: "rgba(185,138,120,0.16)", color: "#9c6a58" },
 };
 
-// Example "returns" — FICTIONAL, illustrative of the kind of pages Yadegar
+// Example "returns", FICTIONAL, illustrative of the kind of pages Yadegar
 // surfaces (one quiet line, in the writer's own words). Deliberately invented,
 // never a real user's writing, since they show on the public landing page.
 const RETURNS: {
@@ -36,14 +37,14 @@ const RETURNS: {
   {
     tag: "what kept returning",
     tone: "sage",
-    date: "2014 — 2024",
+    date: "2014 to 2024",
     quote: "One more week, then I'll really begin.",
     note: "The same gentle promise, made to yourself for ten years.",
   },
   {
     tag: "how far you've come",
     tone: "blush",
-    date: "2019 — today",
+    date: "2019 to today",
     quote: "I don't think I'll ever feel at home in this city.",
     note: "Years on, you simply stopped writing this.",
   },
@@ -58,7 +59,7 @@ const RETURNS: {
   {
     tag: "a question you carried",
     tone: "sage",
-    date: "2015 — 2025",
+    date: "2015 to 2025",
     quote: "Am I doing enough? Am I enough?",
     note: "The same question, ten years on, asked more gently.",
   },
@@ -66,7 +67,7 @@ const RETURNS: {
     tag: "the words you saved",
     tone: "blush",
     date: "2018",
-    quote: "The wound is the place where the Light enters you. — Rumi",
+    quote: "The wound is the place where the Light enters you. (Rumi)",
     note: "A line you copied down, back when it first found you.",
   },
   {
@@ -80,14 +81,14 @@ const RETURNS: {
   {
     tag: "what kept returning",
     tone: "sage",
-    date: "2013 — 2023",
+    date: "2013 to 2023",
     quote: "Be patient with yourself. You're still learning.",
     note: "The same quiet way you've always talked yourself back onto your feet.",
   },
   {
     tag: "how far you've come",
     tone: "blush",
-    date: "2017 — today",
+    date: "2017 to today",
     quote: "I cried in the office bathroom again and told no one.",
     note: "A season you moved all the way through.",
   },
@@ -105,7 +106,7 @@ const STEPS: { n: string; t: string; d: string }[] = [
   {
     n: "01",
     t: "Write",
-    d: "Write today's page, or bring in years of old ones. It doesn't need to be wise — only honest.",
+    d: "Write today's page, or bring in years of old ones. It doesn't need to be wise, only honest.",
   },
   {
     n: "02",
@@ -115,7 +116,7 @@ const STEPS: { n: string; t: string; d: string }[] = [
   {
     n: "03",
     t: "Return",
-    d: "When you ask, Yadegar reads across your years and places one page back in front of you — or stays quiet when nothing honest surfaces.",
+    d: "When you ask, Yadegar reads across your years and places one page back in front of you, or stays quiet when nothing honest surfaces.",
   },
   {
     n: "04",
@@ -179,7 +180,7 @@ function DemoCard({ r }: { r: (typeof RETURNS)[number] }) {
   );
 }
 
-// Interactive taste of the engine — click to surface one return, cycle through
+// Interactive taste of the engine, click to surface one return, cycle through
 // more. Curated examples (no live model call); same voice as the real product.
 function ReturnDemo({ onCreate }: { onCreate: () => void }) {
   const [revealed, setRevealed] = useState(false);
@@ -246,6 +247,12 @@ export function Landing({
         </span>
         <div className="flex items-center gap-5">
           <Link
+            href="/pricing"
+            className="hidden sm:inline font-sans text-xs uppercase tracking-[0.18em] text-soft-ink hover:text-ink transition-colors"
+          >
+            Pricing
+          </Link>
+          <Link
             href="/why"
             className="hidden sm:inline font-sans text-xs uppercase tracking-[0.18em] text-soft-ink hover:text-ink transition-colors"
           >
@@ -286,11 +293,11 @@ export function Landing({
             Yadegar
           </h1>
           <p className="font-body italic text-lg md:text-xl text-accent-sepia mb-7">
-            Persian: a keepsake — the thing that remains
+            Persian: a keepsake, the thing that remains
           </p>
           <p className="font-body text-lg md:text-xl text-soft-ink leading-relaxed mb-10 max-w-[34rem] mx-auto">
             A companion to a lifelong journaling practice. It reads across your
-            years and brings back one page worth returning to — gently, and
+            years and brings back one page worth returning to, gently, and
             always in your own words.
           </p>
           <div className="flex items-center justify-center gap-3">
@@ -311,7 +318,7 @@ export function Landing({
         </motion.div>
       </header>
 
-      {/* What comes back — example returns */}
+      {/* What comes back, example returns */}
       <section className="px-6 py-20 md:py-24 bg-[#F1EADD]">
         <div className="max-w-[720px] mx-auto">
           <Reveal>
@@ -367,11 +374,14 @@ export function Landing({
             >
               یادگار
             </p>
-            <p className="font-body italic text-soft-ink mb-6">
+            <p className="font-body italic text-soft-ink mb-1">
               yadegar · Persian, noun
             </p>
+            <p className="font-sans text-sm text-faint-ink mb-6">
+              said <span className="text-soft-ink">yaa-deh-gar</span>
+            </p>
             <p className="font-body text-lg md:text-xl text-soft-ink leading-relaxed mb-5">
-              A keepsake. A memento. The trace a person — or a time — leaves
+              A keepsake. A memento. The trace a person, or a time, leaves
               behind. The thing that remains.
             </p>
             <p className="font-body text-soft-ink leading-relaxed">
@@ -392,7 +402,7 @@ export function Landing({
               myself. One that would last decades.”
             </p>
             <p className="font-body text-soft-ink leading-relaxed text-center mb-7">
-              I've kept a journal through every version of myself — and lost some
+              I've kept a journal through every version of myself, and lost some
               of them along the way. Yadegar is for the pages that remain.
             </p>
             <p className="text-center">
@@ -407,6 +417,41 @@ export function Landing({
         </div>
       </section>
 
+      {/* Pricing */}
+      <section className="px-6 py-20 md:py-24">
+        <div className="max-w-[720px] mx-auto">
+          <Reveal>
+            <Eyebrow>What it costs</Eyebrow>
+            <h2 className="font-display text-3xl md:text-4xl text-deep-brown text-center leading-tight mb-3 max-w-[34rem] mx-auto">
+              Free to keep. Yours to deepen.
+            </h2>
+            <p className="font-body text-soft-ink text-center leading-relaxed mb-10 max-w-[34rem] mx-auto">
+              Your journal is always free: write, keep, import, export, and
+              revisit the pages that return to you, without limit. Membership
+              lifts the cap on new returns: Yadegar reading across your years,
+              whenever you like.
+            </p>
+          </Reveal>
+          <Reveal>
+            <PricingCards />
+          </Reveal>
+          <Reveal>
+            <p className="font-body text-faint-ink text-sm text-center mt-7 max-w-[34rem] mx-auto">
+              We gate the AI, never your journal. Your words are always yours to
+              write, keep, and take with you.
+            </p>
+            <p className="text-center mt-4">
+              <Link
+                href="/pricing"
+                className="font-sans text-sm text-accent-sepia hover:text-deep-brown border-b border-accent-sepia/40 pb-0.5 transition-colors"
+              >
+                See plans &amp; pricing questions →
+              </Link>
+            </p>
+          </Reveal>
+        </div>
+      </section>
+
       {/* Final CTA */}
       <section className="px-6 pt-20 pb-24 md:pt-24 md:pb-28 bg-[#F1EADD] text-center">
         <Reveal>
@@ -414,8 +459,8 @@ export function Landing({
             Meet the person you used to be.
           </h2>
           <p className="font-body text-soft-ink mb-9 max-w-[30rem] mx-auto">
-            Free while in early access. Private by default, encrypted, and always
-            in your own words.
+            Free to start, membership when you're ready. Private by default,
+            encrypted, and always in your own words.
           </p>
           <div className="flex items-center justify-center gap-3">
             <button

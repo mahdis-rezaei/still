@@ -1444,6 +1444,27 @@ components:
           type: boolean
         emailVerified:
           type: boolean
+        plan:
+          type: string
+          enum: [free, member]
+        planRenewsAt:
+          type: ["string", "null"]
+          format: date-time
+        usage:
+          type: object
+          properties:
+            used:
+              type: integer
+            limit:
+              type: ["integer", "null"]
+            atLimit:
+              type: boolean
+            enforced:
+              type: boolean
+          required:
+            - used
+            - limit
+            - atLimit
       required:
         - id
         - email

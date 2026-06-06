@@ -34,7 +34,7 @@ export default function Collections() {
       <main className="flex-1 w-full max-w-[680px] mx-auto px-6 py-12 md:py-16">
         <PageHeader
           title="Collections"
-          subtitle="The people, places, and questions that run through your pages — gathered by you, shown across the years. Nothing is interpreted; the pages simply sit together."
+          subtitle="The people, places, and questions that run through your pages, gathered by you, shown across the years. Nothing is interpreted; the pages simply sit together."
         />
 
         {/* New collection */}
@@ -69,7 +69,7 @@ export default function Collections() {
           <p className="font-sans text-sm text-faint-ink">Gathering…</p>
         ) : collections.length === 0 ? (
           <p className="font-body text-soft-ink">
-            No collections yet. Make one above — then open any page and add it.
+            No collections yet. Make one above, then open any page and add it.
           </p>
         ) : (
           <div className="space-y-10">

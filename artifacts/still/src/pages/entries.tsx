@@ -135,7 +135,7 @@ export default function Entries() {
       </div>
 
       <p className="text-lg text-soft-ink mb-8 leading-relaxed">
-        Keep your pages here. They stay between visits. Write one, or paste a batch — Yadegar reads across all of them when you're ready.
+        Keep your pages here. They stay between visits. Write one, or paste a batch, Yadegar reads across all of them when you're ready.
       </p>
 
       {/* Mode toggle */}
@@ -251,7 +251,7 @@ export default function Entries() {
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by word or date — try 2018, 2018-03, or a phrase…"
+              placeholder="Search by word or date, try 2018, 2018-03, or a phrase…"
               className="w-full bg-surface border border-border rounded-sm px-4 py-2.5 text-sm text-ink font-sans placeholder:text-faint-ink focus:outline-none focus:ring-1 focus:ring-accent-sepia mb-4"
             />
 

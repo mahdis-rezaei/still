@@ -30,6 +30,7 @@
 2. `docs/HANDOFF.md` — engine/harness state and workflow gotchas.
 3. `docs/STILL-BUILD-AND-EVAL.md` — full account of the engine, guardrails, and eval harness.
 4. `docs/PRD/mvp-v1.md` — the MVP product spec; `docs/PRD/memory-engine-v2-vision.md` — future engine.
+5. Monetization (freemium membership): `docs/MEMBERSHIP-COMMS.md` — pricing & comms case study (unit economics, fair-use ceiling, copy); `docs/MONETIZATION-STRATEGY.md` + `docs/MONETIZATION-BUILD-PLAN.md` — strategy & build order; `docs/STRIPE-SETUP.md` — Stripe runbook. Quota gate is shadow until `STILL_QUOTA_ENFORCED=1`.
 
 ## What Still is (one line)
 A companion to a lifelong journaling practice: paste years of entries, it surfaces **one** thing worth returning to today (a thread, a forgotten page, a distance traveled) — always pointing back to your own words — and **stays silent when nothing honest surfaces.** Governing rule: **offer the meaning, never push the moment.**
