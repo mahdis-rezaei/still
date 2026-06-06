@@ -163,9 +163,21 @@ export function AppNav() {
             href="/today"
             onClick={onWordmark}
             aria-label="Yadegar, home"
-            className="font-display text-xl text-deep-brown tracking-tight hover:text-ink transition-colors"
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            Yadegar
+            {/* The Persian glyph as a small logomark, echoing the landing hero.
+                Decorative (the English wordmark + aria-label carry the name). */}
+            <span
+              className="font-display text-base text-accent-sepia/70 leading-none"
+              dir="rtl"
+              lang="fa"
+              aria-hidden="true"
+            >
+              یادگار
+            </span>
+            <span className="font-display text-xl text-deep-brown tracking-tight leading-none">
+              Yadegar
+            </span>
           </Link>
           <div className="hidden md:flex items-center gap-5 md:gap-6">
             {navLink("/today", "Today", isActive("/today"))}
