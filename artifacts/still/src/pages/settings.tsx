@@ -34,6 +34,41 @@ export default function Settings() {
 
         <section className="mb-10">
           <p className="font-sans text-xs uppercase tracking-[0.18em] text-faint-ink mb-3">
+            Membership
+          </p>
+          <div className="block border border-border rounded-xl bg-surface/60 p-5">
+            {user?.plan === "member" ? (
+              <>
+                <p className="font-body text-lg text-ink">Member</p>
+                <p className="font-body text-soft-ink text-sm mt-1 leading-relaxed">
+                  Unlimited fresh returns across your years. Thank you for keeping
+                  Yadegar alive.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="font-body text-lg text-ink">Your journal — free</p>
+                <p className="font-body text-soft-ink text-sm mt-1 leading-relaxed">
+                  Writing, keeping, importing, and revisiting the pages that return
+                  to you are always free and unlimited.
+                </p>
+                {user?.usage && user.usage.limit != null && (
+                  <p className="font-body text-sm text-faint-ink mt-3">
+                    Fresh returns this month: {user.usage.used} of about{" "}
+                    {user.usage.limit}.
+                  </p>
+                )}
+                <p className="font-body text-sm text-faint-ink mt-3 leading-relaxed">
+                  Membership — unlimited fresh returns across your years — is
+                  coming soon.
+                </p>
+              </>
+            )}
+          </div>
+        </section>
+
+        <section className="mb-10">
+          <p className="font-sans text-xs uppercase tracking-[0.18em] text-faint-ink mb-3">
             Nudges
           </p>
           <Link

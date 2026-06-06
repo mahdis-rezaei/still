@@ -49,6 +49,7 @@ import Onboarding from "@/pages/onboarding";
 import { StillProvider } from "@/lib/store";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { DevPanel } from "@/components/dev-panel";
+import { QuotaPromptProvider } from "@/components/quota-prompt-dialog";
 
 const queryClient = new QueryClient();
 
@@ -186,7 +187,9 @@ function App() {
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
             <AuthProvider>
               <SvgNoise />
-              <Router />
+              <QuotaPromptProvider>
+                <Router />
+              </QuotaPromptProvider>
               <DevPanel />
             </AuthProvider>
           </WouterRouter>

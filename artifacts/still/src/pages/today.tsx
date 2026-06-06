@@ -9,6 +9,7 @@ import {
   customFetch,
   type MemoryRunResult,
 } from "@workspace/api-client-react";
+import { handleQuotaError } from "@/lib/quota-prompt";
 import { AppNav } from "@/components/app-nav";
 import { MemoryCard } from "@/components/memory-card";
 import { OnThisDay } from "@/components/on-this-day";
@@ -122,8 +123,10 @@ export default function Today() {
       } else {
         setRun(resp as MemoryRunResult);
       }
-    } catch {
-      setRun({ surfaced: false, reason: "error" });
+    } catch (err) {
+      // Over the free quota (enforced mode only): the shared upgrade prompt is
+      // raised; keep the page calm rather than showing a generic error.
+      setRun({ surfaced: false, reason: handleQuotaError(err) ? "quota" : "error" });
     } finally {
       setPending(false);
     }
