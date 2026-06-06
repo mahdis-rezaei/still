@@ -22,8 +22,9 @@ This FAQ explains every feature in plain language. Use the contents below to jum
 12. [Notifications & nudges](#12-notifications--nudges)
 13. [Privacy, security & your data](#13-privacy-security--your-data)
 14. [Profile & settings](#14-profile--settings)
-15. [On your phone](#15-on-your-phone)
-16. [Troubleshooting](#16-troubleshooting)
+15. [Membership & pricing](#15-membership--pricing)
+16. [On your phone](#16-on-your-phone)
+17. [Troubleshooting](#17-troubleshooting)
 
 ---
 
@@ -346,13 +347,41 @@ A page describing what Yadegar is and what it believes — its philosophy and ap
 
 ---
 
-## 15. On your phone
+## 15. Membership & pricing
+
+### Is Yadegar free?
+Yes — the journal is free, and stays free. Writing pages, keeping them, importing years of past journals, organizing, exporting, and revisiting any page Yadegar has already brought back all cost nothing, with no limits. **We gate the AI, never your journal.**
+
+### Then what does membership pay for?
+The one thing that genuinely costs us to run: a **fresh return** — when you ask Yadegar to read across your years and bring back something new ("Bring a page back," "What keeps returning," "Revisit a time," "How far you've come"). That's a careful, two-pass read by an AI model, so it has a real cost. Membership covers unlimited fresh returns; the free tier includes a handful each month.
+
+### How many fresh returns do I get for free?
+**Four a month** — about one a week — plus a small bonus in your first month so you can get a feel for it. **Re-opening a page that's already come back to you is always free** and never counts. If you reach the limit, nothing about your journal locks; you simply can't ask for a brand-new return until next month (or you can become a member).
+
+### How much is membership, and what does it include?
+**$8 / month**, or **$59 / year** (that's about **$4.92/month — 38% off** the monthly price). Membership gives you **unlimited fresh returns** across all your years, as often as you like. Everything else was already free.
+
+### Why subscribe instead of a one-time price?
+A fresh return is an ongoing cost each time Yadegar reads your archive, so a subscription is the honest way to match what we charge to what it costs to run — rather than over-charging once and hoping, or quietly degrading the thing that makes Yadegar worth keeping.
+
+### Is my writing ever held hostage by payment?
+Never. Your pages are always readable, editable, and exportable, free, regardless of plan — *"leaving is easier than arriving."* Membership only affects how many **new** AI returns you can request. If you cancel or your membership lapses, you keep **everything** — every page, reflection, and returned memory stays exactly where it is — and you simply move back to the free monthly allowance.
+
+### How do I become a member or manage my membership?
+Go to **Settings → Membership** (or the account menu). Pick **monthly or annual** and **"Become a member"** — payment is handled securely by **Stripe**; Yadegar never sees or stores your card. To update your card, switch between monthly and annual, or cancel, open **"Manage membership,"** which takes you to Stripe's billing portal. Cancelling stops the renewal and keeps your access until the period you've paid for ends.
+
+### Do reminders, "On this day," and date-based returns count against my limit?
+No. Anything date-based (On This Day, Look Back browsing, your Year in Pages, the Timeline and Calendar) is a plain lookup of your own pages — no AI read — so it's always free for everyone. Only a brand-new engine return counts.
+
+---
+
+## 16. On your phone
 
 Yadegar works on phones. The top navigation collapses into a **hamburger menu** with all the sections and your account actions. Toolbars (like the editor's formatting bar and the Look back / Explore sub-tabs) scroll sideways so everything stays reachable on a small screen. Dictation's **"take a photo"** and microphone both use your phone's native camera and speech features.
 
 ---
 
-## 16. Troubleshooting
+## 17. Troubleshooting
 
 ### "Bring a page back" is taking a long time.
 Reading a large archive can take a couple of minutes — that's expected, and the on-screen messages reassure you it's still working. You can navigate away and come back; the read resumes.

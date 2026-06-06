@@ -407,6 +407,69 @@ export function Landing({
         </div>
       </section>
 
+      {/* Pricing */}
+      <section className="px-6 py-20 md:py-24">
+        <div className="max-w-[720px] mx-auto">
+          <Reveal>
+            <Eyebrow>What it costs</Eyebrow>
+            <h2 className="font-display text-3xl md:text-4xl text-deep-brown text-center leading-tight mb-3 max-w-[34rem] mx-auto">
+              Free to keep. Yours to deepen.
+            </h2>
+            <p className="font-body text-soft-ink text-center leading-relaxed mb-10 max-w-[34rem] mx-auto">
+              Your journal is always free — write, keep, import, export, and
+              revisit the pages that return to you, without limit. Membership
+              lifts the cap on new returns: Yadegar reading across your years, as
+              often as you like.
+            </p>
+          </Reveal>
+          <Reveal>
+            <div className="grid md:grid-cols-2 gap-5 text-left">
+              <div className="border border-border rounded-2xl bg-surface/70 p-7">
+                <p className="font-sans text-xs uppercase tracking-[0.18em] text-faint-ink mb-2">
+                  Your journal
+                </p>
+                <p className="font-display text-3xl text-deep-brown">Free</p>
+                <p className="font-body text-soft-ink leading-relaxed mb-5">
+                  Forever.
+                </p>
+                <ul className="space-y-2 font-body text-soft-ink text-sm leading-relaxed">
+                  <li>Unlimited writing, keeping &amp; importing</li>
+                  <li>Your whole archive, private &amp; encrypted</li>
+                  <li>Export everything, anytime</li>
+                  <li>A few fresh returns each month</li>
+                  <li>Revisit anything that's returned — always free</li>
+                </ul>
+              </div>
+              <div className="border border-accent-sepia/40 rounded-2xl bg-surface p-7">
+                <p className="font-sans text-xs uppercase tracking-[0.18em] text-accent-sepia mb-2">
+                  Membership
+                </p>
+                <p className="font-display text-3xl text-deep-brown">
+                  $8<span className="text-lg text-soft-ink"> / mo</span>
+                </p>
+                <p className="font-body text-soft-ink leading-relaxed mb-5">
+                  or $59 a year — about $4.92/mo, 38% off.
+                </p>
+                <ul className="space-y-2 font-body text-soft-ink text-sm leading-relaxed">
+                  <li>Everything in the free journal</li>
+                  <li>
+                    <span className="text-ink">Unlimited fresh returns</span>{" "}
+                    across your years
+                  </li>
+                  <li>Read across all your time, as often as you like</li>
+                </ul>
+              </div>
+            </div>
+          </Reveal>
+          <Reveal>
+            <p className="font-body text-faint-ink text-sm text-center mt-7 max-w-[34rem] mx-auto">
+              We gate the AI, never your journal. Your words are always yours to
+              write, keep, and take with you.
+            </p>
+          </Reveal>
+        </div>
+      </section>
+
       {/* Final CTA */}
       <section className="px-6 pt-20 pb-24 md:pt-24 md:pb-28 bg-[#F1EADD] text-center">
         <Reveal>
@@ -414,8 +477,8 @@ export function Landing({
             Meet the person you used to be.
           </h2>
           <p className="font-body text-soft-ink mb-9 max-w-[30rem] mx-auto">
-            Free while in early access. Private by default, encrypted, and always
-            in your own words.
+            Free to start — membership when you're ready. Private by default,
+            encrypted, and always in your own words.
           </p>
           <div className="flex items-center justify-center gap-3">
             <button

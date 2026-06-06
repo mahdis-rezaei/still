@@ -108,10 +108,11 @@ export default function Plan() {
           Membership
         </h1>
 
-        {status === "success" && !isMember && (
-          <p className="font-body text-soft-ink leading-relaxed mb-6">
-            Thank you — finishing up your membership. This page will update in a
-            moment.
+        {status === "success" && (
+          <p className="font-body text-lg text-deep-brown leading-relaxed mb-6">
+            {isMember
+              ? "Welcome — your years are open to you now."
+              : "Welcome — your years are open to you now. Just finishing the last details…"}
           </p>
         )}
         {status === "cancelled" && (
@@ -172,16 +173,28 @@ export default function Plan() {
 
                 <div className="border border-border rounded-xl bg-surface/60 p-6 max-w-[28rem]">
                   {interval === "annual" ? (
-                    <p className="font-body text-2xl text-ink">
-                      $59<span className="text-base text-soft-ink"> / year</span>
-                      <span className="font-body text-sm text-faint-ink ml-2">
-                        (about $4.92/mo)
-                      </span>
-                    </p>
+                    <>
+                      <p className="font-body text-2xl text-ink">
+                        $59
+                        <span className="text-base text-soft-ink"> / year</span>
+                      </p>
+                      <p className="font-sans text-sm text-accent-sepia mt-1">
+                        $4.92/mo, billed yearly · save 38%
+                      </p>
+                    </>
                   ) : (
-                    <p className="font-body text-2xl text-ink">
-                      $8<span className="text-base text-soft-ink"> / month</span>
-                    </p>
+                    <>
+                      <p className="font-body text-2xl text-ink">
+                        $8<span className="text-base text-soft-ink"> / month</span>
+                      </p>
+                      <button
+                        onClick={() => setIntervalState("annual")}
+                        className="font-sans text-sm text-accent-sepia hover:text-deep-brown transition-colors mt-1"
+                        data-testid="annual-nudge"
+                      >
+                        Save 38% with annual →
+                      </button>
+                    </>
                   )}
                   <button
                     onClick={() => go("/api/billing/checkout", { interval })}

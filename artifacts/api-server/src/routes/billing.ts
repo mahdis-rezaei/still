@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { eq } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
 import { requireAuth } from "../lib/auth";
+import { sendEmail, membershipWelcomeEmail } from "../lib/email";
 
 // Phase 2 — Stripe membership. The webhook is the SOURCE OF TRUTH for users.plan;
 // checkout/portal just hand the user off to Stripe-hosted pages. Everything here
@@ -177,6 +178,24 @@ router.post("/billing/webhook", async (req, res): Promise<void> => {
           typeof session.customer === "string"
             ? session.customer
             : session.customer?.id;
+        // Look up the user once — for the welcome email AND to know whether this
+        // is a genuinely NEW membership (so a redelivered event can't re-send it).
+        let recipient: { email: string; name: string | null } | null = null;
+        let wasMember = false;
+        if (userId) {
+          const [u] = await db
+            .select({
+              email: usersTable.email,
+              name: usersTable.name,
+              plan: usersTable.plan,
+            })
+            .from(usersTable)
+            .where(eq(usersTable.id, userId));
+          if (u) {
+            recipient = { email: u.email, name: u.name };
+            wasMember = u.plan === "member";
+          }
+        }
         // Persist the customer id against the user (idempotent) so later
         // subscription events resolve by customer.
         if (userId && customerId) {
@@ -188,6 +207,16 @@ router.post("/billing/webhook", async (req, res): Promise<void> => {
         if (typeof session.subscription === "string") {
           const sub = await stripe.subscriptions.retrieve(session.subscription);
           await applySubscription(sub);
+        }
+        // Warm welcome — best-effort, and only on the transition into membership
+        // (not on a renewal or a redelivered event).
+        if (!wasMember && recipient?.email) {
+          sendEmail({
+            to: recipient.email,
+            ...membershipWelcomeEmail({ name: recipient.name }),
+          }).catch((err) =>
+            req.log.error({ err }, "Membership welcome email failed"),
+          );
         }
         break;
       }

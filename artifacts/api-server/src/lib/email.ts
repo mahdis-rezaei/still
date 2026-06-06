@@ -121,6 +121,32 @@ export function welcomeEmail(opts: { name?: string | null }): {
   };
 }
 
+// ── a warm thank-you when someone becomes a member ──────────────────────────
+export function membershipWelcomeEmail(opts: { name?: string | null }): {
+  subject: string;
+  html: string;
+  text: string;
+} {
+  const hi = opts.name ? `${opts.name},` : "Hello,";
+  const url = `${appBase()}/today`;
+  const lines = [
+    "Thank you for becoming a member of Yadegar. It genuinely means a lot — a small, honest project like this stays alive because of people like you.",
+    "Your years are open now: bring a page back as often as you like, and Yadegar will keep reading across all of them — for the threads that return, the pages you'd forgotten, and the distance you've travelled.",
+    "Nothing about your journal changes. Writing, keeping, importing, and revisiting what's already come back to you were always free, and always will be — membership simply lifts the limit on new returns.",
+    "You can manage or cancel anytime from Settings → Membership, and your pages remain entirely yours either way.",
+  ];
+  const body =
+    para(hi) +
+    lines.map(para).join("") +
+    button(url, "Bring a page back") +
+    para("— Mahdis");
+  return {
+    subject: "Welcome to Yadegar membership",
+    html: shell(body),
+    text: `${hi}\n\n${lines.join("\n\n")}\n\nBring a page back: ${url}\n\n— Mahdis\n`,
+  };
+}
+
 export function verificationEmail(link: string): {
   subject: string;
   html: string;
