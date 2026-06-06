@@ -5,7 +5,7 @@ import { db, usageTable } from "@workspace/db";
 // send fresh:true, forcing a real model call each click) collapse into ONE
 // billable return within this window — so a user exploring doesn't burn quota,
 // while the token cost of each call is still recorded.
-const REROLL_WINDOW_MS = 10 * 60 * 1000;
+export const REROLL_WINDOW_MS = 10 * 60 * 1000;
 
 // Sonnet 4.6 list price (USD per 1M tokens). Prompt caching splits input into
 // three tiers: uncached (full), cache-read (~0.1x), cache-write (~1.25x). Update
@@ -15,7 +15,7 @@ const USD_PER_M_CACHE_READ = 0.3;
 const USD_PER_M_CACHE_WRITE = 3.75;
 const USD_PER_M_OUTPUT = 15;
 
-function monthStartUTC(d = new Date()): Date {
+export function monthStartUTC(d = new Date()): Date {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
 }
 

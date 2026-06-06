@@ -25,6 +25,17 @@ export const usersTable = pgTable("users", {
     .$type<"open" | "gentle" | "protected">()
     .notNull()
     .default("open"),
+  // Billing plan. "free" = the journal + a small monthly quota of fresh AI
+  // returns; "member" = unlimited returns (fair use). The Stripe webhook is the
+  // source of truth for `plan` once payments land (Phase 2); until then everyone
+  // is "free" and enforcement runs in shadow (metered, not blocked).
+  plan: text("plan")
+    .$type<"free" | "member">()
+    .notNull()
+    .default("free"),
+  planRenewsAt: timestamp("plan_renews_at", { withTimezone: true }),
+  stripeCustomerId: text("stripe_customer_id").unique(),
+  stripeSubscriptionId: text("stripe_subscription_id"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
