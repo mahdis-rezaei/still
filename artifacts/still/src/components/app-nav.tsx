@@ -200,9 +200,9 @@ export function AppNav() {
                 className="absolute right-0 mt-2 w-52 rounded-xl border border-border bg-surface shadow-lg py-1.5 z-50"
               >
                 {menuItem("/settings", "Settings")}
-                {menuItem("/why", "About Yadegar")}
-                {menuItem("/help", "Help & FAQ")}
                 {menuItem("/settings/profile", "My profile")}
+                {menuItem("/help", "Help & FAQ")}
+                {menuItem("/why", "About Yadegar")}
                 <div className="my-1.5 border-t border-border/60" />
                 <button
                   onClick={async () => {
@@ -265,9 +265,9 @@ export function AppNav() {
             {mobileItem("/library", "Explore", exploreActive)}
             <div className="my-1 border-t border-border/60" />
             {mobileItem("/settings", "Settings", isActive("/settings"))}
-            {mobileItem("/why", "About Yadegar")}
-            {mobileItem("/help", "Help & FAQ", isActive("/help"))}
             {mobileItem("/settings/profile", "My profile")}
+            {mobileItem("/help", "Help & FAQ", isActive("/help"))}
+            {mobileItem("/why", "About Yadegar")}
             <button
               onClick={async () => {
                 setMobileOpen(false);
