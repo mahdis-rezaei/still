@@ -9,38 +9,28 @@ See `docs/MOBILE-APP-PLAN.md` for the full plan.
 
 ---
 
-## Bootstrap (one time, on your machine)
+## Bootstrap & run (on your machine)
 
-From the repo root:
+This folder already has the full app: `package.json`, Expo/NativeWind config, and
+our source (`app/`, `lib/`). So it's a one-command start:
 
 ```bash
-# 1. Create the Expo app baseline IN PLACE (Expo Router + TS template).
-npx create-expo-app@latest apps/mobile --template expo-template-blank-typescript
-# (or the 'default' template, which includes expo-router)
-
 cd apps/mobile
 
-# 2. Install our runtime deps (expo install pins versions to your SDK):
-npx expo install expo-router expo-secure-store expo-local-authentication \
-  expo-auth-session expo-apple-authentication expo-font expo-constants \
-  react-native-safe-area-context react-native-screens
-npx expo install nativewind tailwindcss react-native-reanimated
-npm i -D @tanstack/react-query
+npm install                 # install the pinned deps
+npx expo install --fix      # align native deps to your installed Expo SDK (important)
+cp .env.example .env        # backend URL (defaults to yadegarjournal.com)
+
+npx expo start              # press i (iOS sim) / a (Android) / scan the QR on device
 ```
 
-Then set up **NativeWind** (Tailwind for RN) per the current docs
-(https://www.nativewind.dev/getting-started/expo-router) — it needs a
-`babel.config.js` preset, a `metro.config.js` `withNativeWind`, and the
-`global.css` import. Our `tailwind.config.js` + `global.css` below are ready to use.
+If `expo-doctor` flags version mismatches (likely if your Expo SDK is newer than
+the pinned ~52), run `npx expo install --fix` again and bump `expo` in
+`package.json` to your target SDK. The NativeWind setup (`babel.config.js`,
+`metro.config.js`, `tailwind.config.js`, `global.css`) is already wired.
 
-## Run
-
-```bash
-# point the app at the backend
-echo 'EXPO_PUBLIC_API_URL=https://yadegarjournal.com' > .env
-
-npx expo start            # press i (iOS sim) / a (Android) / scan QR for device
-```
+For real device builds + store submission later: `npm i -g eas-cli && eas login`,
+then `eas build` / `eas submit`.
 
 For real device builds + store submission later: `eas build` / `eas submit`
 (`npm i -g eas-cli && eas login`).
