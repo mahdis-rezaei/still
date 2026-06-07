@@ -1,3 +1,5 @@
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
 import {
   createContext,
   useContext,
@@ -5,7 +7,9 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { api, setToken } from "./api";
+import { API_ORIGIN, api, setToken } from "./api";
+
+WebBrowser.maybeCompleteAuthSession();
 
 // Token auth for the native app. Mirrors the web's auth context shape, but the
 // session lives as a bearer token in SecureStore (see lib/api).
@@ -26,6 +30,7 @@ interface AuthState {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name?: string) => Promise<void>;
   signOut: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
@@ -66,6 +71,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(r);
   };
 
+  const signInWithGoogle = async () => {
+    const returnTo = Linking.createURL("auth/google");
+    const startUrl = `${API_ORIGIN}/api/auth/google?client=mobile&returnTo=${encodeURIComponent(returnTo)}`;
+    const result = await WebBrowser.openAuthSessionAsync(startUrl, returnTo);
+
+    if (result.type !== "success") return;
+
+    const url = new URL(result.url);
+    const error = url.searchParams.get("error");
+    const token = url.searchParams.get("token");
+
+    if (error || !token) {
+      throw new Error(error ?? "Google sign-in failed");
+    }
+
+    await setToken(token);
+    const me = await api<MobileUser>("/auth/me");
+    setUser(me);
+  };
+
   const signOut = async () => {
     try {
       await api("/auth/logout", { method: "POST" });
@@ -77,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut, signInWithGoogle }}>
       {children}
     </AuthContext.Provider>
   );
