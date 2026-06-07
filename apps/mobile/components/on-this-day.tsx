@@ -1,0 +1,58 @@
+import { useState } from "react";
+import { View, Text, Pressable } from "react-native";
+import { useRouter } from "expo-router";
+import { useQuery } from "@tanstack/react-query";
+import { getOnThisDay, onThisDayLabel, localTodayISO } from "../lib/memories";
+import { DateMemoryCard } from "./date-memory-card";
+
+// On This Day on Today. Stays SILENT (renders nothing) when there's nothing from
+// this exact calendar day in prior years — never an empty box, never a nudge to
+// look. A quiet "Look back →" leads to the fuller browse. Cross-year reflection
+// lives in Look Back, not here, so this is strictly the exact-day ladder.
+export function OnThisDay() {
+  const router = useRouter();
+  const [showYears, setShowYears] = useState(false);
+  const date = localTodayISO();
+  const { data, isLoading } = useQuery({
+    queryKey: ["on-this-day", date],
+    queryFn: () => getOnThisDay(date),
+    staleTime: 60 * 60 * 1000,
+  });
+
+  const years = (data ?? []).filter((m) => m.onThisExactDay);
+  if (isLoading || years.length === 0) return null;
+
+  return (
+    <View className="mb-10">
+      <View className="flex-row items-baseline justify-between mb-4">
+        <Text className="font-display text-2xl text-deep-brown">On this day</Text>
+        <Pressable onPress={() => router.push("/look-back")} hitSlop={8}>
+          <Text className="font-sans text-sm text-soft-ink">Look back →</Text>
+        </Pressable>
+      </View>
+
+      <DateMemoryCard heading={onThisDayLabel(years[0])} memory={years[0]} />
+
+      {years.length > 1 && (
+        <View className="mt-4">
+          <Pressable onPress={() => setShowYears((v) => !v)} hitSlop={8}>
+            <Text className="font-sans text-sm text-soft-ink">
+              {showYears ? "Hide other years" : `See each year (${years.length})`}
+            </Text>
+          </Pressable>
+          {showYears && (
+            <View className="mt-4 gap-4">
+              {years.slice(1).map((m) => (
+                <DateMemoryCard
+                  key={m.entryId}
+                  heading={onThisDayLabel(m)}
+                  memory={m}
+                />
+              ))}
+            </View>
+          )}
+        </View>
+      )}
+    </View>
+  );
+}

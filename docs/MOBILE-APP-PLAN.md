@@ -125,6 +125,13 @@ Year-in-Pages/Book (print), full offline library.
   detail + reflections + photos, biometric lock.
 - **Phase 2 — Engine + returns + push:** Bring a page back, On This Day, Returns,
   Look back; `device_tokens` + push, cron sends push nudges.
+  - *Status: engine UI done* — `lib/memories.ts` (run + async job poll, on-this-day,
+    look-back, returns archive), `MemoryCard` / `DateMemoryCard` / `OnThisDay`,
+    "Bring a page back" + On This Day on Today, a **Returns** tab, and a Look Back
+    browse screen, all on the same backend endpoints as web (no second engine).
+    *Push is deferred within this phase* — it needs the backend `device_tokens`
+    table + register endpoint + the nudge cron sending Expo Push (a Replit change),
+    so it lands when that backend piece is built.
 - **Phase 3 — Membership (IAP):** RevenueCat + App Store/Play products, paywall,
   webhook→`plan` sync, honor existing web members, `plan_source`.
 - **Phase 4 — Native delights + polish:** "On this day" widget, share-sheet,

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -11,12 +11,16 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQueryClient } from "@tanstack/react-query";
 import { createEntry, updateEntry, todayISO, longDate } from "../../lib/entries";
+import { bringPageBack, type MemoryRunResult } from "../../lib/memories";
+import { MemoryCard } from "../../components/memory-card";
+import { OnThisDay } from "../../components/on-this-day";
 
 type Status = "idle" | "saving" | "saved";
 
-// Real Today: a calm writing surface that autosaves (debounced), with a deliberate
-// "Keep this page" to start a fresh one. Mirrors the web. (Offline-draft cache and
-// Bring-a-page-back come in the next steps.)
+// Real Today: a calm writing surface that autosaves (debounced), plus the engine
+// — "Bring a page back" (a scoped two-pass read of your years) and the quiet
+// "On this day" ladder. Mirrors the web. (Offline-draft cache + push nudges come
+// later; push needs the backend device_tokens table + cron.)
 export default function Today() {
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
@@ -29,6 +33,33 @@ export default function Today() {
   const latest = useRef("");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saving = useRef(false);
+
+  // The engine run (Bring a page back). A long archive is a two-pass model read
+  // and can take a couple of minutes, so we show calm, time-aware reassurance
+  // while pending — a silent wait reads as "broken."
+  const [run, setRun] = useState<MemoryRunResult | null>(null);
+  const [pending, setPending] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    if (!pending) {
+      setElapsed(0);
+      return;
+    }
+    const t = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [pending]);
+
+  async function onBringPageBack() {
+    setRun(null);
+    setPending(true);
+    try {
+      setRun(await bringPageBack());
+    } catch {
+      setRun({ surfaced: false, reason: "error" });
+    } finally {
+      setPending(false);
+    }
+  }
 
   async function flush() {
     const body = latest.current;
@@ -81,8 +112,68 @@ export default function Today() {
         }}
         keyboardShouldPersistTaps="handled"
       >
-        <Text className="text-4xl text-deep-brown">Today</Text>
-        <Text className="text-soft-ink mt-1">{longDate(todayISO())}</Text>
+        <View className="flex-row items-end justify-between mb-8">
+          <View>
+            <Text className="text-4xl text-deep-brown">Today</Text>
+            <Text className="text-soft-ink mt-1">{longDate(todayISO())}</Text>
+          </View>
+          <Pressable
+            onPress={onBringPageBack}
+            disabled={pending}
+            className="rounded-full border border-border px-4 py-2 disabled:opacity-50"
+          >
+            <Text className="text-soft-ink text-sm">
+              {pending ? "reading…" : "✦ Bring a page back"}
+            </Text>
+          </Pressable>
+        </View>
+
+        {/* While reading, calm time-aware reassurance so the long read never
+            reads as a failure. */}
+        {pending && (
+          <View className="border border-border/70 rounded-2xl bg-surface/50 p-6 mb-8">
+            <Text className="text-soft-ink leading-relaxed">
+              {elapsed < 10
+                ? "Reading through your pages…"
+                : elapsed < 35
+                  ? "Still reading, looking across the years…"
+                  : elapsed < 90
+                    ? "Your archive is large, so this takes a moment. Hang tight, Yadegar is still reading."
+                    : "Almost there, a long archive takes a little longer to read."}
+            </Text>
+          </View>
+        )}
+
+        {/* A returned page (or honest silence), shown only after asking. */}
+        {run && (
+          <View className="mb-8">
+            {run.surfaced && run.memory ? (
+              <View className="gap-3">
+                <MemoryCard memory={run.memory} />
+                <Pressable onPress={() => setRun(null)} hitSlop={8}>
+                  <Text className="text-faint-ink text-xs">close</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <View className="border border-border/70 rounded-2xl bg-surface/50 p-6">
+                <Text className="text-soft-ink leading-relaxed">
+                  {run.reason === "crisis"
+                    ? run.supportMessage
+                    : run.reason === "quota"
+                      ? "You've used this month's returns. Revisiting what's already returned to you is always free."
+                      : run.reason === "not_enough"
+                        ? "Write or bring in a few pages first, and Yadegar will have something to return."
+                        : run.reason === "error"
+                          ? "Something interrupted the reading. Try again in a moment."
+                          : "Nothing honest surfaced this time. That's okay, Yadegar is better quiet than false."}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Date-based returns from this day in years past, quiet when empty. */}
+        <OnThisDay />
 
         <TextInput
           value={text}
@@ -91,7 +182,7 @@ export default function Today() {
           placeholderTextColor="#A59B8D"
           multiline
           textAlignVertical="top"
-          className="mt-8 min-h-[280px] text-lg leading-relaxed text-ink"
+          className="min-h-[280px] text-lg leading-relaxed text-ink"
         />
       </ScrollView>
 

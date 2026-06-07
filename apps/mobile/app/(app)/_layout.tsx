@@ -2,8 +2,9 @@ import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../lib/theme";
 
-// The signed-in tab bar. Today (write) + Library (read). Look back / Shop arrive in
-// later phases. entry/[id] is a hidden route (pushed from Library).
+// The signed-in tab bar. Today (write) + Library (read) + Returns (the engine's
+// archive). entry/[id] and look-back are hidden routes (pushed from a list / a
+// "Look back" link). Shop arrives in a later phase.
 export default function AppLayout() {
   return (
     <Tabs
@@ -35,7 +36,17 @@ export default function AppLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="returns"
+        options={{
+          title: "Returns",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="sparkles-outline" size={size} color={color} />
+          ),
+        }}
+      />
       <Tabs.Screen name="entry/[id]" options={{ href: null }} />
+      <Tabs.Screen name="look-back" options={{ href: null }} />
     </Tabs>
   );
 }
