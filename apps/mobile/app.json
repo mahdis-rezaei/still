@@ -12,7 +12,8 @@
     },
     "ios": {
       "bundleIdentifier": "com.yadegar.app",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "usesAppleSignIn": true
     },
     "android": {
       "package": "com.yadegar.app"
@@ -26,7 +27,8 @@
         {
           "faceIDPermission": "Allow Yadegar to use Face ID to keep your journal private."
         }
-      ]
+      ],
+      "expo-apple-authentication"
     ],
     "experiments": {
       "typedRoutes": true

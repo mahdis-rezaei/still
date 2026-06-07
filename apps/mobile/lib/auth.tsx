@@ -1,3 +1,4 @@
+import * as AppleAuthentication from "expo-apple-authentication";
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
 import {
@@ -31,6 +32,7 @@ interface AuthState {
   signUp: (email: string, password: string, name?: string) => Promise<void>;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  signInWithApple: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
@@ -91,6 +93,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(me);
   };
 
+  const signInWithApple = async () => {
+    const credential = await AppleAuthentication.signInAsync({
+      requestedScopes: [
+        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+        AppleAuthentication.AppleAuthenticationScope.EMAIL,
+      ],
+    });
+
+    if (!credential.identityToken) {
+      throw new Error("Apple sign-in did not return an identity token");
+    }
+
+    const r = await api<MobileUser & { token?: string }>("/auth/apple/mobile", {
+      method: "POST",
+      body: {
+        identityToken: credential.identityToken,
+        fullName: credential.fullName,
+      },
+    });
+
+    if (r.token) await setToken(r.token);
+    setUser(r);
+  };
+
   const signOut = async () => {
     try {
       await api("/auth/logout", { method: "POST" });
@@ -102,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut, signInWithGoogle }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut, signInWithGoogle, signInWithApple }}>
       {children}
     </AuthContext.Provider>
   );

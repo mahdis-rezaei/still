@@ -1,18 +1,27 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, TextInput, Pressable, ActivityIndicator } from "react-native";
+import * as AppleAuthentication from "expo-apple-authentication";
 import { useAuth } from "../../lib/auth";
 
 // Email/password auth. Google + Sign in with Apple land in Phase 0.x (native
 // flows). The look mirrors the web's calm auth screen.
 export default function SignIn() {
-  const { signIn, signUp, signInWithGoogle } = useAuth();
+  const { signIn, signUp, signInWithGoogle, signInWithApple } = useAuth();
   const [mode, setMode] = useState<"in" | "up">("in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [socialBusy, setSocialBusy] = useState(false);
+  const [appleBusy, setAppleBusy] = useState(false);
+  const [appleAvailable, setAppleAvailable] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    AppleAuthentication.isAvailableAsync()
+      .then(setAppleAvailable)
+      .catch(() => setAppleAvailable(false));
+  }, []);
 
   async function submitGoogle() {
     setSocialBusy(true);
@@ -23,6 +32,20 @@ export default function SignIn() {
       setError("Google sign-in didn't work. Please try again.");
     } finally {
       setSocialBusy(false);
+    }
+  }
+
+  async function submitApple() {
+    if (busy || socialBusy || appleBusy) return;
+
+    setAppleBusy(true);
+    setError(null);
+    try {
+      await signInWithApple();
+    } catch {
+      setError("Apple sign-in didn't work. Please try again.");
+    } finally {
+      setAppleBusy(false);
     }
   }
 
@@ -57,6 +80,16 @@ export default function SignIn() {
           <Text className="text-ink text-base">Continue with Google</Text>
         )}
       </Pressable>
+
+      {appleAvailable && (
+        <AppleAuthentication.AppleAuthenticationButton
+          buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+          buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+          cornerRadius={24}
+          style={{ height: 48, marginTop: 12 }}
+          onPress={submitApple}
+        />
+      )}
 
       <View className="flex-row items-center gap-3 my-5">
         <View className="h-px flex-1 bg-border" />
