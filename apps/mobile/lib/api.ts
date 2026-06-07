@@ -8,7 +8,7 @@ import { setAuthTokenGetter, setBaseUrl } from "../../../lib/api-client-react/sr
 // @workspace/api-client-react once Metro monorepo resolution is set up.)
 
 const TOKEN_KEY = "yadegar.session";
-const API_ORIGIN = process.env.EXPO_PUBLIC_API_URL ?? "https://yadegarjournal.com";
+export const API_ORIGIN = process.env.EXPO_PUBLIC_API_URL ?? "https://yadegarjournal.com";
 const API_URL = `${API_ORIGIN}/api`;
 
 setBaseUrl(API_URL);

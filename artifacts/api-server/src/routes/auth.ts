@@ -62,9 +62,40 @@ const credentialLimiter = rateLimit({
 });
 
 const OAUTH_STATE_COOKIE = "still_oauth_state";
+const OAUTH_RETURN_TO_COOKIE = "still_oauth_return_to";
 
 function appUrl(): string {
   return (process.env.APP_URL ?? "http://localhost:5173").replace(/\/+$/, "");
+}
+
+function mobileReturnTo(raw: unknown): string | null {
+  if (typeof raw !== "string" || !raw) return null;
+
+  try {
+    const url = new URL(raw);
+    if (
+      url.protocol === "yadegar:" ||
+      url.protocol === "exp:" ||
+      url.protocol === "exps:"
+    ) {
+      return raw;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+function appendOAuthResult(
+  returnTo: string,
+  params: Record<string, string>,
+): string {
+  const url = new URL(returnTo);
+  for (const [key, value] of Object.entries(params)) {
+    url.searchParams.set(key, value);
+  }
+  return url.toString();
 }
 
 // The public shape of a user — never leak passwordHash or googleId.
@@ -433,27 +464,45 @@ router.post(
 // ── Google OAuth ─────────────────────────────────────────────────────────────
 
 router.get("/auth/google", (req, res): void => {
+  const returnTo = mobileReturnTo(req.query.returnTo);
+
   if (!googleConfigured()) {
+    if (returnTo) {
+      res.redirect(appendOAuthResult(returnTo, { error: "google_unconfigured" }));
+      return;
+    }
     res.redirect(`${appUrl()}/login?error=google_unconfigured`);
     return;
   }
+
   const state = randomBytes(16).toString("hex");
-  res.cookie(OAUTH_STATE_COOKIE, state, {
+  const cookieOptions = {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: "lax" as const,
     secure: process.env.NODE_ENV === "production",
     maxAge: 1000 * 60 * 10,
     path: "/",
-  });
+  };
+
+  res.cookie(OAUTH_STATE_COOKIE, state, cookieOptions);
+  if (returnTo) res.cookie(OAUTH_RETURN_TO_COOKIE, returnTo, cookieOptions);
+
   res.redirect(buildGoogleAuthUrl(state));
 });
 
 router.get("/auth/google/callback", async (req, res): Promise<void> => {
   const { code, state } = req.query as { code?: string; state?: string };
   const expectedState = req.cookies?.[OAUTH_STATE_COOKIE] as string | undefined;
+  const returnTo = mobileReturnTo(req.cookies?.[OAUTH_RETURN_TO_COOKIE]);
+
   res.clearCookie(OAUTH_STATE_COOKIE, { path: "/" });
+  res.clearCookie(OAUTH_RETURN_TO_COOKIE, { path: "/" });
 
   if (!code || !state || !expectedState || state !== expectedState) {
+    if (returnTo) {
+      res.redirect(appendOAuthResult(returnTo, { error: "google_failed" }));
+      return;
+    }
     res.redirect(`${appUrl()}/login?error=google_failed`);
     return;
   }
@@ -501,10 +550,18 @@ router.get("/auth/google/callback", async (req, res): Promise<void> => {
       }
     }
 
-    await startSession(res, user.id);
+    const token = await startSession(res, user.id);
+    if (returnTo) {
+      res.redirect(appendOAuthResult(returnTo, { token }));
+      return;
+    }
     res.redirect(appUrl());
   } catch (err) {
     req.log.error({ err }, "Google callback error");
+    if (returnTo) {
+      res.redirect(appendOAuthResult(returnTo, { error: "google_failed" }));
+      return;
+    }
     res.redirect(`${appUrl()}/login?error=google_failed`);
   }
 });

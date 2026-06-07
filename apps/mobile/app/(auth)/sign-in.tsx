@@ -5,13 +5,26 @@ import { useAuth } from "../../lib/auth";
 // Email/password auth. Google + Sign in with Apple land in Phase 0.x (native
 // flows). The look mirrors the web's calm auth screen.
 export default function SignIn() {
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, signInWithGoogle } = useAuth();
   const [mode, setMode] = useState<"in" | "up">("in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [socialBusy, setSocialBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function submitGoogle() {
+    setSocialBusy(true);
+    setError(null);
+    try {
+      await signInWithGoogle();
+    } catch {
+      setError("Google sign-in didn't work. Please try again.");
+    } finally {
+      setSocialBusy(false);
+    }
+  }
 
   async function submit() {
     setBusy(true);
@@ -32,6 +45,26 @@ export default function SignIn() {
       <Text className="text-soft-ink text-center mt-1 mb-8">
         {mode === "in" ? "Welcome back." : "Begin your journal."}
       </Text>
+
+      <Pressable
+        onPress={submitGoogle}
+        disabled={busy || socialBusy}
+        className="border border-border bg-surface rounded-full py-3.5 items-center disabled:opacity-50"
+      >
+        {socialBusy ? (
+          <ActivityIndicator color="#3A2F25" />
+        ) : (
+          <Text className="text-ink text-base">Continue with Google</Text>
+        )}
+      </Pressable>
+
+      <View className="flex-row items-center gap-3 my-5">
+        <View className="h-px flex-1 bg-border" />
+        <Text className="text-faint-ink text-xs uppercase tracking-widest">
+          or
+        </Text>
+        <View className="h-px flex-1 bg-border" />
+      </View>
 
       {mode === "up" && (
         <TextInput
