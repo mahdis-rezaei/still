@@ -20,7 +20,13 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow Yadegar to use Face ID to keep your journal private."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
