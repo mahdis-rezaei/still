@@ -45,6 +45,13 @@ default**: with no Shopify env vars, `/shop` shows a gentle "coming soon" and th
    - `unauthenticated_read_checkouts`
    Then **Install app** → API credentials → copy the **Storefront API access token**.
 
+   > ⚠️ **Use the Storefront API token, not the Admin token.** The credentials page
+   > shows two: the **Admin API access token** (`shpat_…`) and the **Storefront API
+   > access token** (a ~32-char hex string). `SHOPIFY_STOREFRONT_TOKEN` must be the
+   > **Storefront** one — the Storefront API rejects an Admin token with **401**.
+   > Also: after changing the secret, **restart the server** so it picks up the new
+   > value (a restart that races the save will keep the old token).
+
 5. **Set the env vars** (`SHOPIFY_STORE_DOMAIN`, `SHOPIFY_STOREFRONT_TOKEN`) in
    Replit secrets, restart, and `/shop` lights up.
 
