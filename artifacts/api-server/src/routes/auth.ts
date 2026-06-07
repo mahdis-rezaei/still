@@ -1,5 +1,10 @@
 import { Router } from "express";
-import { randomBytes } from "node:crypto";
+import {
+  createPublicKey,
+  randomBytes,
+  verify as verifySignature,
+  type JsonWebKey,
+} from "node:crypto";
 import { eq } from "drizzle-orm";
 import { db, usersTable, sessionsTable, type User } from "@workspace/db";
 import {
@@ -96,6 +101,119 @@ function appendOAuthResult(
     url.searchParams.set(key, value);
   }
   return url.toString();
+}
+
+const APPLE_ISSUER = "https://appleid.apple.com";
+const APPLE_JWKS_URL = "https://appleid.apple.com/auth/keys";
+let appleKeysCache: { keys: JsonWebKey[]; expiresAt: number } | null = null;
+
+type AppleJwtHeader = {
+  alg?: string;
+  kid?: string;
+};
+
+type AppleJwtPayload = {
+  iss?: string;
+  aud?: string | string[];
+  exp?: number;
+  sub?: string;
+  email?: string;
+  email_verified?: boolean | string;
+};
+
+function base64UrlDecode(value: string): Buffer {
+  const padded = value.replace(/-/g, "+").replace(/_/g, "/");
+  return Buffer.from(padded, "base64");
+}
+
+function parseJwtPart<T>(value: string): T {
+  return JSON.parse(base64UrlDecode(value).toString("utf8")) as T;
+}
+
+function appleAudience(): string {
+  return process.env.APPLE_CLIENT_ID ?? process.env.IOS_BUNDLE_ID ?? "com.yadegar.app";
+}
+
+async function applePublicKeys(): Promise<JsonWebKey[]> {
+  if (appleKeysCache && appleKeysCache.expiresAt > Date.now()) {
+    return appleKeysCache.keys;
+  }
+
+  const res = await fetch(APPLE_JWKS_URL);
+  if (!res.ok) throw new Error(`Apple JWKS fetch failed: ${res.status}`);
+
+  const body = (await res.json()) as { keys?: JsonWebKey[] };
+  const keys = body.keys ?? [];
+  appleKeysCache = {
+    keys,
+    expiresAt: Date.now() + 1000 * 60 * 60 * 6,
+  };
+  return keys;
+}
+
+async function verifyAppleIdentityToken(
+  identityToken: string,
+): Promise<AppleJwtPayload & { sub: string }> {
+  const [encodedHeader, encodedPayload, encodedSignature] = identityToken.split(".");
+  if (!encodedHeader || !encodedPayload || !encodedSignature) {
+    throw new Error("Malformed Apple identity token");
+  }
+
+  const header = parseJwtPart<AppleJwtHeader>(encodedHeader);
+  if (!header.kid || !header.alg) throw new Error("Apple token missing header");
+
+  if (header.alg !== "RS256" && header.alg !== "ES256") {
+    throw new Error(`Unsupported Apple token alg: ${header.alg}`);
+  }
+
+  const keys = await applePublicKeys();
+  const jwk = keys.find((key) => key.kid === header.kid);
+  if (!jwk) throw new Error("Apple signing key not found");
+
+  const publicKey = createPublicKey({ key: jwk, format: "jwk" });
+  const signingInput = Buffer.from(`${encodedHeader}.${encodedPayload}`);
+  const signature = base64UrlDecode(encodedSignature);
+
+  const ok =
+    header.alg === "ES256"
+      ? verifySignature(
+          "sha256",
+          signingInput,
+          { key: publicKey, dsaEncoding: "ieee-p1363" },
+          signature,
+        )
+      : verifySignature("RSA-SHA256", signingInput, publicKey, signature);
+
+  if (!ok) throw new Error("Apple token signature failed");
+
+  const payload = parseJwtPart<AppleJwtPayload>(encodedPayload);
+  if (payload.iss !== APPLE_ISSUER) throw new Error("Bad Apple token issuer");
+
+  const aud = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
+  if (!aud.includes(appleAudience())) throw new Error("Bad Apple token audience");
+
+  if (!payload.exp || payload.exp * 1000 <= Date.now()) {
+    throw new Error("Expired Apple token");
+  }
+
+  if (!payload.sub) throw new Error("Apple token missing subject");
+
+  return payload as AppleJwtPayload & { sub: string };
+}
+
+function appleEmailIsVerified(value: unknown): boolean {
+  return value === true || value === "true";
+}
+
+function appleDisplayName(raw: unknown): string | null {
+  if (!raw || typeof raw !== "object") return null;
+
+  const value = raw as { givenName?: unknown; familyName?: unknown };
+  const parts = [value.givenName, value.familyName]
+    .filter((part): part is string => typeof part === "string" && part.trim().length > 0)
+    .map((part) => part.trim());
+
+  return parts.join(" ") || null;
 }
 
 // The public shape of a user — never leak passwordHash or googleId.
@@ -212,6 +330,86 @@ router.post("/auth/login", credentialLimiter, async (req, res): Promise<void> =>
     res.status(500).json({ error: "Failed to sign in" });
   }
 });
+
+
+router.post(
+  "/auth/apple/mobile",
+  credentialLimiter,
+  async (req, res): Promise<void> => {
+    const body = (req.body ?? {}) as {
+      identityToken?: unknown;
+      fullName?: unknown;
+    };
+
+    if (typeof body.identityToken !== "string" || !body.identityToken) {
+      res.status(400).json({ error: "Apple identity token is required" });
+      return;
+    }
+
+    try {
+      const profile = await verifyAppleIdentityToken(body.identityToken);
+      const verifiedEmail =
+        appleEmailIsVerified(profile.email_verified) &&
+        typeof profile.email === "string"
+          ? profile.email.trim().toLowerCase()
+          : null;
+      const name = appleDisplayName(body.fullName);
+
+      let [user] = await db
+        .select()
+        .from(usersTable)
+        .where(eq(usersTable.appleId, profile.sub));
+
+      if (!user) {
+        if (!verifiedEmail) {
+          res.status(400).json({
+            error: "Apple did not share a verified email for this account.",
+          });
+          return;
+        }
+
+        const [byEmail] = await db
+          .select()
+          .from(usersTable)
+          .where(eq(usersTable.email, verifiedEmail));
+
+        if (byEmail) {
+          [user] = await db
+            .update(usersTable)
+            .set({
+              appleId: profile.sub,
+              name: byEmail.name ?? name,
+              emailVerified: true,
+              updatedAt: new Date(),
+            })
+            .where(eq(usersTable.id, byEmail.id))
+            .returning();
+        } else {
+          [user] = await db
+            .insert(usersTable)
+            .values({
+              email: verifiedEmail,
+              appleId: profile.sub,
+              name,
+              emailVerified: true,
+            })
+            .returning();
+
+          sendEmail({
+            to: user.email,
+            ...welcomeEmail({ name: user.name }),
+          }).catch((err) => req.log.error({ err }, "Welcome email failed"));
+        }
+      }
+
+      const token = await startSession(res, user.id);
+      res.json(authResponse(req, user, token));
+    } catch (err) {
+      req.log.error({ err }, "Apple mobile auth error");
+      res.status(401).json({ error: "Apple sign-in failed" });
+    }
+  },
+);
 
 router.post("/auth/logout", async (req, res): Promise<void> => {
   try {
