@@ -129,9 +129,19 @@ Year-in-Pages/Book (print), full offline library.
     look-back, returns archive), `MemoryCard` / `DateMemoryCard` / `OnThisDay`,
     "Bring a page back" + On This Day on Today, a **Returns** tab, and a Look Back
     browse screen, all on the same backend endpoints as web (no second engine).
-    *Push is deferred within this phase* — it needs the backend `device_tokens`
-    table + register endpoint + the nudge cron sending Expo Push (a Replit change),
-    so it lands when that backend piece is built.
+  - *Status: push done (pending a native rebuild)* — backend: a `device_tokens`
+    table (additive), `POST`/`DELETE /notifications/devices` (register/unregister,
+    upsert by token), `lib/push.ts` (Expo Push API send + self-healing prune of
+    `DeviceNotRegistered` tokens), and the **nudge cron now sends a push alongside
+    each email** (writing + on-this-day + engine memory), gated by the SAME prefs +
+    `isDue` + memory-sensitivity, so the engine's silence discipline holds (a memory
+    push only ever carries a page that surfaced). Client: `expo-notifications` +
+    `expo-device`, `lib/push.ts` (`registerForPush`/`unregisterForPush`, fully
+    defensive — no-ops on simulator / denied / error), wired into the auth lifecycle
+    (register on login/launch, unregister on sign-out). **Caveat:** push is a native
+    module, so it needs `npx expo prebuild` + a dev/EAS build (not Expo Go) and an
+    EAS `projectId` to deliver in production. v1.x refinement: a separate push
+    on/off toggle (today it reuses the existing email cadence prefs).
 - **Phase 3 — Membership (IAP):** RevenueCat + App Store/Play products, paywall,
   webhook→`plan` sync, honor existing web members, `plan_source`.
 - **Phase 4 — Native delights + polish:** "On this day" widget, share-sheet,
