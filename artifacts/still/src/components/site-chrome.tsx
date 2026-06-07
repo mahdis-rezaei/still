@@ -60,6 +60,13 @@ export function SiteNav({ showWhy = true }: { showWhy?: boolean }) {
       {showWhy && (
         <div className="flex items-center gap-5">
           <Link
+            href="/shop"
+            className="font-sans text-xs uppercase tracking-[0.18em] text-soft-ink hover:text-ink transition-colors"
+            data-testid="link-shop"
+          >
+            Shop
+          </Link>
+          <Link
             href="/pricing"
             className="font-sans text-xs uppercase tracking-[0.18em] text-soft-ink hover:text-ink transition-colors"
             data-testid="link-pricing"

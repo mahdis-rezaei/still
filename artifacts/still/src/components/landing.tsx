@@ -247,6 +247,12 @@ export function Landing({
         </span>
         <div className="flex items-center gap-5">
           <Link
+            href="/shop"
+            className="hidden sm:inline font-sans text-xs uppercase tracking-[0.18em] text-soft-ink hover:text-ink transition-colors"
+          >
+            Shop
+          </Link>
+          <Link
             href="/pricing"
             className="hidden sm:inline font-sans text-xs uppercase tracking-[0.18em] text-soft-ink hover:text-ink transition-colors"
           >

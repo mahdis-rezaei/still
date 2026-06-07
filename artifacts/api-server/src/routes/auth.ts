@@ -83,9 +83,29 @@ function toAuthUser(u: User) {
   };
 }
 
-async function startSession(res: import("express").Response, userId: string) {
+async function startSession(
+  res: import("express").Response,
+  userId: string,
+): Promise<string> {
   const { token, expiresAt } = await createSession(userId);
   setSessionCookie(res, token, expiresAt);
+  return token;
+}
+
+// Native clients can't use the httpOnly cookie, so they ask for the session token
+// in the response body via this header. Web stays cookie-only (token never leaves
+// the httpOnly cookie), preserving its XSS protection.
+function wantsToken(req: import("express").Request): boolean {
+  return req.get("X-Yadegar-Client") === "mobile";
+}
+
+// The auth response: the user, plus the bearer token for native clients only.
+function authResponse(
+  req: import("express").Request,
+  user: User,
+  token: string,
+): ReturnType<typeof toAuthUser> & { token?: string } {
+  return { ...toAuthUser(user), ...(wantsToken(req) ? { token } : {}) };
 }
 
 // ── Email + password ─────────────────────────────────────────────────────────
@@ -120,14 +140,14 @@ router.post("/auth/register", credentialLimiter, async (req, res): Promise<void>
       .values({ email, passwordHash, name: parsed.data.name ?? null })
       .returning();
 
-    await startSession(res, user.id);
+    const token = await startSession(res, user.id);
     await sendVerification(user, req.log); // best-effort; soft verification
     // A warm welcome, separate from the confirm. Fire-and-forget so a mail
     // hiccup never fails the signup.
     sendEmail({ to: user.email, ...welcomeEmail({ name: user.name }) }).catch(
       (err) => req.log.error({ err }, "Welcome email failed"),
     );
-    res.status(201).json(toAuthUser(user));
+    res.status(201).json(authResponse(req, user, token));
   } catch (err) {
     req.log.error({ err }, "Register route error");
     res.status(500).json({ error: "Failed to create account" });
@@ -154,8 +174,8 @@ router.post("/auth/login", credentialLimiter, async (req, res): Promise<void> =>
       res.status(401).json({ error: "Incorrect email or password" });
       return;
     }
-    await startSession(res, user.id);
-    res.json(toAuthUser(user));
+    const token = await startSession(res, user.id);
+    res.json(authResponse(req, user, token));
   } catch (err) {
     req.log.error({ err }, "Login route error");
     res.status(500).json({ error: "Failed to sign in" });

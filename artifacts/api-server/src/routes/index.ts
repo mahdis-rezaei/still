@@ -17,6 +17,7 @@ import importsRouter from "./imports";
 import notificationsRouter from "./notifications";
 import cronRouter from "./cron";
 import billingRouter from "./billing";
+import shopRouter from "./shop";
 import stillRouter from "./still";
 import { rateLimit, ipKey, isLoopback } from "../lib/rate-limit";
 
@@ -54,6 +55,7 @@ router.use(importsRouter);
 router.use(notificationsRouter);
 router.use(cronRouter);
 router.use(billingRouter);
+router.use(shopRouter);
 router.use("/still", engineGuard);
 router.use(stillRouter);
 

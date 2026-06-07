@@ -202,6 +202,7 @@ export function AppNav() {
             {navLink("/today", "Today", isActive("/today"))}
             {navLink("/look-back", "Look back", lookBackActive)}
             {navLink("/library", "Explore", exploreActive)}
+            {navLink("/shop", "Shop", isActive("/shop"))}
           </div>
         </div>
         <div className="flex items-center gap-1">
@@ -295,6 +296,7 @@ export function AppNav() {
             {mobileItem("/today", "Today", isActive("/today"))}
             {mobileItem("/look-back", "Look back", lookBackActive)}
             {mobileItem("/library", "Explore", exploreActive)}
+            {mobileItem("/shop", "Shop", isActive("/shop"))}
             <div className="my-1 border-t border-border/60" />
             {mobileItem("/settings", "Settings", isActive("/settings"))}
             {mobileItem("/settings/profile", "My profile")}

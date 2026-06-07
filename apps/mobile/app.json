@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "Yadegar",
+    "slug": "yadegar",
+    "scheme": "yadegar",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#F7F1E6"
+    },
+    "ios": {
+      "bundleIdentifier": "com.yadegar.app",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.yadegar.app"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-asset"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
