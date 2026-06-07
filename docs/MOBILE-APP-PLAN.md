@@ -142,6 +142,8 @@ Year-in-Pages/Book (print), full offline library.
     module, so it needs `npx expo prebuild` + a dev/EAS build (not Expo Go) and an
     EAS `projectId` to deliver in production. v1.x refinement: a separate push
     on/off toggle (today it reuses the existing email cadence prefs).
+    **See `docs/MOBILE-EAS-BUILD.md`** for the step-by-step EAS dev-build + push
+    credentials (APNs / FCM) + delivery-test runbook.
 - **Phase 3 — Membership (IAP):** RevenueCat + App Store/Play products, paywall,
   webhook→`plan` sync, honor existing web members, `plan_source`.
 - **Phase 4 — Native delights + polish:** "On this day" widget, share-sheet,
