@@ -4,6 +4,7 @@ import { Slot, useRouter, useSegments } from "expo-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider, useAuth } from "../lib/auth";
+import { BiometricLockGate } from "../lib/biometric-lock";
 
 const queryClient = new QueryClient();
 
@@ -12,15 +13,19 @@ function Gate() {
   const { user, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const inAuthGroup = segments[0] === "(auth)";
 
   useEffect(() => {
     if (loading) return;
-    const inAuthGroup = segments[0] === "(auth)";
     if (!user && !inAuthGroup) router.replace("/(auth)/sign-in");
     else if (user && inAuthGroup) router.replace("/(app)/today");
-  }, [user, loading, segments, router]);
+  }, [user, loading, inAuthGroup, router]);
 
-  return <Slot />;
+  return (
+    <BiometricLockGate enabled={!loading && Boolean(user) && !inAuthGroup}>
+      <Slot />
+    </BiometricLockGate>
+  );
 }
 
 export default function RootLayout() {
