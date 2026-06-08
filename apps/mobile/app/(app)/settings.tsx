@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import { useAuth } from "../../lib/auth";
 import {
   getNotifications,
@@ -97,6 +98,7 @@ const SENSITIVITY: { value: MemorySensitivity; label: string }[] = [
 
 export default function Settings() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { user, signOut } = useAuth();
 
   const [name, setName] = useState(user?.name ?? "");
@@ -256,6 +258,16 @@ export default function Settings() {
                 onChange={setSens}
               />
             </View>
+          </Section>
+
+          <Section title="Your writing">
+            <Pressable onPress={() => router.push("/(app)/import")}>
+              <Text className="text-deep-brown">Import past journals</Text>
+              <Text className="text-faint-ink text-sm mt-1 leading-relaxed">
+                Paste writing from anywhere; Yadegar splits it into dated pages so
+                it has your history to read.
+              </Text>
+            </Pressable>
           </Section>
 
           <Section title="Privacy">
