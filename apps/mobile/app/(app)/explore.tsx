@@ -1,7 +1,6 @@
 import { ScrollView, Text, View, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppHeader } from "../../components/app-header";
 
 // Explore: the home for everything that isn't Today or Look back — mirrors the
 // web's Explore section (Library · Shelf · Collections · Capsules), plus the
@@ -38,12 +37,11 @@ export default function Explore() {
     <ScrollView
       className="flex-1 bg-background"
       contentContainerStyle={{
-        paddingTop: insets.top + 16,
+        paddingTop: 14,
         paddingHorizontal: 24,
         paddingBottom: insets.bottom + 48,
       }}
     >
-      <AppHeader />
       <Text className="text-4xl text-deep-brown">Explore</Text>
 
       {SECTIONS.map((s) => (

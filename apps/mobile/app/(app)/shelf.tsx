@@ -48,7 +48,7 @@ export default function Shelf() {
         />
       }
       contentContainerStyle={{
-        paddingTop: insets.top + 24,
+        paddingTop: 14,
         paddingHorizontal: 24,
         paddingBottom: insets.bottom + 48,
       }}

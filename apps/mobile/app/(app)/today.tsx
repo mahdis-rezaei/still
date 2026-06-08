@@ -16,7 +16,6 @@ import { useAuth } from "../../lib/auth";
 import { bringPageBack, type MemoryRunResult } from "../../lib/memories";
 import { MemoryCard } from "../../components/memory-card";
 import { OnThisDay } from "../../components/on-this-day";
-import { AppHeader } from "../../components/app-header";
 import { KeyboardDone, KEYBOARD_DONE_ID } from "../../components/keyboard-done";
 
 type JournalEntry = {
@@ -273,12 +272,11 @@ export default function Today() {
         className="flex-1"
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
-          paddingTop: insets.top + 24,
+          paddingTop: 14,
           paddingHorizontal: 24,
           paddingBottom: insets.bottom + 48,
         }}
       >
-        <AppHeader />
         <View className="flex-row items-start justify-between gap-4">
           <View className="flex-1">
             <Text className="text-4xl text-deep-brown">Today</Text>

@@ -11,7 +11,6 @@ import {
 import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { api } from "../../lib/api";
-import { AppHeader } from "../../components/app-header";
 
 type JournalEntry = {
   id: string;
@@ -93,12 +92,11 @@ export default function Library() {
         <RefreshControl refreshing={refreshing} onRefresh={() => void load({ refresh: true })} />
       }
       contentContainerStyle={{
-        paddingTop: insets.top + 24,
+        paddingTop: 14,
         paddingHorizontal: 24,
         paddingBottom: insets.bottom + 48,
       }}
     >
-      <AppHeader />
       <View className="flex-row items-start justify-between gap-4">
         <View className="flex-1">
           <Text className="text-4xl text-deep-brown">Library</Text>

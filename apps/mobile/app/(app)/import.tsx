@@ -90,14 +90,11 @@ export default function Import() {
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
-          paddingTop: insets.top + 16,
+          paddingTop: 14,
           paddingHorizontal: 24,
           paddingBottom: insets.bottom + 48,
         }}
       >
-        <Pressable onPress={() => router.back()} className="mb-4" hitSlop={8}>
-          <Text className="text-soft-ink">‹ Settings</Text>
-        </Pressable>
 
         <Text className="text-4xl text-deep-brown">Import</Text>
 

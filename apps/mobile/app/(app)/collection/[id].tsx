@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getCollection, type CollectionDetail } from "../../../lib/extras";
 import { EntryRefCard } from "../../../components/entry-ref-card";
@@ -9,7 +9,6 @@ import { EntryRefCard } from "../../../components/entry-ref-card";
 export default function CollectionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const router = useRouter();
   const [data, setData] = useState<CollectionDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -35,15 +34,11 @@ export default function CollectionDetailScreen() {
     <ScrollView
       className="flex-1 bg-background"
       contentContainerStyle={{
-        paddingTop: insets.top + 16,
+        paddingTop: 14,
         paddingHorizontal: 24,
         paddingBottom: insets.bottom + 48,
       }}
     >
-      <Pressable onPress={() => router.back()} className="mb-4" hitSlop={8}>
-        <Text className="text-soft-ink">‹ Collections</Text>
-      </Pressable>
-
       {loading ? (
         <View className="min-h-80 items-center justify-center">
           <ActivityIndicator color="#3A2F25" />

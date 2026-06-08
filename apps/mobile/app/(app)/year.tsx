@@ -40,7 +40,7 @@ export default function Year() {
     <ScrollView
       className="flex-1 bg-background"
       contentContainerStyle={{
-        paddingTop: insets.top + 24,
+        paddingTop: 14,
         paddingHorizontal: 24,
         paddingBottom: insets.bottom + 48,
       }}
