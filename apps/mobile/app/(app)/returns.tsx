@@ -11,7 +11,6 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { listMemories, updateMemory, type Memory } from "../../lib/memories";
 import { MemoryCard } from "../../components/memory-card";
-import { AppHeader } from "../../components/app-header";
 
 // Returns: the archive of pages the engine has brought back. They stay here to
 // revisit (revisiting is always free). Star to keep, dismiss to retire. Mirrors
@@ -80,12 +79,11 @@ export default function Returns() {
         />
       }
       contentContainerStyle={{
-        paddingTop: insets.top + 24,
+        paddingTop: 14,
         paddingHorizontal: 24,
         paddingBottom: insets.bottom + 48,
       }}
     >
-      <AppHeader />
       <View>
         <Text className="text-4xl text-deep-brown">Returns</Text>
         <Text className="text-soft-ink mt-1 leading-relaxed">

@@ -16,7 +16,6 @@ import {
   type LookBack as LookBackData,
 } from "../../lib/memories";
 import { DateMemoryCard } from "../../components/date-memory-card";
-import { AppHeader } from "../../components/app-header";
 
 // Look Back: every date-based way a page returns, gathered into quiet sections —
 // on this day, around this time, the ones you treasured, and pages long unopened.
@@ -94,12 +93,11 @@ export default function LookBack() {
         />
       }
       contentContainerStyle={{
-        paddingTop: insets.top + 24,
+        paddingTop: 14,
         paddingHorizontal: 24,
         paddingBottom: insets.bottom + 48,
       }}
     >
-      <AppHeader />
       <View>
         <Text className="text-4xl text-deep-brown">Look back</Text>
         <Text className="text-soft-ink mt-1 leading-relaxed">

@@ -1,5 +1,6 @@
 import { Tabs } from "expo-router";
 import { TabBar } from "../../components/tab-bar";
+import { AppHeader } from "../../components/app-header";
 
 // Navigation mirrors the web: primary destinations are Today · Look back ·
 // Explore (the bottom tabs), and the full menu — Explore's sub-sections, Returns,
@@ -9,7 +10,7 @@ export default function AppLayout() {
   return (
     <Tabs
       tabBar={(props) => <TabBar {...props} />}
-      screenOptions={{ headerShown: false }}
+      screenOptions={{ headerShown: true, header: () => <AppHeader /> }}
     >
       <Tabs.Screen name="today" options={{ title: "Today" }} />
       <Tabs.Screen name="look-back" options={{ title: "Look back" }} />

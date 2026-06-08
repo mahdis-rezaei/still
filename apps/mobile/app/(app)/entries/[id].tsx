@@ -297,23 +297,11 @@ export default function EntryDetail() {
         className="flex-1"
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
-          paddingTop: insets.top + 24,
+          paddingTop: 14,
           paddingHorizontal: 24,
           paddingBottom: insets.bottom + 48,
         }}
       >
-        <View className="flex-row items-center justify-between">
-          <Pressable onPress={() => router.back()}>
-            <Text className="text-soft-ink">Back</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() => router.push("/(app)/today")}
-            className="rounded-full border border-border bg-surface px-4 py-2"
-          >
-            <Text className="text-soft-ink">Today</Text>
-          </Pressable>
-        </View>
 
         {status === "loading" ? (
           <View className="min-h-80 items-center justify-center">

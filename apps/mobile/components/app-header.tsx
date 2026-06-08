@@ -4,19 +4,20 @@ import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../lib/auth";
 
-// A web-parity top bar: the Yadegar wordmark + a ☰ menu that opens the FULL
-// navigation (Today · Look back · Explore items · Returns · Shop · account),
-// mirroring the website's menu. Bottom tabs still handle the primary
-// destinations; this carries everything else. Pure JS (RN Modal) — no native
-// drawer dependency, so it works on the current build.
+// The fixed top bar, rendered as the navigator header on every signed-in screen:
+// a back arrow (when there's somewhere to go back to) + the Yadegar wordmark on
+// the left, and a ☰ on the right that opens the FULL menu — mirroring the web's
+// nav (Today · Look back · Returns · Explore items · Shop · account). Pure JS
+// (RN Modal) — no native drawer dependency.
 
-type Item = { label: string; to?: string; action?: () => void; muted?: boolean };
+type Item = { label: string; to?: string; action?: () => void };
 
 export function AppHeader() {
   const router = useRouter();
   const { signOut } = useAuth();
-  const [open, setOpen] = useState(false);
   const insets = useSafeAreaInsets();
+  const [open, setOpen] = useState(false);
+  const canBack = router.canGoBack();
 
   function go(to: string) {
     setOpen(false);
@@ -69,13 +70,23 @@ export function AppHeader() {
   ];
 
   return (
-    <>
-      <View className="flex-row items-center justify-between mb-4">
-        <Pressable onPress={() => go("/(app)/today")} hitSlop={8}>
-          <Text className="text-2xl text-deep-brown">
-            Yadegar <Text className="text-soft-ink text-base">یادگار</Text>
-          </Text>
-        </Pressable>
+    <View
+      style={{ paddingTop: insets.top }}
+      className="bg-background border-b border-border/60"
+    >
+      <View className="flex-row items-center justify-between px-5 py-2.5">
+        <View className="flex-row items-center gap-2">
+          {canBack ? (
+            <Pressable onPress={() => router.back()} hitSlop={10}>
+              <Text className="text-soft-ink text-2xl">‹</Text>
+            </Pressable>
+          ) : null}
+          <Pressable onPress={() => go("/(app)/today")} hitSlop={8}>
+            <Text className="text-xl text-deep-brown">
+              Yadegar <Text className="text-soft-ink text-sm">یادگار</Text>
+            </Text>
+          </Pressable>
+        </View>
         <Pressable
           onPress={() => setOpen(true)}
           hitSlop={10}
@@ -100,7 +111,6 @@ export function AppHeader() {
               <Text className="text-soft-ink text-lg">✕</Text>
             </Pressable>
           </View>
-
           <ScrollView
             contentContainerStyle={{
               paddingHorizontal: 24,
@@ -128,6 +138,6 @@ export function AppHeader() {
           </ScrollView>
         </View>
       </Modal>
-    </>
+    </View>
   );
 }

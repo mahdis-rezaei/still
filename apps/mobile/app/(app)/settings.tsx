@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../lib/auth";
-import { AppHeader } from "../../components/app-header";
 import {
   getNotifications,
   getPreferences,
@@ -190,12 +189,11 @@ export default function Settings() {
     <ScrollView
       className="flex-1 bg-background"
       contentContainerStyle={{
-        paddingTop: insets.top + 24,
+        paddingTop: 14,
         paddingHorizontal: 24,
         paddingBottom: insets.bottom + 48,
       }}
     >
-      <AppHeader />
       <Text className="text-4xl text-deep-brown">Settings</Text>
 
       {loading ? (
