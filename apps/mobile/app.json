@@ -35,7 +35,8 @@
           "faceIDPermission": "Allow Yadegar to use Face ID to keep your journal private."
         }
       ],
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true

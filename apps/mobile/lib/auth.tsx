@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { API_ORIGIN, api, setToken } from "./api";
+import { registerForPush, unregisterForPush } from "./push";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -47,6 +48,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const me = await api<MobileUser>("/auth/me");
         setUser(me);
+        // Refresh this device's push registration on every authenticated launch
+        // (the backend upserts; a rotated token self-heals). Fire-and-forget.
+        void registerForPush();
       } catch {
         setUser(null); // no/invalid token
       } finally {
@@ -62,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     if (r.token) await setToken(r.token);
     setUser(r);
+    void registerForPush();
   };
 
   const signUp = async (email: string, password: string, name?: string) => {
@@ -71,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     if (r.token) await setToken(r.token);
     setUser(r);
+    void registerForPush();
   };
 
   const signInWithGoogle = async () => {
@@ -91,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await setToken(token);
     const me = await api<MobileUser>("/auth/me");
     setUser(me);
+    void registerForPush();
   };
 
   const signInWithApple = async () => {
@@ -115,9 +122,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (r.token) await setToken(r.token);
     setUser(r);
+    void registerForPush();
   };
 
   const signOut = async () => {
+    // Unregister BEFORE logout/clearing the token — the DELETE call still needs
+    // the bearer token, and logout invalidates the session server-side.
+    await unregisterForPush();
     try {
       await api("/auth/logout", { method: "POST" });
     } catch {

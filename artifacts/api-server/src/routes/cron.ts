@@ -15,6 +15,7 @@ import {
   capsuleEmail,
 } from "../lib/email";
 import { runMemoryForUser } from "../lib/memory-engine";
+import { sendPushToUser } from "../lib/push";
 import { tagPendingEntries } from "../lib/resurface-safety";
 import { onThisDayForUser, onThisDayFramedSet } from "../lib/on-this-day";
 import { sweepMemoryJobs, enqueueMemoryJob } from "../lib/memory-jobs";
@@ -87,6 +88,7 @@ router.post("/cron/run-nudges", async (req, res): Promise<void> => {
     writingSent: 0,
     memorySent: 0,
     memorySilent: 0,
+    pushSent: 0,
     capsulesDelivered: 0,
     errors: 0,
   };
@@ -124,6 +126,18 @@ router.post("/cron/run-nudges", async (req, res): Promise<void> => {
           req.log.error({ err, userId: user.id }, "Writing nudge failed");
           summary.errors++;
         }
+        // The native counterpart, sent alongside email to any registered devices
+        // (no-op for web-only users). Never throws; a push failure is logged inside.
+        try {
+          const push = await sendPushToUser(user.id, {
+            title: "A page is waiting",
+            body: "What wants to be written today?",
+            data: { type: "writing" },
+          });
+          if (push.sent > 0) summary.pushSent++;
+        } catch (err) {
+          req.log.error({ err, userId: user.id }, "Writing push failed");
+        }
         await db
           .update(notificationPreferencesTable)
           .set({ lastWritingNudgeAt: new Date(), updatedAt: new Date() })
@@ -155,6 +169,16 @@ router.post("/cron/run-nudges", async (req, res): Promise<void> => {
               }),
             });
             summary.memorySent++;
+            try {
+              const push = await sendPushToUser(user.id, {
+                title: `On this day, ${monthYear(item.entryDate)}`,
+                body: item.excerpt.slice(0, 140),
+                data: { type: "on_this_day", entryId: item.entryId },
+              });
+              if (push.sent > 0) summary.pushSent++;
+            } catch (err) {
+              req.log.error({ err, userId: user.id }, "On-this-day push failed");
+            }
           } else {
             const result = await runMemoryForUser(user.id, {}, { kind: "auto" });
             if (result.surfaced && result.memory) {
@@ -172,6 +196,18 @@ router.post("/cron/run-nudges", async (req, res): Promise<void> => {
                 }),
               });
               summary.memorySent++;
+              // The engine already cleared every safety gate to surface this, so
+              // the push only ever carries a real, showable page.
+              try {
+                const push = await sendPushToUser(user.id, {
+                  title: "A page worth returning to",
+                  body: (m.quote || m.observation || "").slice(0, 140),
+                  data: { type: "memory", entryId: m.journalEntryId ?? null },
+                });
+                if (push.sent > 0) summary.pushSent++;
+              } catch (err) {
+                req.log.error({ err, userId: user.id }, "Memory push failed");
+              }
             } else {
               summary.memorySilent++;
             }
