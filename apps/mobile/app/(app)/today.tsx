@@ -103,7 +103,7 @@ function statusLabel(status: SaveStatus): string {
 }
 
 export default function Today() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const insets = useSafeAreaInsets();
 
   const entryDate = useMemo(() => localDateKey(), []);
@@ -376,12 +376,6 @@ export default function Today() {
           Your words save privately to this phone first, then sync to Yadegar when
           the connection is available.
         </Text>
-
-        <View className="mt-12 flex-row items-center justify-end">
-          <Pressable onPress={signOut}>
-            <Text className="text-soft-ink">Sign out</Text>
-          </Pressable>
-        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );

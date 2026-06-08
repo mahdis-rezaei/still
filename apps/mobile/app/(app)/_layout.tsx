@@ -19,6 +19,7 @@ export default function AppLayout() {
       <Tabs.Screen name="library" options={{ title: "Library" }} />
       <Tabs.Screen name="returns" options={{ title: "Returns" }} />
       <Tabs.Screen name="look-back" options={{ title: "Look back" }} />
+      <Tabs.Screen name="settings" options={{ title: "Settings" }} />
       <Tabs.Screen name="entries/[id]" options={{ href: null }} />
     </Tabs>
   );
