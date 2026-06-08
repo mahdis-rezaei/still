@@ -14,6 +14,8 @@ import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
+import { bringPageBack, type MemoryRunResult } from "../../lib/memories";
+import { MemoryCard } from "../../components/memory-card";
 
 type JournalEntry = {
   id: string;
@@ -120,6 +122,33 @@ export default function Today() {
   const loadedRef = useRef(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveSequenceRef = useRef(0);
+
+  // "Bring a page back" — the engine read. A long archive is a two-pass model
+  // read (can take a couple of minutes), so show calm, time-aware reassurance
+  // while pending; a silent wait reads as "broken."
+  const [run, setRun] = useState<MemoryRunResult | null>(null);
+  const [pending, setPending] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    if (!pending) {
+      setElapsed(0);
+      return;
+    }
+    const t = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [pending]);
+
+  async function onBringPageBack() {
+    setRun(null);
+    setPending(true);
+    try {
+      setRun(await bringPageBack());
+    } catch {
+      setRun({ surfaced: false, reason: "error" });
+    } finally {
+      setPending(false);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -258,6 +287,63 @@ export default function Today() {
             <Text className="text-xs text-soft-ink">{statusLabel(status)}</Text>
           </View>
         </View>
+
+        {/* The engine: bring back one page worth returning to, or stay silent. */}
+        <Pressable
+          onPress={onBringPageBack}
+          disabled={pending}
+          style={{ opacity: pending ? 0.5 : 1 }}
+          className="mt-6 self-start rounded-full border border-border bg-surface px-5 py-3"
+        >
+          <Text className="text-soft-ink">
+            {pending ? "Reading…" : "✦ Bring a page back"}
+          </Text>
+        </Pressable>
+
+        {pending && (
+          <View className="mt-4 rounded-3xl border border-border bg-surface p-5">
+            <Text className="text-soft-ink leading-relaxed">
+              {elapsed < 10
+                ? "Reading through your pages…"
+                : elapsed < 35
+                  ? "Still reading, looking across the years…"
+                  : elapsed < 90
+                    ? "Your archive is large, so this takes a moment. Hang tight, Yadegar is still reading."
+                    : "Almost there, a long archive takes a little longer to read."}
+            </Text>
+          </View>
+        )}
+
+        {run && !pending && (
+          <View className="mt-4">
+            {run.surfaced && run.memory ? (
+              <View className="gap-3">
+                <MemoryCard memory={run.memory} />
+                <Pressable
+                  onPress={() => setRun(null)}
+                  hitSlop={8}
+                  className="self-start"
+                >
+                  <Text className="text-xs text-faint-ink">close</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <View className="rounded-3xl border border-border bg-surface p-5">
+                <Text className="text-soft-ink leading-relaxed">
+                  {run.reason === "crisis"
+                    ? run.supportMessage
+                    : run.reason === "quota"
+                      ? "You've used this month's returns. Revisiting what's already returned to you is always free."
+                      : run.reason === "not_enough"
+                        ? "Write or bring in a few pages first, and Yadegar will have something to return."
+                        : run.reason === "error"
+                          ? "Something interrupted the reading. Try again in a moment."
+                          : "Nothing honest surfaced this time. That's okay, Yadegar is better quiet than false."}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
 
         <Text className="text-ink text-lg mt-10 leading-relaxed">
           {user?.name ? `Hello, ${user.name}.` : "Hello."} What do you want to
