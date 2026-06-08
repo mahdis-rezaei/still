@@ -8,21 +8,35 @@ import { BiometricLockGate } from "../lib/biometric-lock";
 
 const queryClient = new QueryClient();
 
-// Auth gate: send signed-out users to sign-in, signed-in users into the app.
+// Auth gate: route signed-out → sign-in, brand-new users → onboarding, everyone
+// else → the app.
 function Gate() {
   const { user, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
   const inAuthGroup = segments[0] === "(auth)";
+  const inOnboarding = segments[0] === "onboarding";
+  // Only force onboarding when the flag is EXPLICITLY false — a missing flag
+  // (older accounts) is treated as done, so no one gets trapped.
+  const needsOnboarding = !!user && user.onboardingCompleted === false;
 
   useEffect(() => {
     if (loading) return;
-    if (!user && !inAuthGroup) router.replace("/(auth)/sign-in");
-    else if (user && inAuthGroup) router.replace("/(app)/today");
-  }, [user, loading, inAuthGroup, router]);
+    if (!user) {
+      if (!inAuthGroup) router.replace("/(auth)/sign-in");
+      return;
+    }
+    if (needsOnboarding) {
+      if (!inOnboarding) router.replace("/onboarding");
+      return;
+    }
+    if (inAuthGroup || inOnboarding) router.replace("/(app)/today");
+  }, [user, loading, inAuthGroup, inOnboarding, needsOnboarding, router]);
 
   return (
-    <BiometricLockGate enabled={!loading && Boolean(user) && !inAuthGroup}>
+    <BiometricLockGate
+      enabled={!loading && Boolean(user) && !inAuthGroup && !inOnboarding}
+    >
       <Slot />
     </BiometricLockGate>
   );

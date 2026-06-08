@@ -34,6 +34,7 @@ interface AuthState {
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signInWithApple: () => Promise<void>;
+  completeOnboarding: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
@@ -138,8 +139,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const completeOnboarding = async () => {
+    await api("/auth/complete-onboarding", { method: "POST" });
+    setUser((u) => (u ? { ...u, onboardingCompleted: true } : u));
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut, signInWithGoogle, signInWithApple }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        signIn,
+        signUp,
+        signOut,
+        signInWithGoogle,
+        signInWithApple,
+        completeOnboarding,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
