@@ -380,12 +380,20 @@ export default function Today() {
         </Text>
 
         <View className="mt-12 flex-row items-center justify-between">
-          <Pressable
-            onPress={() => router.push("/(app)/library")}
-            className="rounded-full border border-border bg-surface px-5 py-3"
-          >
-            <Text className="text-soft-ink">Library</Text>
-          </Pressable>
+          <View className="flex-row gap-3">
+            <Pressable
+              onPress={() => router.push("/(app)/library")}
+              className="rounded-full border border-border bg-surface px-5 py-3"
+            >
+              <Text className="text-soft-ink">Library</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => router.push("/(app)/returns")}
+              className="rounded-full border border-border bg-surface px-5 py-3"
+            >
+              <Text className="text-soft-ink">Returns</Text>
+            </Pressable>
+          </View>
 
           <Pressable onPress={signOut}>
             <Text className="text-soft-ink">Sign out</Text>
