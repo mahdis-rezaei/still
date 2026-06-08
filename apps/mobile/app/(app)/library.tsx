@@ -97,9 +97,18 @@ export default function Library() {
         paddingBottom: insets.bottom + 48,
       }}
     >
-      <View>
-        <Text className="text-4xl text-deep-brown">Library</Text>
-        <Text className="text-soft-ink mt-1">Your saved pages</Text>
+      <View className="flex-row items-start justify-between gap-4">
+        <View className="flex-1">
+          <Text className="text-4xl text-deep-brown">Library</Text>
+          <Text className="text-soft-ink mt-1">Your saved pages</Text>
+        </View>
+        <Pressable
+          onPress={() => router.push("/(app)/import")}
+          className="mt-2"
+          hitSlop={8}
+        >
+          <Text className="text-accent-sepia">Bring old journals →</Text>
+        </Pressable>
       </View>
 
       {/* Ways to browse the library. */}
