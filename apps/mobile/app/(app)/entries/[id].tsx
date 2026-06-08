@@ -24,6 +24,15 @@ type JournalEntry = {
   updatedAt: string;
 };
 
+type Reflection = {
+  id: string;
+  journalEntryId: string;
+  body: string;
+  reflectionDate: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 type SaveStatus = "loading" | "saved" | "draft" | "saving" | "offline" | "error";
 
 function formatEntryDate(value: string | null): string {
@@ -34,6 +43,17 @@ function formatEntryDate(value: string | null): string {
 
   return new Date(year, month - 1, day).toLocaleDateString("en-US", {
     weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatShortDate(value: string): string {
+  const [year, month, day] = value.split("-").map(Number);
+  if (!year || !month || !day) return value;
+
+  return new Date(year, month - 1, day).toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
@@ -73,6 +93,11 @@ export default function EntryDetail() {
   const [status, setStatus] = useState<SaveStatus>("loading");
   const [error, setError] = useState<string | null>(null);
 
+  const [reflections, setReflections] = useState<Reflection[]>([]);
+  const [reflectionText, setReflectionText] = useState("");
+  const [reflectionBusy, setReflectionBusy] = useState(false);
+  const [reflectionError, setReflectionError] = useState<string | null>(null);
+
   const loadedRef = useRef(false);
   const latestBodyRef = useRef("");
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -81,6 +106,12 @@ export default function EntryDetail() {
   useEffect(() => {
     latestBodyRef.current = body;
   }, [body]);
+
+  const loadReflections = useCallback(async () => {
+    if (!id) return;
+    const rows = await api<Reflection[]>(`/entries/${id}/reflections`);
+    setReflections(rows);
+  }, [id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -95,15 +126,21 @@ export default function EntryDetail() {
       loadedRef.current = false;
       setStatus("loading");
       setError(null);
+      setReflectionError(null);
 
       try {
-        const row = await api<JournalEntry>(`/entries/${id}`);
+        const [row, reflectionRows] = await Promise.all([
+          api<JournalEntry>(`/entries/${id}`),
+          api<Reflection[]>(`/entries/${id}/reflections`),
+        ]);
+
         if (cancelled) return;
 
         setEntry(row);
         setBody(row.body);
         setLastSavedBody(row.body);
         latestBodyRef.current = row.body;
+        setReflections(reflectionRows);
         setStatus("saved");
       } catch {
         if (cancelled) return;
@@ -177,6 +214,30 @@ export default function EntryDetail() {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
   }, [body, lastSavedBody, saveBody]);
+
+  async function submitReflection() {
+    if (!id || reflectionBusy) return;
+
+    const trimmed = reflectionText.trim();
+    if (!trimmed) return;
+
+    setReflectionBusy(true);
+    setReflectionError(null);
+
+    try {
+      const created = await api<Reflection>(`/entries/${id}/reflections`, {
+        method: "POST",
+        body: { body: trimmed },
+      });
+
+      setReflections((current) => [...current, created]);
+      setReflectionText("");
+    } catch {
+      setReflectionError("Could not save this reflection. Please try again.");
+    } finally {
+      setReflectionBusy(false);
+    }
+  }
 
   return (
     <KeyboardAvoidingView
@@ -262,6 +323,70 @@ export default function EntryDetail() {
                   {status === "saving" ? "Saving…" : "Save now"}
                 </Text>
               </Pressable>
+            </View>
+
+            <View className="mt-12">
+              <Text className="text-3xl text-deep-brown">Reflections</Text>
+              <Text className="mt-2 text-soft-ink leading-relaxed">
+                Add a note to this page without changing the original writing.
+              </Text>
+
+              <View className="mt-5 gap-4">
+                {reflections.length === 0 ? (
+                  <View className="rounded-3xl border border-border bg-surface p-5">
+                    <Text className="text-soft-ink">
+                      No reflections yet.
+                    </Text>
+                  </View>
+                ) : (
+                  reflections.map((reflection) => (
+                    <View
+                      key={reflection.id}
+                      className="rounded-3xl border border-border bg-surface p-5"
+                    >
+                      <Text className="text-sm text-soft-ink">
+                        {formatShortDate(reflection.reflectionDate)}
+                      </Text>
+                      <Text className="mt-3 text-base leading-7 text-ink">
+                        {reflection.body}
+                      </Text>
+                    </View>
+                  ))
+                )}
+              </View>
+
+              <View className="mt-6 rounded-full border border-border bg-surface px-4 py-3">
+                <View className="flex-row items-center gap-3">
+                  <TextInput
+                    value={reflectionText}
+                    onChangeText={setReflectionText}
+                    placeholder="Write a reflection…"
+                    placeholderTextColor="#A59B8D"
+                    className="flex-1 text-base text-ink"
+                    autoCorrect
+                    returnKeyType="done"
+                    onSubmitEditing={submitReflection}
+                  />
+
+                  <Pressable
+                    onPress={submitReflection}
+                    disabled={reflectionBusy || !reflectionText.trim()}
+                    className="rounded-full bg-deep-brown px-4 py-2 disabled:opacity-50"
+                  >
+                    {reflectionBusy ? (
+                      <ActivityIndicator color="#F7F1E6" />
+                    ) : (
+                      <Text className="text-sm text-background">Add</Text>
+                    )}
+                  </Pressable>
+                </View>
+              </View>
+
+              {reflectionError ? (
+                <Text className="mt-3 text-sm text-accent-sepia">
+                  {reflectionError}
+                </Text>
+              ) : null}
             </View>
           </>
         ) : null}
