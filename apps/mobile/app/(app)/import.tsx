@@ -19,6 +19,7 @@ import {
   type ParsedEntry,
 } from "../../lib/import";
 import { longDate } from "../../lib/extras";
+import { KeyboardDone, KEYBOARD_DONE_ID } from "../../components/keyboard-done";
 
 type Phase = "paste" | "review" | "done";
 
@@ -115,6 +116,7 @@ export default function Import() {
                 placeholder="Paste your writing here…"
                 placeholderTextColor="#A59B8D"
                 className="min-h-[260px] text-base leading-6 text-ink"
+                inputAccessoryViewID={KEYBOARD_DONE_ID}
               />
             </View>
             {error ? (
@@ -214,6 +216,7 @@ export default function Import() {
           </View>
         )}
       </ScrollView>
+      <KeyboardDone />
     </KeyboardAvoidingView>
   );
 }

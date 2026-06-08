@@ -17,6 +17,7 @@ import { bringPageBack, type MemoryRunResult } from "../../lib/memories";
 import { MemoryCard } from "../../components/memory-card";
 import { OnThisDay } from "../../components/on-this-day";
 import { AppHeader } from "../../components/app-header";
+import { KeyboardDone, KEYBOARD_DONE_ID } from "../../components/keyboard-done";
 
 type JournalEntry = {
   id: string;
@@ -370,6 +371,7 @@ export default function Today() {
               className="min-h-80 text-lg leading-7 text-ink"
               autoCorrect
               scrollEnabled={false}
+              inputAccessoryViewID={KEYBOARD_DONE_ID}
             />
           )}
         </View>
@@ -379,6 +381,7 @@ export default function Today() {
           the connection is available.
         </Text>
       </ScrollView>
+      <KeyboardDone />
     </KeyboardAvoidingView>
   );
 }
