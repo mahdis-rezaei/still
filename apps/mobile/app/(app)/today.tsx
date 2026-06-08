@@ -16,6 +16,7 @@ import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { bringPageBack, type MemoryRunResult } from "../../lib/memories";
 import { MemoryCard } from "../../components/memory-card";
+import { OnThisDay } from "../../components/on-this-day";
 
 type JournalEntry = {
   id: string;
@@ -344,6 +345,9 @@ export default function Today() {
             )}
           </View>
         )}
+
+        {/* Date-based returns from this day in years past, quiet when empty. */}
+        <OnThisDay />
 
         <Text className="text-ink text-lg mt-10 leading-relaxed">
           {user?.name ? `Hello, ${user.name}.` : "Hello."} What do you want to

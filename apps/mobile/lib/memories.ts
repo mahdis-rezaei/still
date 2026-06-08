@@ -1,9 +1,12 @@
 import { api, ApiError } from "./api";
 
-// The engine on mobile. Slice 1: "Bring a page back" — a scoped two-pass read of
-// your years that returns ONE page worth returning to, or stays honestly silent.
-// Same backend endpoints as web (no second engine). Date-based surfaces (On This
-// Day, Look Back) and the Returns archive arrive in later slices.
+// The engine on mobile.
+// - "Bring a page back" — a scoped two-pass read of your years that returns ONE
+//   page worth returning to, or stays honestly silent.
+// - "On this day" — date-based resurfacing: past pages from this calendar day in
+//   prior years (no model call; free).
+// Same backend endpoints as web (no second engine). Look Back + the Returns
+// archive arrive in later slices.
 
 // A surfaced page the engine chose to return (toMemory in routes/memories.ts).
 export interface Memory {
@@ -38,6 +41,40 @@ export const LENS_LABELS: Record<string, string> = {
   becoming: "Who you were becoming",
   survival: "What you carried through",
 };
+
+// One date-based memory (GET /memories/on-this-day). onThisExactDay marks the
+// exact calendar day in a prior year (vs merely near it).
+export interface DateMemory {
+  entryId: string;
+  title: string | null;
+  excerpt: string;
+  entryDate: string;
+  favorite: boolean;
+  yearsAgo: number;
+  onThisExactDay?: boolean;
+}
+
+// Local calendar day as YYYY-MM-DD; the window must match the reader's calendar,
+// so we pass the device's local day (mirrors the web's localTodayISO).
+export function localTodayISO(): string {
+  const d = new Date();
+  const tz = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - tz).toISOString().slice(0, 10);
+}
+
+// "A year ago today" / "7 years ago, around this day" — honest about whether
+// it's the exact calendar day or merely near it.
+export function onThisDayLabel(m: {
+  yearsAgo: number;
+  onThisExactDay?: boolean;
+}): string {
+  const span = m.yearsAgo === 1 ? "A year ago" : `${m.yearsAgo} years ago`;
+  return m.onThisExactDay ? `${span} today` : `${span}, around this day`;
+}
+
+// GET /memories/on-this-day?date= — date-based resurfacing (free, no model call).
+export const getOnThisDay = (date = localTodayISO()) =>
+  api<DateMemory[]>(`/memories/on-this-day?date=${date}`);
 
 // Poll an async memory job (ADR 0002) to completion, then resolve to the same
 // shape a synchronous run returns. Bounded (~4 min) so it never spins forever.
