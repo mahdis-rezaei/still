@@ -1,20 +1,31 @@
 import { Platform } from "react-native";
+import { requireOptionalNativeModule } from "expo-modules-core";
 import { api } from "./api";
 
 // Native push: ask permission, get this device's Expo push token, and register it
 // with the backend so the nudge cron can reach it (the native counterpart to the
 // web's email nudges).
 //
-// The expo-notifications / expo-device native modules are imported LAZILY (inside
-// the functions, wrapped in try/catch) on purpose: importing them at the top would
-// throw on any build that doesn't include the native modules yet (e.g. an older
-// dev build, or Expo Go). Lazy + guarded means this file is always safe to load —
-// push simply no-ops until the app is rebuilt with the modules present. Every path
-// is defensive (simulator, denied permission, missing module) and returns quietly,
-// so push can never break sign-in or app launch.
+// IMPORTANT — why the guard below: on a build that doesn't include the push native
+// modules yet (an older dev build made before push, or Expo Go), merely importing
+// expo-notifications throws "Cannot find native module 'ExpoPushTokenManager'" at
+// module-eval time — and that throw escapes even a surrounding try/catch (Metro
+// surfaces dynamic-import eval errors out of band). So we first check, via
+// expo-modules-core (always present), whether the native module is registered. If
+// not, we skip everything and never touch expo-notifications. Push stays dormant
+// until the app is rebuilt with the modules; it can never break sign-in or launch.
 //
 // NOTE: remote push only delivers from a dev/production build (not Expo Go). The
 // EAS projectId in app.json (extra.eas.projectId) is what getExpoPushTokenAsync needs.
+
+// True only on a build that actually includes the push native module.
+function pushNativeAvailable(): boolean {
+  try {
+    return requireOptionalNativeModule("ExpoPushTokenManager") != null;
+  } catch {
+    return false;
+  }
+}
 
 function projectIdFrom(constants: unknown): string | undefined {
   const c = constants as {
@@ -28,6 +39,8 @@ function projectIdFrom(constants: unknown): string | undefined {
 // module, no permission, simulator, or error). Safe to call repeatedly (the
 // backend upserts).
 export async function registerForPush(): Promise<string | null> {
+  // Skip entirely on a build without the push native module (see note above).
+  if (!pushNativeAvailable()) return null;
   try {
     const Notifications = await import("expo-notifications");
     const Device = await import("expo-device");
@@ -80,6 +93,7 @@ export async function registerForPush(): Promise<string | null> {
 
 // Unregister on sign-out so a shared device stops receiving this user's pushes.
 export async function unregisterForPush(): Promise<void> {
+  if (!pushNativeAvailable()) return;
   try {
     const Notifications = await import("expo-notifications");
     const Device = await import("expo-device");
