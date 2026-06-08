@@ -17,6 +17,7 @@ import { bringPageBack, type MemoryRunResult } from "../../lib/memories";
 import { MemoryCard } from "../../components/memory-card";
 import { OnThisDay } from "../../components/on-this-day";
 import { KeyboardDone, KEYBOARD_DONE_ID } from "../../components/keyboard-done";
+import { EntryPhotos } from "../../components/entry-photos";
 
 type JournalEntry = {
   id: string;
@@ -264,6 +265,23 @@ export default function Today() {
     };
   }, [body, draftKey, entryDate, entryId, lastSavedBody]);
 
+  // Save/create today's page on demand (so a photo always has a page to attach
+  // to). Returns the entry id, or null if it couldn't be created.
+  async function ensureEntry(): Promise<string | null> {
+    if (entryId) return entryId;
+    try {
+      const saved = await api<JournalEntry>("/entries", {
+        method: "POST",
+        body: { body, entryDate },
+      });
+      setEntryId(saved.id);
+      setLastSavedBody(saved.body);
+      return saved.id;
+    } catch {
+      return null;
+    }
+  }
+
   return (
     <KeyboardAvoidingView
       className="flex-1 bg-background"
@@ -378,6 +396,8 @@ export default function Today() {
             />
           )}
         </View>
+
+        <EntryPhotos entryId={entryId} ensureEntry={ensureEntry} />
 
         <Text className="text-faint-ink text-sm mt-4 leading-relaxed">
           Your words save privately to this phone first, then sync to Yadegar when

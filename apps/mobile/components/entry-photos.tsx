@@ -16,18 +16,30 @@ import {
   type Attachment,
 } from "../lib/photos";
 
-// A photos strip for a saved page: tap to add (library or camera), long-press a
+// A photos strip for a page: tap to add (library or camera), long-press a
 // thumbnail to remove. Image bytes are auth'd, so each <Image> carries the token.
-export function EntryPhotos({ entryId }: { entryId: string }) {
+// On Today the page may not be saved yet — `ensureEntry` saves/creates it first
+// (so a photo always has a page to attach to), matching the web.
+export function EntryPhotos({
+  entryId,
+  ensureEntry,
+}: {
+  entryId: string | null;
+  ensureEntry?: () => Promise<string | null>;
+}) {
   const [items, setItems] = useState<Attachment[]>([]);
   const [token, setToken] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
+    const t = await getToken();
+    setToken(t);
+    if (!entryId) {
+      setItems([]);
+      return;
+    }
     try {
-      const [t, rows] = await Promise.all([getToken(), listAttachments(entryId)]);
-      setToken(t);
-      setItems(rows);
+      setItems(await listAttachments(entryId));
     } catch {
       // leave as-is
     }
@@ -51,16 +63,19 @@ export function EntryPhotos({ entryId }: { entryId: string }) {
     setBusy(true);
     try {
       const picked = await pickImage(from);
-      if (picked) {
-        const row = await uploadAttachment(
-          entryId,
-          picked.uri,
-          picked.width,
-          picked.height,
+      if (!picked) return;
+      // Make sure there's a saved page to attach to (Today may be unsaved).
+      const id = entryId ?? (ensureEntry ? await ensureEntry() : null);
+      if (!id) {
+        Alert.alert(
+          "Write something first",
+          "Add a sentence, and the photo will attach to today's page.",
         );
-        if (row) setItems((list) => [...list, row]);
-        else Alert.alert("Couldn't add the photo", "Please try again.");
+        return;
       }
+      const row = await uploadAttachment(id, picked.uri, picked.width, picked.height);
+      if (row) setItems((list) => [...list, row]);
+      else Alert.alert("Couldn't add the photo", "Please try again.");
     } finally {
       setBusy(false);
     }
