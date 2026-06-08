@@ -25,6 +25,10 @@ tab bar · push delivery · Settings · Search.
 - [ ] **Collection detail**: shows the collection's pages; tap a page opens it; back button works.
 - [ ] **Shelf**: loads your shelved pages (empty state if none); pull-to-refresh works.
 
+### Entry detail → "Add to shelf" / "Add to collection"
+- [ ] Open a page → tap **Add to shelf** → shows "On shelf ✓"; it now appears on the Shelf.
+- [ ] Tap **Add to collection** → the picker lists your collections; tap one → "Added ✓"; it now appears in that collection's detail.
+
 ### Look back → keepsakes row (Year in Pages · Capsules)
 - [ ] **Year in Pages**: opens; ‹ › step years; shows page + reflection counts; favorites list; tap a favorite opens it.
 - [ ] **Capsules**: compose a letter, pick a delivery preset (1/5/10 yrs), **Seal it** → it appears as "Sealed until <date>". (Opening only works once a capsule's date has passed + the cron delivers it.)
@@ -33,8 +37,6 @@ tab bar · push delivery · Settings · Search.
 - [ ] Register a **new** account → see the welcome screen → **Begin** → lands on Today. (Existing accounts skip it.)
 
 ## Known limitations / not built (need a rebuild or backend work)
-- **Add to Collection / Add to Shelf from a page** — the *browse* views are built; the
-  "add this page" action on entry detail is a small follow-up.
 - **Photos on entries** — needs `expo-image-picker` (rebuild).
 - **Import (file / Google Doc)** — needs a document picker (rebuild).
 - **Membership / IAP** — Phase 3 (RevenueCat, rebuild).

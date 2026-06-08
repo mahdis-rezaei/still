@@ -12,6 +12,12 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { api } from "../../../lib/api";
+import {
+  addToShelf,
+  listCollections,
+  addToCollection,
+  type Collection,
+} from "../../../lib/extras";
 
 type JournalEntry = {
   id: string;
@@ -97,6 +103,48 @@ export default function EntryDetail() {
   const [reflectionText, setReflectionText] = useState("");
   const [reflectionBusy, setReflectionBusy] = useState(false);
   const [reflectionError, setReflectionError] = useState<string | null>(null);
+
+  // Keep this page: shelf + collections.
+  const [shelved, setShelved] = useState(false);
+  const [collPickerOpen, setCollPickerOpen] = useState(false);
+  const [collections, setCollections] = useState<Collection[] | null>(null);
+  const [addedColl, setAddedColl] = useState<Set<string>>(new Set());
+
+  async function onAddToShelf() {
+    if (!id || shelved) return;
+    setShelved(true); // optimistic; idempotent server-side
+    try {
+      await addToShelf(id);
+    } catch {
+      setShelved(false);
+    }
+  }
+
+  async function toggleCollPicker() {
+    const next = !collPickerOpen;
+    setCollPickerOpen(next);
+    if (next && collections === null) {
+      try {
+        setCollections(await listCollections());
+      } catch {
+        setCollections([]);
+      }
+    }
+  }
+
+  async function onAddToCollection(c: Collection) {
+    if (!id || addedColl.has(c.id)) return;
+    setAddedColl((s) => new Set(s).add(c.id));
+    try {
+      await addToCollection(c.id, id);
+    } catch {
+      setAddedColl((s) => {
+        const n = new Set(s);
+        n.delete(c.id);
+        return n;
+      });
+    }
+  }
 
   const loadedRef = useRef(false);
   const latestBodyRef = useRef("");
@@ -295,6 +343,59 @@ export default function EntryDetail() {
                 </Text>
               </View>
             </View>
+
+            {/* Keep this page: shelf + collections. */}
+            <View className="mt-6 flex-row gap-2">
+              <Pressable
+                onPress={onAddToShelf}
+                disabled={shelved}
+                className="flex-1 items-center rounded-full border border-border bg-surface py-2.5"
+              >
+                <Text className="text-soft-ink" style={{ fontSize: 13 }}>
+                  {shelved ? "On shelf ✓" : "Add to shelf"}
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={toggleCollPicker}
+                className="flex-1 items-center rounded-full border border-border bg-surface py-2.5"
+              >
+                <Text className="text-soft-ink" style={{ fontSize: 13 }}>
+                  Add to collection
+                </Text>
+              </Pressable>
+            </View>
+
+            {collPickerOpen ? (
+              <View className="mt-3 rounded-3xl border border-border bg-surface p-4 gap-1">
+                {collections === null ? (
+                  <ActivityIndicator color="#3A2F25" />
+                ) : collections.length === 0 ? (
+                  <Text className="text-soft-ink leading-relaxed">
+                    No collections yet. Make one on the Collections screen
+                    (Library → Collections).
+                  </Text>
+                ) : (
+                  collections.map((c) => {
+                    const added = addedColl.has(c.id);
+                    return (
+                      <Pressable
+                        key={c.id}
+                        onPress={() => onAddToCollection(c)}
+                        disabled={added}
+                        className="flex-row items-center justify-between py-2.5"
+                      >
+                        <Text className="text-ink">{c.name}</Text>
+                        <Text
+                          className={added ? "text-accent-sepia" : "text-faint-ink"}
+                        >
+                          {added ? "Added ✓" : "Add"}
+                        </Text>
+                      </Pressable>
+                    );
+                  })
+                )}
+              </View>
+            ) : null}
 
             <View className="mt-8 rounded-3xl border border-border bg-surface px-5 py-4">
               <TextInput
