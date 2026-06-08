@@ -7,7 +7,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   getLookBack,
@@ -48,7 +48,6 @@ function Section({
 }
 
 export default function LookBack() {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
 
   const [data, setData] = useState<LookBackData | null>(null);
@@ -98,20 +97,11 @@ export default function LookBack() {
         paddingBottom: insets.bottom + 48,
       }}
     >
-      <View className="flex-row items-start justify-between gap-4">
-        <View className="flex-1">
-          <Text className="text-4xl text-deep-brown">Look back</Text>
-          <Text className="text-soft-ink mt-1 leading-relaxed">
-            Your own pages, by date and by the ones you treasured.
-          </Text>
-        </View>
-
-        <Pressable
-          onPress={() => router.push("/(app)/today")}
-          className="rounded-full border border-border bg-surface px-4 py-2"
-        >
-          <Text className="text-soft-ink">Today</Text>
-        </Pressable>
+      <View>
+        <Text className="text-4xl text-deep-brown">Look back</Text>
+        <Text className="text-soft-ink mt-1 leading-relaxed">
+          Your own pages, by date and by the ones you treasured.
+        </Text>
       </View>
 
       {loading ? (

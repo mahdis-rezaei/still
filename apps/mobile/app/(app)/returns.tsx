@@ -84,29 +84,11 @@ export default function Returns() {
         paddingBottom: insets.bottom + 48,
       }}
     >
-      <View className="flex-row items-start justify-between gap-4">
-        <View className="flex-1">
-          <Text className="text-4xl text-deep-brown">Returns</Text>
-          <Text className="text-soft-ink mt-1 leading-relaxed">
-            Pages Yadegar has brought back, to revisit.
-          </Text>
-          <Pressable
-            onPress={() => router.push("/(app)/look-back")}
-            className="mt-3"
-            hitSlop={8}
-          >
-            <Text className="text-soft-ink">
-              Or look back through your own pages, by date →
-            </Text>
-          </Pressable>
-        </View>
-
-        <Pressable
-          onPress={() => router.push("/(app)/today")}
-          className="rounded-full border border-border bg-surface px-4 py-2"
-        >
-          <Text className="text-soft-ink">Today</Text>
-        </Pressable>
+      <View>
+        <Text className="text-4xl text-deep-brown">Returns</Text>
+        <Text className="text-soft-ink mt-1 leading-relaxed">
+          Pages Yadegar has brought back, to revisit.
+        </Text>
       </View>
 
       {loading ? (
