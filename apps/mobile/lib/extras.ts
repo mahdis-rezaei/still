@@ -56,6 +56,12 @@ export const createCollection = (name: string, kind: CollectionKind = "custom") 
   api<Collection>("/collections", { method: "POST", body: { name, kind } });
 export const deleteCollection = (id: string) =>
   api(`/collections/${id}`, { method: "DELETE" });
+// Add a page to a collection (idempotent server-side).
+export const addToCollection = (collectionId: string, entryId: string) =>
+  api(`/collections/${collectionId}/items`, {
+    method: "POST",
+    body: { entryId },
+  });
 
 // --- Shelf ---
 export interface ShelfItem extends EntryRef {
