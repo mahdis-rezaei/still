@@ -3,8 +3,9 @@ import {
   createPublicKey,
   randomBytes,
   verify as verifySignature,
-  type JsonWebKey,
 } from "node:crypto";
+// JsonWebKey is an ambient global type (not exported by node:crypto), so it's
+// used below without an import — importing it from node:crypto is a type error.
 import { eq } from "drizzle-orm";
 import { db, usersTable, sessionsTable, type User } from "@workspace/db";
 import {
@@ -111,6 +112,23 @@ function appendOAuthResult(
 
 const APPLE_ISSUER = "https://appleid.apple.com";
 const APPLE_JWKS_URL = "https://appleid.apple.com/auth/keys";
+
+// A JSON Web Key, as Apple returns in its JWKS. Defined locally because
+// node:crypto doesn't export JsonWebKey and the DOM lib's global isn't in this
+// server's tsconfig. Fields cover the RSA (n/e) and EC (crv/x/y) keys Apple uses;
+// it's structurally compatible with what createPublicKey({ format: "jwk" }) wants.
+interface JsonWebKey {
+  kty?: string;
+  kid?: string;
+  use?: string;
+  alg?: string;
+  n?: string;
+  e?: string;
+  crv?: string;
+  x?: string;
+  y?: string;
+}
+
 let appleKeysCache: { keys: JsonWebKey[]; expiresAt: number } | null = null;
 
 type AppleJwtHeader = {
