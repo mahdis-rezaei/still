@@ -36,7 +36,14 @@
         }
       ],
       "expo-apple-authentication",
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Yadegar to add photos to your pages.",
+          "cameraPermission": "Allow Yadegar to take a photo for your page."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

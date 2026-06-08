@@ -19,6 +19,7 @@ import {
   type Collection,
 } from "../../../lib/extras";
 import { KeyboardDone, KEYBOARD_DONE_ID } from "../../../components/keyboard-done";
+import { EntryPhotos } from "../../../components/entry-photos";
 
 type JournalEntry = {
   id: string;
@@ -415,6 +416,8 @@ export default function EntryDetail() {
                 </Text>
               </Pressable>
             </View>
+
+            {id ? <EntryPhotos entryId={id} /> : null}
 
             <View className="mt-12">
               <Text className="text-3xl text-deep-brown">Reflections</Text>
