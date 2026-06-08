@@ -80,6 +80,10 @@ export async function registerForPush(): Promise<string | null> {
     const token = tokenResp.data;
     if (!token) return null;
 
+    // Dev-only: print the token so you can fire a test push from the terminal
+    // (stripped from production builds via __DEV__).
+    if (__DEV__) console.log("[push] Expo push token:", token);
+
     await api("/notifications/devices", {
       method: "POST",
       body: { token, platform: Platform.OS },
