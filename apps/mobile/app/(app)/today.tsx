@@ -122,6 +122,7 @@ export default function Today() {
   const loadedRef = useRef(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveSequenceRef = useRef(0);
+  const editorRef = useRef<TextInput>(null);
 
   // "Bring a page back" — the engine read. A long archive is a two-pass model
   // read (can take a couple of minutes), so show calm, time-aware reassurance
@@ -283,9 +284,12 @@ export default function Today() {
             <Text className="text-soft-ink mt-1">{today}</Text>
           </View>
 
-          <View className="rounded-full border border-border bg-surface px-3 py-1.5">
+          <Pressable
+            onPress={() => editorRef.current?.focus()}
+            className="rounded-full border border-border bg-surface px-3 py-1.5"
+          >
             <Text className="text-xs text-soft-ink">{statusLabel(status)}</Text>
-          </View>
+          </Pressable>
         </View>
 
         {/* The engine: bring back one page worth returning to, or stay silent. */}
@@ -360,6 +364,7 @@ export default function Today() {
             </View>
           ) : (
             <TextInput
+              ref={editorRef}
               value={body}
               onChangeText={setBody}
               multiline
