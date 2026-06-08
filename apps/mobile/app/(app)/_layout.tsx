@@ -28,6 +28,7 @@ export default function AppLayout() {
       <Tabs.Screen name="shelf" options={{ href: null }} />
       <Tabs.Screen name="capsules" options={{ href: null }} />
       <Tabs.Screen name="year" options={{ href: null }} />
+      <Tabs.Screen name="import" options={{ href: null }} />
     </Tabs>
   );
 }
