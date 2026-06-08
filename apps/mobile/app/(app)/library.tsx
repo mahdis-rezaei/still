@@ -5,6 +5,7 @@ import {
   RefreshControl,
   ScrollView,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -46,9 +47,20 @@ export default function Library() {
   const insets = useSafeAreaInsets();
 
   const [entries, setEntries] = useState<JournalEntry[]>([]);
+  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Client-side search over title + body (matches the web's search behavior).
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? entries.filter(
+        (e) =>
+          (e.title ?? "").toLowerCase().includes(q) ||
+          e.body.toLowerCase().includes(q),
+      )
+    : entries;
 
   const load = useCallback(async ({ refresh = false } = {}) => {
     if (refresh) setRefreshing(true);
@@ -90,6 +102,19 @@ export default function Library() {
         <Text className="text-soft-ink mt-1">Your saved pages</Text>
       </View>
 
+      {!loading && !error && entries.length > 0 ? (
+        <TextInput
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Search your pages…"
+          placeholderTextColor="#A59B8D"
+          autoCapitalize="none"
+          autoCorrect={false}
+          clearButtonMode="while-editing"
+          className="mt-6 rounded-full border border-border bg-surface px-5 py-3 text-ink"
+        />
+      ) : null}
+
       {loading ? (
         <View className="min-h-80 items-center justify-center">
           <ActivityIndicator color="#3A2F25" />
@@ -108,9 +133,15 @@ export default function Library() {
             Write something on Today and it will appear here.
           </Text>
         </View>
+      ) : filtered.length === 0 ? (
+        <View className="mt-10 rounded-3xl border border-border bg-surface p-5">
+          <Text className="text-soft-ink leading-relaxed">
+            No pages match “{query.trim()}”.
+          </Text>
+        </View>
       ) : (
         <View className="mt-8 gap-4">
-          {entries.map((entry) => (
+          {filtered.map((entry) => (
             <Pressable
               key={entry.id}
               onPress={() =>
