@@ -96,6 +96,18 @@ export function BiometricLockGate({
     return <>{children}</>;
   }
 
+  // During the (fast) initial/auto check, show a calm splash — NOT the alarming
+  // "Yadegar is locked" screen — so a normal sign-in doesn't flash a scary lock
+  // message before Today. The full lock screen below only appears once a check
+  // has actually failed (status === "locked"), where the Unlock button matters.
+  if (status === "checking") {
+    return (
+      <View className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator size="large" color="#3A2F25" />
+      </View>
+    );
+  }
+
   return (
     <View className="flex-1 items-center justify-center bg-background px-8">
       <Text className="text-center text-3xl text-deep-brown">
@@ -106,16 +118,12 @@ export function BiometricLockGate({
         {message ?? "Use Face ID, Touch ID, or your device passcode to open your journal."}
       </Text>
 
-      {status === "checking" ? (
-        <ActivityIndicator size="large" />
-      ) : (
-        <Pressable
-          onPress={unlock}
-          className="mt-8 w-full rounded-full bg-deep-brown px-5 py-4"
-        >
-          <Text className="text-center text-base text-background">Unlock</Text>
-        </Pressable>
-      )}
+      <Pressable
+        onPress={unlock}
+        className="mt-8 w-full rounded-full bg-deep-brown px-5 py-4"
+      >
+        <Text className="text-center text-base text-background">Unlock</Text>
+      </Pressable>
 
       <Pressable onPress={signOut} className="mt-6">
         <Text className="text-soft-ink">Sign out</Text>
