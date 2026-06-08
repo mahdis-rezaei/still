@@ -16,6 +16,7 @@ import {
   longDate,
   type Capsule,
 } from "../../lib/extras";
+import { KeyboardDone, KEYBOARD_DONE_ID } from "../../components/keyboard-done";
 
 // Memory Capsules: seal a letter to your future self; it stays locked until its
 // delivery date, then you can open it. Delivery is chosen from presets (a native
@@ -83,6 +84,7 @@ export default function Capsules() {
   }
 
   return (
+    <>
     <ScrollView
       className="flex-1 bg-background"
       keyboardShouldPersistTaps="handled"
@@ -106,6 +108,7 @@ export default function Capsules() {
           placeholderTextColor="#A59B8D"
           multiline
           textAlignVertical="top"
+          inputAccessoryViewID={KEYBOARD_DONE_ID}
           className="min-h-[120px] text-base leading-6 text-ink"
         />
         <View className="flex-row gap-2">
@@ -185,5 +188,7 @@ export default function Capsules() {
         </View>
       )}
     </ScrollView>
+    <KeyboardDone />
+    </>
   );
 }

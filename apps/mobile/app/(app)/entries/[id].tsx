@@ -18,6 +18,7 @@ import {
   addToCollection,
   type Collection,
 } from "../../../lib/extras";
+import { KeyboardDone, KEYBOARD_DONE_ID } from "../../../components/keyboard-done";
 
 type JournalEntry = {
   id: string;
@@ -408,6 +409,7 @@ export default function EntryDetail() {
                 className="min-h-80 text-lg leading-7 text-ink"
                 autoCorrect
                 scrollEnabled={false}
+                inputAccessoryViewID={KEYBOARD_DONE_ID}
               />
             </View>
 
@@ -492,6 +494,7 @@ export default function EntryDetail() {
           </>
         ) : null}
       </ScrollView>
+      <KeyboardDone />
     </KeyboardAvoidingView>
   );
 }
