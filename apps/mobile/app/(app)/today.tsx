@@ -16,6 +16,7 @@ import { useAuth } from "../../lib/auth";
 import { bringPageBack, type MemoryRunResult } from "../../lib/memories";
 import { MemoryCard } from "../../components/memory-card";
 import { OnThisDay } from "../../components/on-this-day";
+import { AppHeader } from "../../components/app-header";
 
 type JournalEntry = {
   id: string;
@@ -276,6 +277,7 @@ export default function Today() {
           paddingBottom: insets.bottom + 48,
         }}
       >
+        <AppHeader />
         <View className="flex-row items-start justify-between gap-4">
           <View className="flex-1">
             <Text className="text-4xl text-deep-brown">Today</Text>

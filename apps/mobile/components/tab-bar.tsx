@@ -8,13 +8,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 // so it works on the current dev build. The active tab is deep-brown + medium
 // weight with a short accent rule above it; the rest are muted.
 
-const ORDER = ["today", "library", "returns", "look-back", "settings"] as const;
+const ORDER = ["today", "look-back", "explore"] as const;
 const LABELS: Record<string, string> = {
   today: "Today",
-  library: "Library",
-  returns: "Returns",
   "look-back": "Look back",
-  settings: "Settings",
+  explore: "Explore",
 };
 
 const DEEP_BROWN = "#3A2F25";

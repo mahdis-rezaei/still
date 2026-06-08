@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../lib/auth";
+import { AppHeader } from "../../components/app-header";
 import {
   getNotifications,
   getPreferences,
@@ -194,6 +195,7 @@ export default function Settings() {
         paddingBottom: insets.bottom + 48,
       }}
     >
+      <AppHeader />
       <Text className="text-4xl text-deep-brown">Settings</Text>
 
       {loading ? (
