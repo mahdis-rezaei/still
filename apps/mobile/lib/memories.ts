@@ -108,3 +108,14 @@ export async function bringPageBack(): Promise<MemoryRunResult> {
     throw err;
   }
 }
+
+// --- Returns archive ---
+
+// GET /memories — every page the engine has brought back, newest first.
+export const listMemories = () => api<Memory[]>("/memories");
+
+// PATCH /memories/:id — star (favorite) or retire (dismissed) a returned page.
+export const updateMemory = (
+  id: string,
+  patch: Partial<{ favorite: boolean; dismissed: boolean; opened: boolean }>,
+) => api<Memory>(`/memories/${id}`, { method: "PATCH", body: patch });
