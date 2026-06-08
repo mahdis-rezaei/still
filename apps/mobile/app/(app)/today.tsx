@@ -10,7 +10,6 @@ import {
   View,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
@@ -105,7 +104,6 @@ function statusLabel(status: SaveStatus): string {
 
 export default function Today() {
   const { user, signOut } = useAuth();
-  const router = useRouter();
   const insets = useSafeAreaInsets();
 
   const entryDate = useMemo(() => localDateKey(), []);
@@ -379,22 +377,7 @@ export default function Today() {
           the connection is available.
         </Text>
 
-        <View className="mt-12 flex-row items-center justify-between">
-          <View className="flex-row gap-3">
-            <Pressable
-              onPress={() => router.push("/(app)/library")}
-              className="rounded-full border border-border bg-surface px-5 py-3"
-            >
-              <Text className="text-soft-ink">Library</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => router.push("/(app)/returns")}
-              className="rounded-full border border-border bg-surface px-5 py-3"
-            >
-              <Text className="text-soft-ink">Returns</Text>
-            </Pressable>
-          </View>
-
+        <View className="mt-12 flex-row items-center justify-end">
           <Pressable onPress={signOut}>
             <Text className="text-soft-ink">Sign out</Text>
           </Pressable>
