@@ -90,6 +90,15 @@ export default function Returns() {
           <Text className="text-soft-ink mt-1 leading-relaxed">
             Pages Yadegar has brought back, to revisit.
           </Text>
+          <Pressable
+            onPress={() => router.push("/(app)/look-back")}
+            className="mt-3"
+            hitSlop={8}
+          >
+            <Text className="text-soft-ink">
+              Or look back through your own pages, by date →
+            </Text>
+          </Pressable>
         </View>
 
         <Pressable

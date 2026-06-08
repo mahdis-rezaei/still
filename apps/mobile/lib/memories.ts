@@ -76,6 +76,18 @@ export function onThisDayLabel(m: {
 export const getOnThisDay = (date = localTodayISO()) =>
   api<DateMemory[]>(`/memories/on-this-day?date=${date}`);
 
+// The Look Back browse payload — every date-based way a page returns, gathered
+// (GET /memories/look-back). De-duped server-side across buckets.
+export interface LookBack {
+  onThisDay: DateMemory[];
+  aroundThisTime: DateMemory[];
+  favorites: DateMemory[];
+  forgotten: DateMemory[];
+}
+
+export const getLookBack = (date = localTodayISO()) =>
+  api<LookBack>(`/memories/look-back?date=${date}`);
+
 // Poll an async memory job (ADR 0002) to completion, then resolve to the same
 // shape a synchronous run returns. Bounded (~4 min) so it never spins forever.
 async function pollRunJob(jobId: string): Promise<MemoryRunResult> {
