@@ -53,12 +53,17 @@ links inside Settings; the rest stay web.
 Forgot/reset password, verify-email — mobile leans on the emailed links / web.
 
 ## Recommended order
-1. **Settings cluster** — Profile · Notifications · Resurfacing · **Privacy (export + delete)** · Sign out.
-   Mostly JS, unblocks the App Store account-deletion requirement, and surfaces the
-   notification prefs that make push fire. *(In progress.)*
-2. **Onboarding + Search + Calendar** — first-run + finding pages.
-3. **Keepsake depth** — Capsules · Collections · Shelf · Year-in-Pages.
-4. **Photos + Import** — fold the native bits (image/doc picker) into one rebuild.
-5. **Phase 3 — Membership (RevenueCat IAP)**.
-6. **Phase 4 — native delights + store** — "On this day" widget, share-sheet,
-   TestFlight / App Store submission (also re-add tab icons via the same rebuild).
+1. ✅ **Settings cluster** — Profile · Notifications · Resurfacing · Privacy (export + delete) · Sign out. *(shipped)*
+2. ✅ **Search** (in Library) · ✅ **Onboarding** · ✅ **Calendar** (month browser). *(shipped)*
+3. ✅ **Keepsake depth** — **Collections** (list + detail + create) · **Shelf** (browse) ·
+   **Capsules** (seal + open) · **Year in Pages**. *(shipped — reachable from Library's
+   browse row and Look back's keepsakes row)*
+4. **Photos + Import** — native bits (image/doc picker) → one rebuild. *(pending)*
+5. **Phase 3 — Membership (RevenueCat IAP)**. *(pending — native)*
+6. **Phase 4 — native delights + store** — "On this day" widget, share-sheet, tab
+   icons, TestFlight / App Store submission. *(pending — native)*
+
+### Small follow-ups (JS, quick)
+- Add-to-Collection / Add-to-Shelf **action on entry detail** (the browse views exist).
+- Resurfacing **mutes** management (sensitivity is in Settings; per-page mutes pending).
+- Engine **run History** screen (Returns covers the saved archive).

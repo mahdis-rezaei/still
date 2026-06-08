@@ -20,7 +20,14 @@ export default function AppLayout() {
       <Tabs.Screen name="returns" options={{ title: "Returns" }} />
       <Tabs.Screen name="look-back" options={{ title: "Look back" }} />
       <Tabs.Screen name="settings" options={{ title: "Settings" }} />
+      {/* Hidden routes, pushed from a list / a browse link (not tabs). */}
       <Tabs.Screen name="entries/[id]" options={{ href: null }} />
+      <Tabs.Screen name="calendar" options={{ href: null }} />
+      <Tabs.Screen name="collections" options={{ href: null }} />
+      <Tabs.Screen name="collection/[id]" options={{ href: null }} />
+      <Tabs.Screen name="shelf" options={{ href: null }} />
+      <Tabs.Screen name="capsules" options={{ href: null }} />
+      <Tabs.Screen name="year" options={{ href: null }} />
     </Tabs>
   );
 }

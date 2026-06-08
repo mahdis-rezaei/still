@@ -7,7 +7,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   getLookBack,
@@ -49,6 +49,7 @@ function Section({
 
 export default function LookBack() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
 
   const [data, setData] = useState<LookBackData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -102,6 +103,24 @@ export default function LookBack() {
         <Text className="text-soft-ink mt-1 leading-relaxed">
           Your own pages, by date and by the ones you treasured.
         </Text>
+      </View>
+
+      {/* Reflective keepsakes. */}
+      <View className="mt-5 flex-row gap-2">
+        {[
+          { label: "Year in Pages", to: "/(app)/year" },
+          { label: "Capsules", to: "/(app)/capsules" },
+        ].map((b) => (
+          <Pressable
+            key={b.to}
+            onPress={() => router.push(b.to as never)}
+            className="flex-1 items-center rounded-full border border-border bg-surface px-3 py-2"
+          >
+            <Text className="text-soft-ink" style={{ fontSize: 13 }}>
+              {b.label}
+            </Text>
+          </Pressable>
+        ))}
       </View>
 
       {loading ? (

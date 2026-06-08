@@ -102,6 +102,25 @@ export default function Library() {
         <Text className="text-soft-ink mt-1">Your saved pages</Text>
       </View>
 
+      {/* Ways to browse the library. */}
+      <View className="mt-5 flex-row gap-2">
+        {[
+          { label: "Calendar", to: "/(app)/calendar" },
+          { label: "Collections", to: "/(app)/collections" },
+          { label: "Shelf", to: "/(app)/shelf" },
+        ].map((b) => (
+          <Pressable
+            key={b.to}
+            onPress={() => router.push(b.to as never)}
+            className="flex-1 items-center rounded-full border border-border bg-surface px-3 py-2"
+          >
+            <Text className="text-soft-ink" style={{ fontSize: 13 }}>
+              {b.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
       {!loading && !error && entries.length > 0 ? (
         <TextInput
           value={query}
