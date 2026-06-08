@@ -81,7 +81,13 @@ function mobileReturnTo(raw: unknown): string | null {
     if (
       url.protocol === "yadegar:" ||
       url.protocol === "exp:" ||
-      url.protocol === "exps:"
+      url.protocol === "exps:" ||
+      // Expo dev/preview builds deep-link via an "exp+<scheme>:" protocol
+      // (e.g. "exp+yadegar:"). Without this, Google sign-in from a dev build
+      // can't return to the app and falls back to the website. Safe to allow:
+      // a custom scheme only opens an app registered for it (never a web
+      // open-redirect — http/https are still rejected).
+      url.protocol.startsWith("exp+")
     ) {
       return raw;
     }
