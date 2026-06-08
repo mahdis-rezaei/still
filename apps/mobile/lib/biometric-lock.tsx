@@ -73,7 +73,12 @@ export function BiometricLockGate({
     let shouldLockOnReturn = false;
 
     const subscription = AppState.addEventListener("change", (nextState) => {
-      if (nextState === "inactive" || nextState === "background") {
+      // Only a true "background" should re-lock. iOS also fires "inactive"
+      // while the native Face ID prompt is up (and for the app switcher, control
+      // center, incoming calls) — if we re-locked on "inactive", the unlock
+      // prompt itself would flip us to "inactive", we'd re-lock, then on
+      // "active" re-prompt: an infinite Face ID loop right after sign-in.
+      if (nextState === "background") {
         shouldLockOnReturn = true;
         setStatus("locked");
       }
