@@ -59,7 +59,8 @@ export async function pickAvatarDataUrl(): Promise<string | null> {
       allowsEditing: true,
       aspect: [1, 1],
       quality: 1,
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      // SDK 54: MediaTypeOptions removed; mediaTypes now takes a string array.
+      mediaTypes: ["images"],
     });
     if (r.canceled || !r.assets?.[0]) return null;
     const Manip = await import("expo-image-manipulator");
