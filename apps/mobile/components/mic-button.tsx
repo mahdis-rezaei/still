@@ -24,9 +24,13 @@ function speechAvailable(): boolean {
 export function MicButton({
   value,
   onChangeText,
+  onInsert,
 }: {
-  value: string;
-  onChangeText: (t: string) => void;
+  // Plain-text mode (TextInput): append the live transcript into `value`.
+  value?: string;
+  onChangeText?: (t: string) => void;
+  // Rich-editor mode: insert finalized phrases at the cursor instead.
+  onInsert?: (t: string) => void;
 }) {
   const [listening, setListening] = useState(false);
   const [starting, setStarting] = useState(false);
@@ -36,7 +40,7 @@ export function MicButton({
   const subsRef = useRef<any[]>([]);
 
   useEffect(() => {
-    valueRef.current = value;
+    valueRef.current = value ?? "";
   }, [value]);
 
   function cleanup() {
@@ -85,9 +89,15 @@ export function MicButton({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (e: any) => {
           const transcript = e?.results?.[0]?.transcript ?? "";
+          if (onInsert) {
+            // Rich editor: interim results churn, so only insert finalized
+            // phrases (each once) at the cursor.
+            if (e?.isFinal && transcript) onInsert(transcript + " ");
+            return;
+          }
           const base = baseRef.current;
           const sep = base && transcript && !base.endsWith(" ") ? " " : "";
-          onChangeText(base + sep + transcript);
+          onChangeText?.(base + sep + transcript);
         },
       );
       const onEnd = Speech.ExpoSpeechRecognitionModule.addListener("end", () =>

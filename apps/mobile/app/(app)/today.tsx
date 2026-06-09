@@ -6,7 +6,6 @@ import {
   Pressable,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -18,12 +17,15 @@ import { MemoryCard } from "../../components/memory-card";
 import { OnThisDay } from "../../components/on-this-day";
 import { EntryPhotos } from "../../components/entry-photos";
 import { MicButton } from "../../components/mic-button";
-import { FormatToolbar } from "../../components/format-toolbar";
-import { applyMarkup, markupToHtml, type FormatAction } from "../../lib/markup";
+import { RichEditor, type RichEditorHandle } from "../../components/rich-editor";
+import { htmlToPlain, plainToHtml } from "../../lib/html";
 
 type JournalEntry = {
   id: string;
   body: string;
+  // Rich-text layer (sanitized HTML) — the editor's content; the plain `body`
+  // is derived from it server-side.
+  bodyRich?: string | null;
   entryDate: string | null;
   source: string;
   createdAt: string;
@@ -125,20 +127,8 @@ export default function Today() {
   const loadedRef = useRef(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveSequenceRef = useRef(0);
-  const editorRef = useRef<TextInput>(null);
-  // Track the latest body + cursor so a toolbar tap can format the right span
-  // without controlling the TextInput selection (which makes RN editors janky).
-  const bodyRef = useRef(body);
-  const selRef = useRef({ start: 0, end: 0 });
-
-  useEffect(() => {
-    bodyRef.current = body;
-  }, [body]);
-
-  function applyFormat(action: FormatAction) {
-    const { start, end } = selRef.current;
-    setBody(applyMarkup(bodyRef.current, start, end, action));
-  }
+  // `body` holds the editor's rich HTML; the server derives the plain body from it.
+  const editorRef = useRef<RichEditorHandle>(null);
 
   // "Bring a page back" — the engine read. A long archive is a two-pass model
   // read (can take a couple of minutes), so show calm, time-aware reassurance
@@ -189,27 +179,35 @@ export default function Today() {
             (entry) => entry.entryDate === entryDate && entry.source === "manual",
           ) ?? null;
 
-        const serverBody = todayEntry?.body ?? "";
+        // The editor works in HTML: use the saved rich layer, or wrap a plain
+        // page's text into HTML so it opens cleanly in the editor.
+        const serverHtml = todayEntry
+          ? (todayEntry.bodyRich ?? plainToHtml(todayEntry.body))
+          : "";
         const serverUpdatedAt = todayEntry?.updatedAt ?? new Date(0).toISOString();
 
         const draftIsNewer =
           draft &&
-          draft.body !== serverBody &&
+          draft.body !== serverHtml &&
           new Date(draft.updatedAt).getTime() > new Date(serverUpdatedAt).getTime();
 
+        const initial = draftIsNewer ? draft.body : serverHtml;
         setEntryId(todayEntry?.id ?? null);
-        setLastSavedBody(serverBody);
-        setBody(draftIsNewer ? draft.body : serverBody);
+        setLastSavedBody(serverHtml);
+        setBody(initial);
+        editorRef.current?.setHtml(initial);
 
         if (draftIsNewer) setStatus("offline");
-        else setStatus(serverBody.trim() ? "saved" : "idle");
+        else setStatus(htmlToPlain(serverHtml).trim() ? "saved" : "idle");
       } catch {
         const draft = await readDraft(draftKey);
         if (cancelled) return;
 
-        setBody(draft?.body ?? "");
+        const initial = draft?.body ?? "";
+        setBody(initial);
+        editorRef.current?.setHtml(initial);
         setLastSavedBody("");
-        setStatus(draft?.body ? "offline" : "idle");
+        setStatus(htmlToPlain(initial).trim() ? "offline" : "idle");
       } finally {
         loadedRef.current = true;
       }
@@ -230,12 +228,14 @@ export default function Today() {
 
     void writeDraft(draftKey, body);
 
+    const plain = htmlToPlain(body);
+
     if (body === lastSavedBody) {
-      setStatus(body.trim() ? "saved" : "idle");
+      setStatus(plain.trim() ? "saved" : "idle");
       return;
     }
 
-    if (!body.trim()) {
+    if (!plain.trim()) {
       setStatus("draft");
       return;
     }
@@ -249,15 +249,9 @@ export default function Today() {
       async function save() {
         setStatus("saving");
 
-        // Convert the writer's markers to the allowlist HTML. We ALWAYS send
-        // bodyRich explicitly (html when formatted, null otherwise) so the
-        // server's plain `body` and the rich layer can never drift apart.
-        const { html, hasFormatting } = markupToHtml(body);
-        const payload = {
-          body,
-          bodyRich: hasFormatting ? html : null,
-          entryDate,
-        };
+        // `body` is the editor's HTML. Send it as bodyRich (the server sanitizes
+        // it and derives the canonical plain `body`); `plain` is just a fallback.
+        const payload = { body: plain, bodyRich: body, entryDate };
 
         try {
           const saved = entryId
@@ -273,16 +267,10 @@ export default function Today() {
           if (saveSequenceRef.current !== sequence) return;
 
           setEntryId(saved.id);
-          // When formatted, keep the editor + local draft on the MARKER text
-          // (saved.body is the stripped plain version); otherwise track the
-          // server's body as before.
-          if (hasFormatting) {
-            setLastSavedBody(body);
-            await writeDraft(draftKey, body);
-          } else {
-            setLastSavedBody(saved.body);
-            await writeDraft(draftKey, saved.body);
-          }
+          // Keep the editor + local draft on the HTML we hold (saved.body is the
+          // stripped plain version, which would lose the formatting).
+          setLastSavedBody(body);
+          await writeDraft(draftKey, body);
           setStatus("saved");
         } catch {
           if (saveSequenceRef.current !== sequence) return;
@@ -303,12 +291,13 @@ export default function Today() {
   async function ensureEntry(): Promise<string | null> {
     if (entryId) return entryId;
     try {
+      const plain = htmlToPlain(body);
       const saved = await api<JournalEntry>("/entries", {
         method: "POST",
-        body: { body, entryDate },
+        body: { body: plain || " ", bodyRich: body, entryDate },
       });
       setEntryId(saved.id);
-      setLastSavedBody(saved.body);
+      setLastSavedBody(body);
       return saved.id;
     } catch {
       return null;
@@ -409,37 +398,25 @@ export default function Today() {
           remember about today?
         </Text>
 
-        <View className="mt-6 rounded-3xl border border-border bg-surface px-5 py-4">
+        <View className="mt-6 rounded-3xl border border-border bg-surface px-2 py-2 overflow-hidden">
           {status === "loading" ? (
             <View className="min-h-80 items-center justify-center">
               <ActivityIndicator color="#3A2F25" />
             </View>
           ) : (
-            <>
-              <View className="mb-3 border-b border-border pb-3">
-                <FormatToolbar onAction={applyFormat} />
-              </View>
-              <TextInput
-                ref={editorRef}
-                value={body}
-                onChangeText={setBody}
-                onSelectionChange={(e) => {
-                  selRef.current = e.nativeEvent.selection;
-                }}
-                multiline
-                textAlignVertical="top"
-                placeholder="Start with one sentence…"
-                placeholderTextColor="#A59B8D"
-                className="min-h-80 text-lg leading-7 text-ink"
-                autoCorrect
-                scrollEnabled={false}
-              />
-            </>
+            <RichEditor
+              ref={editorRef}
+              initialHtml={body}
+              onChangeHtml={setBody}
+              placeholder="Start with one sentence…"
+            />
           )}
-          <View className="mt-3">
-            <MicButton value={body} onChangeText={setBody} />
+          <View className="mt-3 px-3">
+            <MicButton onInsert={(t) => editorRef.current?.insertText(t)} />
           </View>
-          <EntryPhotos entryId={entryId} ensureEntry={ensureEntry} />
+          <View className="px-3">
+            <EntryPhotos entryId={entryId} ensureEntry={ensureEntry} />
+          </View>
         </View>
 
         <Text className="text-faint-ink text-sm mt-4 leading-relaxed">
