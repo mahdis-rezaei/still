@@ -1,6 +1,9 @@
 import { useCallback, useState } from "react";
 import {
+  ActionSheetIOS,
   ActivityIndicator,
+  Alert,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -19,13 +22,10 @@ import {
 import { KeyboardDone, KEYBOARD_DONE_ID } from "../keyboard-done";
 
 // Memory Capsules: seal a letter to your future self; locked until its delivery
-// date, then openable. Delivery uses presets (a native date picker would need a
-// rebuild). Used by the Explore tab and the standalone /capsules route.
-const PRESETS = [
-  { label: "In 1 year", years: 1 },
-  { label: "In 5 years", years: 5 },
-  { label: "In 10 years", years: 10 },
-];
+// date, then openable. Delivery is In 1/5/10 years or a chosen date (mirrors the
+// web's Deliver dropdown). Used by the Explore tab and the standalone /capsules route.
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const PRESETS = [1, 5, 10];
 
 function isoYearsFromNow(years: number): string {
   const d = new Date();
@@ -38,8 +38,38 @@ export default function CapsulesView() {
   const [items, setItems] = useState<Capsule[]>([]);
   const [loading, setLoading] = useState(true);
   const [body, setBody] = useState("");
+  // Delivery: a year preset, or a chosen date.
+  const [mode, setMode] = useState<"years" | "date">("years");
   const [years, setYears] = useState(1);
+  const [dateStr, setDateStr] = useState("");
   const [sealing, setSealing] = useState(false);
+
+  const deliverLabel = mode === "date" ? "On a date…" : `In ${years} ${years === 1 ? "year" : "years"}`;
+
+  function pickDeliver() {
+    const options = [...PRESETS.map((y) => `In ${y} ${y === 1 ? "year" : "years"}`), "On a date…"];
+    const choose = (i: number) => {
+      if (i < PRESETS.length) {
+        setMode("years");
+        setYears(PRESETS[i]);
+      } else {
+        setMode("date");
+      }
+    };
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { title: "Deliver", options: [...options, "Cancel"], cancelButtonIndex: options.length },
+        (i) => {
+          if (i != null && i < options.length) choose(i);
+        },
+      );
+    } else {
+      Alert.alert("Deliver", undefined, [
+        ...options.map((label, i) => ({ text: label, onPress: () => choose(i) })),
+        { text: "Cancel", style: "cancel" as const },
+      ]);
+    }
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -60,9 +90,26 @@ export default function CapsulesView() {
 
   async function seal() {
     if (!body.trim() || sealing) return;
+
+    let deliverAt: string;
+    if (mode === "years") {
+      deliverAt = isoYearsFromNow(years);
+    } else {
+      if (!ISO_DATE.test(dateStr)) {
+        Alert.alert("Pick a date", "Enter the delivery date as YYYY-MM-DD.");
+        return;
+      }
+      const d = new Date(dateStr + "T12:00:00");
+      if (Number.isNaN(d.getTime()) || d.getTime() <= Date.now()) {
+        Alert.alert("Choose a future date", "A capsule has to open sometime ahead.");
+        return;
+      }
+      deliverAt = d.toISOString();
+    }
+
     setSealing(true);
     try {
-      const c = await createCapsule(body.trim(), isoYearsFromNow(years));
+      const c = await createCapsule(body.trim(), deliverAt);
       setBody("");
       setItems((list) =>
         [c, ...list].sort((a, b) => a.deliverAt.localeCompare(b.deliverAt)),
@@ -114,28 +161,24 @@ export default function CapsulesView() {
           />
           <View>
             <Text className="text-faint-ink text-xs mb-2">Deliver</Text>
-            <View className="flex-row gap-2">
-              {PRESETS.map((p) => {
-                const sel = p.years === years;
-                return (
-                  <Pressable
-                    key={p.years}
-                    onPress={() => setYears(p.years)}
-                    className={
-                      "flex-1 items-center rounded-full border px-3 py-2 " +
-                      (sel ? "bg-deep-brown border-deep-brown" : "bg-surface border-border")
-                    }
-                  >
-                    <Text
-                      style={{ fontSize: 13 }}
-                      className={sel ? "text-background" : "text-soft-ink"}
-                    >
-                      {p.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
+            <Pressable
+              onPress={pickDeliver}
+              className="flex-row items-center justify-between rounded-xl border border-border bg-background px-4 py-3"
+            >
+              <Text className="text-ink" style={{ fontSize: 14 }}>{deliverLabel}</Text>
+              <Text className="text-faint-ink">⌄</Text>
+            </Pressable>
+            {mode === "date" ? (
+              <TextInput
+                value={dateStr}
+                onChangeText={setDateStr}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor="#A59B8D"
+                autoCapitalize="none"
+                className="mt-2 rounded-xl border border-border bg-background px-4 py-3 text-ink"
+                style={{ fontSize: 14 }}
+              />
+            ) : null}
           </View>
           <Pressable
             onPress={seal}
