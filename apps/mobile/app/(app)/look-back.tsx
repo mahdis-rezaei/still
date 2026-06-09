@@ -166,9 +166,9 @@ export default function LookBack() {
     yYear ?? years.find((y) => y <= new Date().getFullYear()) ?? years[0] ?? null;
 
   const TABS: { key: Tab; label: string }[] = [
-    { key: "returning", label: "What keeps returning" },
-    { key: "revisit", label: "Revisit a time" },
-    { key: "year", label: "Your Year in Pages" },
+    { key: "returning", label: "What returns" },
+    { key: "revisit", label: "Revisit" },
+    { key: "year", label: "Year in Pages" },
   ];
 
   return (
@@ -183,31 +183,26 @@ export default function LookBack() {
     >
       <Text className="text-4xl text-deep-brown">Look back</Text>
 
-      {/* Sub-tabs. */}
-      <View className="mt-5">
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View className="flex-row gap-2">
-            {TABS.map((t) => {
-              const sel = t.key === tab;
-              return (
-                <Pressable
-                  key={t.key}
-                  onPress={() => setTab(t.key)}
-                  className={
-                    "rounded-full border px-4 py-2 " +
-                    (sel ? "bg-deep-brown border-deep-brown" : "bg-surface border-border")
-                  }
+      {/* Sub-tabs — a quiet text nav, mirroring Explore (no pills, no scroll). */}
+      <View className="mt-5 border-b border-border/60">
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 20 }}
+        >
+          {TABS.map((t) => {
+            const sel = t.key === tab;
+            return (
+              <Pressable key={t.key} onPress={() => setTab(t.key)} className="py-3">
+                <Text
+                  style={{ fontSize: 15 }}
+                  className={sel ? "text-ink" : "text-soft-ink"}
                 >
-                  <Text
-                    style={{ fontSize: 13 }}
-                    className={sel ? "text-background" : "text-soft-ink"}
-                  >
-                    {t.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+                  {t.label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </ScrollView>
       </View>
 
