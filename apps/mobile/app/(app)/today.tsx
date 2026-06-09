@@ -6,15 +6,12 @@ import {
   Pressable,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
-import { bringPageBack, type MemoryRunResult } from "../../lib/memories";
-import { MemoryCard } from "../../components/memory-card";
 import { OnThisDay } from "../../components/on-this-day";
 import { EntryPhotos } from "../../components/entry-photos";
 import { MicButton } from "../../components/mic-button";
@@ -130,44 +127,6 @@ export default function Today() {
   const saveSequenceRef = useRef(0);
   // `body` holds the editor's rich HTML; the server derives the plain body from it.
   const editorRef = useRef<RichEditorHandle>(null);
-
-  // "Bring a page back" — the engine read. A long archive is a two-pass model
-  // read (can take a couple of minutes), so show calm, time-aware reassurance
-  // while pending; a silent wait reads as "broken."
-  const [run, setRun] = useState<MemoryRunResult | null>(null);
-  const [pending, setPending] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
-  useEffect(() => {
-    if (!pending) {
-      setElapsed(0);
-      return;
-    }
-    const t = setInterval(() => setElapsed((s) => s + 1), 1000);
-    return () => clearInterval(t);
-  }, [pending]);
-
-  // Optional scope: narrow the read to a year (and optional month).
-  const [scopeOpen, setScopeOpen] = useState(false);
-  const [scopeYear, setScopeYear] = useState("");
-  const [scopeMonth, setScopeMonth] = useState("");
-
-  async function onBringPageBack() {
-    setRun(null);
-    setPending(true);
-    try {
-      const year = /^\d{4}$/.test(scopeYear) ? Number(scopeYear) : undefined;
-      const monthNum = Number(scopeMonth);
-      const month =
-        year && Number.isInteger(monthNum) && monthNum >= 1 && monthNum <= 12
-          ? monthNum
-          : undefined;
-      setRun(await bringPageBack({ year, month }));
-    } catch {
-      setRun({ surfaced: false, reason: "error" });
-    } finally {
-      setPending(false);
-    }
-  }
 
   useEffect(() => {
     let cancelled = false;
@@ -345,100 +304,9 @@ export default function Today() {
           </Pressable>
         </View>
 
-        {/* The engine: bring back one page worth returning to, or stay silent. */}
-        <View className="mt-6 flex-row items-center gap-3">
-          <Pressable
-            onPress={onBringPageBack}
-            disabled={pending}
-            style={{ opacity: pending ? 0.5 : 1 }}
-            className="self-start rounded-full border border-border bg-surface px-5 py-3"
-          >
-            <Text className="text-soft-ink">
-              {pending ? "Reading…" : "✦ Bring a page back"}
-            </Text>
-          </Pressable>
-          <Pressable onPress={() => setScopeOpen((v) => !v)} hitSlop={8}>
-            <Text className="text-faint-ink" style={{ fontSize: 13 }}>
-              {scopeOpen ? "Across all years" : "Choose a time"}
-            </Text>
-          </Pressable>
-        </View>
-
-        {scopeOpen && (
-          <View className="mt-3 rounded-2xl border border-border bg-surface px-4 py-3">
-            <Text className="text-faint-ink text-xs mb-2 leading-relaxed">
-              Read from one year (and optionally one month), instead of across all
-              your pages.
-            </Text>
-            <View className="flex-row gap-2">
-              <TextInput
-                value={scopeYear}
-                onChangeText={setScopeYear}
-                keyboardType="number-pad"
-                placeholder="Year (e.g. 2019)"
-                placeholderTextColor="#A59B8D"
-                className="flex-1 rounded-xl border border-border bg-background px-3 py-2.5 text-ink"
-                style={{ fontSize: 13 }}
-              />
-              <TextInput
-                value={scopeMonth}
-                onChangeText={setScopeMonth}
-                keyboardType="number-pad"
-                placeholder="Month 1–12 (optional)"
-                placeholderTextColor="#A59B8D"
-                className="flex-1 rounded-xl border border-border bg-background px-3 py-2.5 text-ink"
-                style={{ fontSize: 13 }}
-              />
-            </View>
-          </View>
-        )}
-
-        {pending && (
-          <View className="mt-4 rounded-3xl border border-border bg-surface p-5">
-            <Text className="text-soft-ink leading-relaxed">
-              {elapsed < 10
-                ? "Reading through your pages…"
-                : elapsed < 35
-                  ? "Still reading, looking across the years…"
-                  : elapsed < 90
-                    ? "Your archive is large, so this takes a moment. Hang tight, Yadegar is still reading."
-                    : "Almost there, a long archive takes a little longer to read."}
-            </Text>
-          </View>
-        )}
-
-        {run && !pending && (
-          <View className="mt-4">
-            {run.surfaced && run.memory ? (
-              <View className="gap-3">
-                <MemoryCard memory={run.memory} />
-                <Pressable
-                  onPress={() => setRun(null)}
-                  hitSlop={8}
-                  className="self-start"
-                >
-                  <Text className="text-xs text-faint-ink">close</Text>
-                </Pressable>
-              </View>
-            ) : (
-              <View className="rounded-3xl border border-border bg-surface p-5">
-                <Text className="text-soft-ink leading-relaxed">
-                  {run.reason === "crisis"
-                    ? run.supportMessage
-                    : run.reason === "quota"
-                      ? "You've used this month's returns. Revisiting what's already returned to you is always free."
-                      : run.reason === "not_enough"
-                        ? "Write or bring in a few pages first, and Yadegar will have something to return."
-                        : run.reason === "error"
-                          ? "Something interrupted the reading. Try again in a moment."
-                          : "Nothing honest surfaced this time. That's okay, Yadegar is better quiet than false."}
-                </Text>
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* Date-based returns from this day in years past, quiet when empty. */}
+        {/* Date-based returns from this day in years past, quiet when empty.
+            The engine reads (what keeps returning, revisit a time…) live under
+            Look back, mirroring the web. */}
         <OnThisDay />
 
         <Text className="text-ink text-lg mt-10 leading-relaxed">

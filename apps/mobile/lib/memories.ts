@@ -102,25 +102,15 @@ async function pollRunJob(jobId: string): Promise<MemoryRunResult> {
   return { surfaced: false, reason: "error" };
 }
 
-// POST /memories/run. The run may come back synchronously (a result) or as an
+// Shared engine POST. The run may come back synchronously (a result) or as an
 // async job to poll (ADR 0002). A 402 means the free quota is spent (only when
 // enforcement is on) — surface it as a calm "quota" reason rather than an error.
-// An optional scope narrows the read to a year (and optional month); omitted, it
-// reads across all the years.
-export interface RunScope {
-  year?: number;
-  month?: number;
-}
-
-export async function bringPageBack(scope: RunScope = {}): Promise<MemoryRunResult> {
-  const body: RunScope = {};
-  if (scope.year) body.year = scope.year;
-  if (scope.month) body.month = scope.month;
+async function postRun(path: string, body: object): Promise<MemoryRunResult> {
   try {
-    const resp = await api<MemoryRunResult & { jobId?: string }>(
-      "/memories/run",
-      { method: "POST", body },
-    );
+    const resp = await api<MemoryRunResult & { jobId?: string }>(path, {
+      method: "POST",
+      body,
+    });
     if (resp && typeof resp.jobId === "string") return pollRunJob(resp.jobId);
     return resp as MemoryRunResult;
   } catch (err) {
@@ -129,6 +119,35 @@ export async function bringPageBack(scope: RunScope = {}): Promise<MemoryRunResu
     }
     throw err;
   }
+}
+
+// POST /memories/run — "what keeps returning": the cross-time engine read. `fresh`
+// bypasses the cache for a re-roll; `entryIds` scopes it to one page (the
+// "forgotten page" pull). No args = the whole-archive read.
+export const bringPageBack = (
+  body: { fresh?: boolean; entryIds?: string[] } = {},
+) => postRun("/memories/run", body);
+
+// POST /memories/revisit { year, month } — the one line worth returning to from a
+// chosen month.
+export const revisitTime = (year: number, month: number) =>
+  postRun("/memories/revisit", { year, month });
+
+// POST /memories/then-and-now { year } — "how far you've come": a past year held
+// up against where you are now.
+export const thenAndNow = (year: number) =>
+  postRun("/memories/then-and-now", { year });
+
+// Distinct years the user has written in (newest first), derived from /entries —
+// the same source the web's Look back selectors use.
+export async function listEntryYears(): Promise<number[]> {
+  const rows = await api<{ entryDate: string | null }[]>("/entries");
+  const set = new Set<number>();
+  for (const r of rows) {
+    const y = r.entryDate ? Number(r.entryDate.slice(0, 4)) : NaN;
+    if (Number.isInteger(y)) set.add(y);
+  }
+  return [...set].sort((a, b) => b - a);
 }
 
 // --- Returns archive ---

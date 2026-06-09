@@ -6,16 +6,23 @@ import {
   Text,
   View,
 } from "react-native";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getYearInPages, type YearInPages } from "../../lib/extras";
 import { EntryRefCard } from "../../components/entry-ref-card";
 
 // Year in Pages: a quiet look back at a year — how much you wrote, how much you
-// reflected, and the pages you marked favorite. Step across years.
+// reflected, and the pages you marked favorite. Step across years. An optional
+// `year` param (from Look back → Your Year in Pages) sets the starting year.
 export default function Year() {
   const insets = useSafeAreaInsets();
-  const [year, setYear] = useState(new Date().getFullYear());
+  const params = useLocalSearchParams<{ year?: string }>();
+  const initialYear = Number(params.year);
+  const [year, setYear] = useState(
+    Number.isInteger(initialYear) && initialYear > 1900
+      ? initialYear
+      : new Date().getFullYear(),
+  );
   const [data, setData] = useState<YearInPages | null>(null);
   const [loading, setLoading] = useState(true);
 

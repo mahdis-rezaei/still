@@ -1,48 +1,184 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
-  RefreshControl,
   ScrollView,
   Text,
   View,
 } from "react-native";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
+  bringPageBack,
+  revisitTime,
+  thenAndNow,
+  listEntryYears,
   getLookBack,
-  onThisDayLabel,
   type DateMemory,
-  type LookBack as LookBackData,
+  type MemoryRunResult,
 } from "../../lib/memories";
-import { DateMemoryCard } from "../../components/date-memory-card";
+import { MemoryCard } from "../../components/memory-card";
 
-// Look Back: every date-based way a page returns, gathered into quiet sections —
-// on this day, around this time, the ones you treasured, and pages long unopened.
-// These are your OWN pages surfaced by date; the engine doesn't speak here. Each
-// section is silent when empty, so it's never an empty shelf.
-function yearsAgoLabel(m: DateMemory): string {
-  return m.yearsAgo === 1 ? "A year ago" : `${m.yearsAgo} years ago`;
+// Look back mirrors the web: three quiet tabs of engine reads —
+//  · What keeps returning (the cross-time thread + a page you'd forgotten)
+//  · Revisit a time (a chosen month, and how far you've come from a past year)
+//  · Your Year in Pages (a whole year gathered to read)
+// Each read is button-to-surface (the engine never speaks unbidden) and stays
+// honestly silent when nothing real surfaces.
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+type Tab = "returning" | "revisit" | "year";
+
+function silenceMessage(r: MemoryRunResult): string {
+  if (r.reason === "crisis" && r.supportMessage) return r.supportMessage;
+  if (r.reason === "quota")
+    return "You've used this month's returns. Revisiting what's already returned to you is always free.";
+  if (r.reason === "not_enough")
+    return "Write or bring in a few more pages first, and Yadegar will have something to return.";
+  if (r.reason === "error")
+    return "Something interrupted the reading. Try again in a moment.";
+  return "Nothing honest surfaced this time. That's okay — Yadegar is better quiet than false.";
 }
 
-function Section({
-  title,
-  items,
-  heading,
+// A button-to-surface engine read: calm reassurance while it reads, then the
+// voiced page, or honest silence.
+function useRun() {
+  const [pending, setPending] = useState(false);
+  const [result, setResult] = useState<MemoryRunResult | null>(null);
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    if (!pending) {
+      setElapsed(0);
+      return;
+    }
+    const t = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [pending]);
+
+  const run = useCallback(async (fn: () => Promise<MemoryRunResult>) => {
+    setResult(null);
+    setPending(true);
+    try {
+      setResult(await fn());
+    } catch {
+      setResult({ surfaced: false, reason: "error" });
+    } finally {
+      setPending(false);
+    }
+  }, []);
+
+  return { pending, result, elapsed, run };
+}
+
+function RunView({
+  pending,
+  elapsed,
+  result,
 }: {
-  title: string;
-  items: DateMemory[];
-  heading: (m: DateMemory) => string;
+  pending: boolean;
+  elapsed: number;
+  result: MemoryRunResult | null;
 }) {
-  if (items.length === 0) return null;
-  return (
-    <View className="mt-10">
-      <Text className="text-2xl text-deep-brown mb-4">{title}</Text>
-      <View className="gap-4">
-        {items.map((m) => (
-          <DateMemoryCard key={m.entryId} heading={heading(m)} memory={m} />
-        ))}
+  if (pending) {
+    return (
+      <View className="mt-4 rounded-3xl border border-border bg-surface p-5">
+        <Text className="text-soft-ink leading-relaxed">
+          {elapsed < 10
+            ? "Reading across your years…"
+            : elapsed < 35
+              ? "Still reading, looking for what keeps coming back…"
+              : elapsed < 90
+                ? "Your archive is large, so this takes a moment. Hang tight, Yadegar is still reading."
+                : "Almost there — a long archive takes a little longer to read."}
+        </Text>
       </View>
+    );
+  }
+  if (!result) return null;
+  if (result.surfaced && result.memory) {
+    return (
+      <View className="mt-4">
+        <MemoryCard memory={result.memory} />
+      </View>
+    );
+  }
+  return (
+    <View className="mt-4 rounded-3xl border border-border bg-surface p-5">
+      <Text className="text-soft-ink leading-relaxed">{silenceMessage(result)}</Text>
+    </View>
+  );
+}
+
+function PillButton({
+  label,
+  onPress,
+  disabled,
+}: {
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      style={{ opacity: disabled ? 0.5 : 1 }}
+      className="self-start rounded-full border border-border bg-surface px-5 py-3"
+    >
+      <Text className="text-soft-ink">{label}</Text>
+    </Pressable>
+  );
+}
+
+// A horizontal chip selector (no native picker dependency).
+function Chips<T extends string | number>({
+  options,
+  value,
+  onChange,
+  labelOf,
+}: {
+  options: T[];
+  value: T | null;
+  onChange: (v: T) => void;
+  labelOf: (v: T) => string;
+}) {
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      <View className="flex-row gap-2">
+        {options.map((o) => {
+          const sel = o === value;
+          return (
+            <Pressable
+              key={String(o)}
+              onPress={() => onChange(o)}
+              className={
+                "rounded-full border px-4 py-2 " +
+                (sel ? "bg-deep-brown border-deep-brown" : "bg-surface border-border")
+              }
+            >
+              <Text
+                style={{ fontSize: 13 }}
+                className={sel ? "text-background" : "text-soft-ink"}
+              >
+                {labelOf(o)}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </ScrollView>
+  );
+}
+
+function SectionHeading({ title, body }: { title: string; body: string }) {
+  return (
+    <View className="mb-4">
+      <Text className="text-2xl text-deep-brown">{title}</Text>
+      <Text className="text-soft-ink mt-1 leading-relaxed">{body}</Text>
     </View>
   );
 }
@@ -51,120 +187,270 @@ export default function LookBack() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
-  const [data, setData] = useState<LookBackData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>("returning");
+  const [years, setYears] = useState<number[]>([]);
+  const [forgotten, setForgotten] = useState<DateMemory[]>([]);
 
-  const load = useCallback(async ({ refresh = false } = {}) => {
-    if (refresh) setRefreshing(true);
-    else setLoading(true);
-    setError(null);
-    try {
-      setData(await getLookBack());
-    } catch {
-      setError("Could not load your pages. Please try again.");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
+  useEffect(() => {
+    void (async () => {
+      try {
+        setYears(await listEntryYears());
+      } catch {
+        // selectors stay hidden until years load
+      }
+      try {
+        setForgotten((await getLookBack()).forgotten);
+      } catch {
+        // forgotten section stays empty
+      }
+    })();
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      void load();
-    }, [load]),
-  );
+  // What keeps returning + A page you'd forgotten.
+  const wkr = useRun();
+  const forg = useRun();
+  const [forgIdx, setForgIdx] = useState(-1);
 
-  const empty =
-    data != null &&
-    data.onThisDay.length === 0 &&
-    data.aroundThisTime.length === 0 &&
-    data.favorites.length === 0 &&
-    data.forgotten.length === 0;
+  function showForgotten() {
+    if (forgotten.length === 0) return;
+    let next = Math.floor(Math.random() * forgotten.length);
+    if (forgotten.length > 1 && next === forgIdx) next = (next + 1) % forgotten.length;
+    setForgIdx(next);
+    const entry = forgotten[next];
+    void forg.run(() => bringPageBack({ entryIds: [entry.entryId] }));
+  }
+
+  // Revisit a time + How far you've come.
+  const revisit = useRun();
+  const [rMonth, setRMonth] = useState<number | null>(null);
+  const [rYear, setRYear] = useState<number | null>(null);
+  const thenNow = useRun();
+  const [tYear, setTYear] = useState<number | null>(null);
+  const pastYears = years.filter((y) => y !== new Date().getFullYear());
+
+  // Your Year in Pages.
+  const [yYear, setYYear] = useState<number | null>(null);
+  const pickedYear =
+    yYear ?? years.find((y) => y <= new Date().getFullYear()) ?? years[0] ?? null;
+
+  const TABS: { key: Tab; label: string }[] = [
+    { key: "returning", label: "What keeps returning" },
+    { key: "revisit", label: "Revisit a time" },
+    { key: "year", label: "Your Year in Pages" },
+  ];
 
   return (
     <ScrollView
       className="flex-1 bg-background"
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={() => void load({ refresh: true })}
-        />
-      }
+      keyboardShouldPersistTaps="handled"
       contentContainerStyle={{
         paddingTop: 14,
         paddingHorizontal: 24,
         paddingBottom: insets.bottom + 48,
       }}
     >
-      <View>
-        <Text className="text-4xl text-deep-brown">Look back</Text>
-        <Text className="text-soft-ink mt-1 leading-relaxed">
-          Your own pages, by date and by the ones you treasured.
-        </Text>
+      <Text className="text-4xl text-deep-brown">Look back</Text>
+
+      {/* Sub-tabs. */}
+      <View className="mt-5">
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View className="flex-row gap-2">
+            {TABS.map((t) => {
+              const sel = t.key === tab;
+              return (
+                <Pressable
+                  key={t.key}
+                  onPress={() => setTab(t.key)}
+                  className={
+                    "rounded-full border px-4 py-2 " +
+                    (sel ? "bg-deep-brown border-deep-brown" : "bg-surface border-border")
+                  }
+                >
+                  <Text
+                    style={{ fontSize: 13 }}
+                    className={sel ? "text-background" : "text-soft-ink"}
+                  >
+                    {t.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </ScrollView>
       </View>
 
-      {/* Reflective keepsakes. */}
-      <View className="mt-5 flex-row gap-2">
-        {[
-          { label: "Year in Pages", to: "/(app)/year" },
-          { label: "Capsules", to: "/(app)/capsules" },
-        ].map((b) => (
-          <Pressable
-            key={b.to}
-            onPress={() => router.push(b.to as never)}
-            className="flex-1 items-center rounded-full border border-border bg-surface px-3 py-2"
-          >
-            <Text className="text-soft-ink" style={{ fontSize: 13 }}>
-              {b.label}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+      {tab === "returning" && (
+        <View className="mt-8">
+          <SectionHeading
+            title="What keeps returning"
+            body="Across years of pages, the same things quietly resurface — a worry, a hope, a line you keep coming back to. Yadegar reads your whole archive and brings back one thread worth sitting with."
+          />
+          {!wkr.pending && !wkr.result ? (
+            <PillButton
+              label="✦ Show me what keeps returning"
+              onPress={() => void wkr.run(() => bringPageBack({}))}
+            />
+          ) : null}
+          <RunView pending={wkr.pending} elapsed={wkr.elapsed} result={wkr.result} />
+          {!wkr.pending && wkr.result?.surfaced ? (
+            <Pressable
+              onPress={() => void wkr.run(() => bringPageBack({ fresh: true }))}
+              className="mt-3 self-start"
+            >
+              <Text className="text-faint-ink" style={{ fontSize: 13 }}>
+                show another →
+              </Text>
+            </Pressable>
+          ) : null}
 
-      {loading ? (
-        <View className="min-h-80 items-center justify-center">
-          <ActivityIndicator color="#3A2F25" />
+          <View className="mt-12">
+            <SectionHeading
+              title="A page you'd forgotten"
+              body="Or let an old page find you — one that's slipped out of view, read back in Yadegar's voice."
+            />
+            {forgotten.length === 0 ? (
+              <Text className="text-faint-ink leading-relaxed">
+                As your pages span more years, forgotten ones will surface here.
+              </Text>
+            ) : (
+              <>
+                {!forg.pending && !forg.result ? (
+                  <PillButton
+                    label="✦ Bring back a page you'd forgotten"
+                    onPress={showForgotten}
+                  />
+                ) : null}
+                <RunView
+                  pending={forg.pending}
+                  elapsed={forg.elapsed}
+                  result={forg.result}
+                />
+                {!forg.pending && forg.result && forgotten.length > 1 ? (
+                  <Pressable onPress={showForgotten} className="mt-3 self-start">
+                    <Text className="text-faint-ink" style={{ fontSize: 13 }}>
+                      show another →
+                    </Text>
+                  </Pressable>
+                ) : null}
+              </>
+            )}
+          </View>
         </View>
-      ) : error ? (
-        <View className="mt-10 rounded-3xl border border-border bg-surface p-5">
-          <Text className="text-ink">{error}</Text>
-          <Pressable onPress={() => void load()} className="mt-4">
-            <Text className="text-deep-brown">Try again</Text>
-          </Pressable>
-        </View>
-      ) : empty ? (
-        <View className="mt-10 rounded-3xl border border-border bg-surface p-6">
-          <Text className="text-lg text-ink">Nothing to look back on yet.</Text>
-          <Text className="mt-2 text-soft-ink leading-relaxed">
-            As your pages span more time, this fills in on its own.
-          </Text>
-        </View>
-      ) : (
-        <>
-          <Section
-            title="On this day"
-            items={data!.onThisDay}
-            heading={onThisDayLabel}
-          />
-          <Section
-            title="Around this time"
-            items={data!.aroundThisTime}
-            heading={yearsAgoLabel}
-          />
-          <Section
-            title="Pages you treasured"
-            items={data!.favorites}
-            heading={yearsAgoLabel}
-          />
-          <Section
-            title="Long unopened"
-            items={data!.forgotten}
-            heading={yearsAgoLabel}
-          />
-        </>
       )}
+
+      {tab === "revisit" && (
+        <View className="mt-8">
+          <SectionHeading
+            title="Revisit a time"
+            body="Pick a month and year, and Yadegar reads that stretch of your life back to you in your own words. A way to return somewhere on purpose."
+          />
+          {years.length === 0 ? (
+            <Text className="text-faint-ink leading-relaxed">
+              Once you have a few months of pages, you can revisit any of them here.
+            </Text>
+          ) : (
+            <>
+              <Text className="text-soft-ink mb-2" style={{ fontSize: 13 }}>
+                Month
+              </Text>
+              <Chips
+                options={MONTHS.map((_, i) => i + 1)}
+                value={rMonth}
+                onChange={setRMonth}
+                labelOf={(m) => MONTHS[m - 1]}
+              />
+              <Text className="text-soft-ink mt-3 mb-2" style={{ fontSize: 13 }}>
+                Year
+              </Text>
+              <Chips options={years} value={rYear} onChange={setRYear} labelOf={String} />
+              <View className="mt-4">
+                <PillButton
+                  label={revisit.pending ? "Reading…" : "Show me"}
+                  disabled={!rMonth || !rYear || revisit.pending}
+                  onPress={() =>
+                    rMonth && rYear && void revisit.run(() => revisitTime(rYear, rMonth))
+                  }
+                />
+              </View>
+              <RunView
+                pending={revisit.pending}
+                elapsed={revisit.elapsed}
+                result={revisit.result}
+              />
+            </>
+          )}
+
+          {pastYears.length > 0 ? (
+            <View className="mt-12">
+              <SectionHeading
+                title="How far you've come"
+                body="Or choose a past year, and Yadegar holds it up against where you are now — the distance you've travelled since."
+              />
+              <Chips options={pastYears} value={tYear} onChange={setTYear} labelOf={String} />
+              <View className="mt-4">
+                <PillButton
+                  label={thenNow.pending ? "Reading…" : "Show me"}
+                  disabled={!tYear || thenNow.pending}
+                  onPress={() => tYear && void thenNow.run(() => thenAndNow(tYear))}
+                />
+              </View>
+              <RunView
+                pending={thenNow.pending}
+                elapsed={thenNow.elapsed}
+                result={thenNow.result}
+              />
+            </View>
+          ) : null}
+        </View>
+      )}
+
+      {tab === "year" && (
+        <View className="mt-8">
+          <SectionHeading
+            title="Your Year in Pages"
+            body="A whole year of your writing, gathered into one place to read straight through. The keepsake at the heart of Yadegar."
+          />
+          {years.length === 0 ? (
+            <Text className="text-faint-ink leading-relaxed">
+              Once you've written across a year, you can gather it into a book here.
+            </Text>
+          ) : (
+            <>
+              {years.length > 1 ? (
+                <>
+                  <Text className="text-soft-ink mb-2" style={{ fontSize: 13 }}>
+                    Year
+                  </Text>
+                  <Chips options={years} value={pickedYear} onChange={setYYear} labelOf={String} />
+                </>
+              ) : null}
+              <Pressable
+                onPress={() =>
+                  router.push({
+                    pathname: "/(app)/year",
+                    params: pickedYear ? { year: String(pickedYear) } : {},
+                  })
+                }
+                className="mt-4 rounded-3xl border border-border bg-surface px-6 py-5"
+              >
+                <Text className="text-3xl text-deep-brown">{pickedYear} →</Text>
+                <Text className="text-soft-ink mt-1 leading-relaxed">
+                  Open this year as a single, readable letter.
+                </Text>
+              </Pressable>
+            </>
+          )}
+        </View>
+      )}
+
+      <Pressable
+        onPress={() => router.push("/(app)/returns")}
+        className="mt-12 self-start"
+      >
+        <Text className="text-soft-ink" style={{ fontSize: 13 }}>
+          Everything Yadegar has brought back is kept in your Returns →
+        </Text>
+      </Pressable>
     </ScrollView>
   );
 }
