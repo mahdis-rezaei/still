@@ -5,12 +5,13 @@ import {
   useRef,
   useState,
 } from "react";
-import { Text, View } from "react-native";
+import { Text, TextInput, View } from "react-native";
+import { htmlToPlain, plainToHtml } from "../lib/html";
 
 // react-native-webview is a NATIVE module. Require it guardedly so a build that
-// doesn't include it yet shows a friendly note instead of crashing the whole
-// Today screen — a static `import` throws at load ("RNCWebViewModule could not
-// be found") and takes the app down with it.
+// doesn't include it yet falls back to a plain editor instead of crashing the
+// whole Today screen — a static `import` throws at load ("RNCWebViewModule could
+// not be found") and takes the app down with it.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let WebView: any = null;
 try {
@@ -125,15 +126,14 @@ function buildHtml(placeholder: string): string {
 </script></body></html>`;
 }
 
-export const RichEditor = forwardRef<
-  RichEditorHandle,
-  {
-    initialHtml?: string;
-    placeholder?: string;
-    onChangeHtml: (html: string) => void;
-    height?: number;
-  }
->(function RichEditor(
+type RichEditorProps = {
+  initialHtml?: string;
+  placeholder?: string;
+  onChangeHtml: (html: string) => void;
+  height?: number;
+};
+
+const RichEditorWeb = forwardRef<RichEditorHandle, RichEditorProps>(function RichEditorWeb(
   { initialHtml = "", placeholder = "Start with one sentence…", onChangeHtml, height = 420 },
   ref,
 ) {
@@ -152,18 +152,6 @@ export const RichEditor = forwardRef<
     insertText: (t: string) => send("insert", t),
     setHtml: (h: string) => send("setHtml", h),
   }));
-
-  // The installed build doesn't include the WebView module yet — degrade calmly.
-  if (!WebView) {
-    return (
-      <View style={{ minHeight: 240 }} className="items-start justify-center p-4">
-        <Text className="text-soft-ink leading-relaxed">
-          The rich editor needs the latest build of the app. Once it's rebuilt
-          with the editor update, your formatting toolbar appears here.
-        </Text>
-      </View>
-    );
-  }
 
   return (
     <View style={{ height }}>
@@ -193,3 +181,53 @@ export const RichEditor = forwardRef<
     </View>
   );
 });
+
+// Fallback for a build without the WebView module: a plain-text editor that
+// keeps writing working. It speaks the same HTML contract — loading via
+// htmlToPlain, reporting changes as plainToHtml — so saving/drafts are
+// unchanged; you just don't get live styling until the app is rebuilt.
+const RichEditorPlain = forwardRef<RichEditorHandle, RichEditorProps>(function RichEditorPlain(
+  { initialHtml = "", placeholder = "Start with one sentence…", onChangeHtml },
+  ref,
+) {
+  const inputRef = useRef<TextInput>(null);
+  const [text, setText] = useState(() => htmlToPlain(initialHtml));
+
+  useImperativeHandle(ref, () => ({
+    focus: () => inputRef.current?.focus(),
+    insertText: (t: string) =>
+      setText((prev) => {
+        const next = prev + (prev && !prev.endsWith(" ") ? " " : "") + t;
+        onChangeHtml(plainToHtml(next));
+        return next;
+      }),
+    // Load-only (day change): update the field without echoing a change back.
+    setHtml: (h: string) => setText(htmlToPlain(h)),
+  }));
+
+  return (
+    <View className="px-3 py-2">
+      <Text className="text-faint-ink text-xs mb-2">
+        Writing in plain text — formatting turns on after the next app build.
+      </Text>
+      <TextInput
+        ref={inputRef}
+        value={text}
+        onChangeText={(t) => {
+          setText(t);
+          onChangeHtml(plainToHtml(t));
+        }}
+        multiline
+        textAlignVertical="top"
+        placeholder={placeholder}
+        placeholderTextColor="#A59B8D"
+        className="min-h-72 text-lg leading-7 text-ink"
+        autoCorrect
+        scrollEnabled={false}
+      />
+    </View>
+  );
+});
+
+// Pick the editor once, by whether the native module is in this binary.
+export const RichEditor = WebView ? RichEditorWeb : RichEditorPlain;
