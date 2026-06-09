@@ -19,6 +19,7 @@ import {
   type ExportFormat,
   type ExportScope,
 } from "../../../lib/settings";
+import { BackToSettings } from "../../../components/settings-back";
 
 const DATA: { title: string; body: string }[] = [
   {
@@ -128,6 +129,7 @@ export default function Privacy() {
         paddingBottom: insets.bottom + 48,
       }}
     >
+      <BackToSettings />
       <Text className="text-4xl text-deep-brown leading-tight">
         Your pages belong to you.
       </Text>

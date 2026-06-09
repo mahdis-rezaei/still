@@ -18,6 +18,7 @@ import {
   type MemorySensitivity,
   type ResurfaceMute,
 } from "../../../lib/settings";
+import { BackToSettings } from "../../../components/settings-back";
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -119,6 +120,7 @@ export default function Resurfacing() {
         paddingBottom: insets.bottom + 48,
       }}
     >
+      <BackToSettings />
       <Text className="text-4xl text-deep-brown">What returns</Text>
       <Text className="text-soft-ink mt-2 leading-relaxed">
         You decide what comes back. Some seasons are harder to revisit than

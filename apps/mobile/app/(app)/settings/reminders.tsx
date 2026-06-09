@@ -7,6 +7,7 @@ import {
   type NudgeFreq,
 } from "../../../lib/settings";
 import { Segmented } from "../../../components/segmented";
+import { BackToSettings } from "../../../components/settings-back";
 
 // Nudges → Reminders: cadence for the write nudge and the page-brought-back
 // nudge. Off by default; optimistic save.
@@ -61,6 +62,7 @@ export default function Reminders() {
         paddingBottom: insets.bottom + 48,
       }}
     >
+      <BackToSettings />
       <Text className="text-4xl text-deep-brown">Nudges</Text>
       <Text className="text-soft-ink mt-2 leading-relaxed">
         Gentle, never guilt. No streaks, no "you missed a day." Just a quiet note

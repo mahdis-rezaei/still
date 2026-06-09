@@ -17,6 +17,7 @@ import {
   avatarPhotoAvailable,
   pickAvatarDataUrl,
 } from "../../../lib/avatar";
+import { BackToSettings } from "../../../components/settings-back";
 
 function SectionLabel({ children }: { children: string }) {
   return (
@@ -117,6 +118,7 @@ export default function Profile() {
         paddingBottom: insets.bottom + 48,
       }}
     >
+      <BackToSettings />
       <Text className="text-4xl text-deep-brown">Your profile</Text>
 
       {/* Avatar + photo controls. */}
