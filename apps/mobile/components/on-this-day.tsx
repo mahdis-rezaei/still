@@ -15,7 +15,7 @@ export function OnThisDay() {
   const router = useRouter();
   const [showYears, setShowYears] = useState(false);
   const date = localTodayISO();
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["on-this-day-framed", date],
     queryFn: () => getOnThisDayFramed(date),
     staleTime: 60 * 60 * 1000,
@@ -36,7 +36,11 @@ export function OnThisDay() {
       {data?.framed ? (
         <MemoryCard memory={data.framed} />
       ) : (
-        <DateMemoryCard heading={onThisDayLabel(years[0])} memory={years[0]} />
+        <DateMemoryCard
+          heading={onThisDayLabel(years[0])}
+          memory={years[0]}
+          onChanged={() => void refetch()}
+        />
       )}
 
       {years.length > 1 && (
@@ -53,6 +57,7 @@ export function OnThisDay() {
                   key={m.entryId}
                   heading={onThisDayLabel(m)}
                   memory={m}
+                  onChanged={() => void refetch()}
                 />
               ))}
             </View>
