@@ -519,11 +519,7 @@ export default function LibraryView() {
                 : "No pages here yet — try widening the filters."}
             </Text>
           ) : view === "timeline" ? (
-            <View className="mt-6">
-              {filtered.map((e) => (
-                {renderRow(e)}
-              ))}
-            </View>
+            <View className="mt-6">{filtered.map((e) => renderRow(e))}</View>
           ) : (
             yearGroups.map(([year, items]) => (
               <View key={year} className="mt-8">
@@ -531,9 +527,7 @@ export default function LibraryView() {
                   <Text className="text-xs uppercase tracking-widest text-faint-ink">{year}</Text>
                   <View className="flex-1 h-px bg-border/60" />
                 </View>
-                {items.map((e) => (
-                  {renderRow(e)}
-                ))}
+                {items.map((e) => renderRow(e))}
               </View>
             ))
           )}
