@@ -1,4 +1,5 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Pressable } from "react-native";
+import { Text } from "./text";
 import { useRouter } from "expo-router";
 import { longDate } from "../lib/extras";
 

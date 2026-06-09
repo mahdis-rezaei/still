@@ -4,9 +4,9 @@ import {
   Alert,
   Image,
   Pressable,
-  Text,
   View,
 } from "react-native";
+import { Text } from "./text";
 import { API_ORIGIN, getToken } from "../lib/api";
 import {
   listAttachments,

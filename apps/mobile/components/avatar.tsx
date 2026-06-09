@@ -1,4 +1,5 @@
-import { Image, Text, View } from "react-native";
+import { Image, View } from "react-native";
+import { Text } from "./text";
 import { avatarColorFor, avatarInitial } from "../lib/avatar";
 
 // A round avatar: the user's photo (a data: URL) when set, otherwise a coloured

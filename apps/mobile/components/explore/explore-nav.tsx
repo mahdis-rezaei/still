@@ -1,4 +1,5 @@
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
+import { Text } from "../text";
 
 // The Explore sub-nav: Library · Shelf · Collections · Capsules — the same shared
 // bar the web shows across all four archive/keepsake views.

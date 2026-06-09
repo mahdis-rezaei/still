@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, ScrollView, View } from "react-native";
+import { Text } from "../../../components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   getNotifications,

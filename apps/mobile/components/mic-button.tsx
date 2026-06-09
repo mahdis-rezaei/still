@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, Text } from "react-native";
+import { ActivityIndicator, Alert, Pressable } from "react-native";
+import { Text } from "./text";
 import { requireOptionalNativeModule } from "expo-modules-core";
 
 // True only on a build that actually includes the speech native module. Checked

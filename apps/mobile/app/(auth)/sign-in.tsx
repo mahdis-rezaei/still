@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { View, Text, TextInput, Pressable, ActivityIndicator } from "react-native";
+import { View, TextInput, Pressable, ActivityIndicator } from "react-native";
+import { Text } from "../../components/text";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { useAuth } from "../../lib/auth";

@@ -3,9 +3,9 @@ import {
   ActivityIndicator,
   Pressable,
   ScrollView,
-  Text,
   View,
 } from "react-native";
+import { Text } from "../../components/text";
 import {
   useFocusEffect,
   useLocalSearchParams,

@@ -4,9 +4,9 @@ import {
   Keyboard,
   Platform,
   Pressable,
-  Text,
   View,
 } from "react-native";
+import { Text } from "./text";
 
 // Dismissing the keyboard on a MULTILINE input (where Return makes a new line, as
 // journaling needs) is awkward on iOS: the standard InputAccessoryView "Done" bar

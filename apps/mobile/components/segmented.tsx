@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { Text } from "./text";
 
 // A connected segmented control (Off · Weekly · Monthly, Open · Gentle ·
 // Protected…) — one rounded pill with equal segments, the selected one filled.

@@ -3,10 +3,10 @@ import {
   Alert,
   Pressable,
   ScrollView,
-  Text,
   TextInput,
   View,
 } from "react-native";
+import { Text } from "../../../components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../../lib/auth";
 import { updateProfile, changePassword } from "../../../lib/profile";

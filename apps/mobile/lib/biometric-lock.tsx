@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { ActivityIndicator, AppState, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, AppState, Pressable, View } from "react-native";
+import { Text } from "../components/text";
 import * as LocalAuthentication from "expo-local-authentication";
 import { useAuth } from "./auth";
 

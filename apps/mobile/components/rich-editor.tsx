@@ -5,7 +5,8 @@ import {
   useRef,
   useState,
 } from "react";
-import { Text, TextInput, View } from "react-native";
+import { TextInput, View } from "react-native";
+import { Text } from "./text";
 import { htmlToPlain, plainToHtml } from "../lib/html";
 
 // react-native-webview is a NATIVE module. Require it guardedly so a build that

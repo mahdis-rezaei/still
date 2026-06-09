@@ -1,5 +1,6 @@
 import { Fragment, type ReactNode } from "react";
-import { Linking, Text, View } from "react-native";
+import { Linking, View } from "react-native";
+import { Text } from "./text";
 
 // A small Markdown renderer for the FAQ/Help content (headings, bold/italic,
 // lists, blockquotes, rules, links). Not a full CommonMark engine — just enough

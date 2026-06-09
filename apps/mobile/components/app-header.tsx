@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import {
   View,
-  Text,
   Pressable,
   Modal,
   ScrollView,
   Linking,
   Keyboard,
 } from "react-native";
+import { Text } from "./text";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../lib/auth";

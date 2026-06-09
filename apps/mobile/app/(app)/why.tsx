@@ -1,4 +1,5 @@
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
+import { Text } from "../../components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // "why I built Yadegar" — the maker's note, Mahdis's words, unchanged. A calm

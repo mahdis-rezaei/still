@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Text } from "./text";
 import { type MemoryRunResult } from "../lib/memories";
 import { MemoryCard } from "./memory-card";
 

@@ -7,9 +7,10 @@ module.exports = {
     extend: {
       fontFamily: {
         // Mirrors the web: Fraunces (display), Newsreader (body), Inter (sans).
-        display: ["Fraunces_600SemiBold"],
-        body: ["Newsreader_400Regular"],
-        sans: ["Inter_400Regular"],
+        // Names are the embedded TTFs' PostScript names (see assets/fonts).
+        display: ["Fraunces-SemiBold"],
+        body: ["Newsreader-Regular"],
+        sans: ["Inter-Regular"],
       },
       colors: {
         background: "#F7F1E6",

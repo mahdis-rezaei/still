@@ -1,4 +1,5 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Pressable } from "react-native";
+import { Text } from "./text";
 import { useRouter } from "expo-router";
 import { LENS_LABELS, type Memory } from "../lib/memories";
 

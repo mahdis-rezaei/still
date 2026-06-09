@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Linking, Pressable, ScrollView, Text, View } from "react-native";
+import { Linking, Pressable, ScrollView, View } from "react-native";
+import { Text } from "../../components/text";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -163,7 +164,7 @@ export default function Welcome() {
         </Text>
         <Text
           className="text-7xl text-deep-brown mt-1"
-          style={{ fontFamily: "Fraunces_600SemiBold" }}
+          style={{ fontFamily: "Fraunces-SemiBold" }}
         >
           Yadegar
         </Text>

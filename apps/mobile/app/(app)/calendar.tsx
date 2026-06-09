@@ -3,9 +3,9 @@ import {
   ActivityIndicator,
   Pressable,
   ScrollView,
-  Text,
   View,
 } from "react-native";
+import { Text } from "../../components/text";
 import { useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getMonthEntries, type CalendarEntry } from "../../lib/extras";

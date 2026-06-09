@@ -7,10 +7,10 @@ import {
   Pressable,
   ScrollView,
   Share,
-  Text,
   TextInput,
   View,
 } from "react-native";
+import { Text } from "../../../components/text";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { api } from "../../../lib/api";

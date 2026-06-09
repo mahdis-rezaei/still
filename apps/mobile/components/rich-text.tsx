@@ -1,5 +1,6 @@
 import { Fragment, useMemo, type ReactNode } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Text } from "./text";
 
 // Renders the server-sanitized rich entry HTML (`bodyRich`) natively. The tag set
 // is a fixed allowlist the API enforces (see api-server/src/lib/rich-text.ts):

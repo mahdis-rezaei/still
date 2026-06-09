@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Pressable } from "react-native";
+import { Text } from "./text";
 import { useRouter } from "expo-router";
 import { api } from "../lib/api";
 import { updateEntryResurfacing } from "../lib/settings";

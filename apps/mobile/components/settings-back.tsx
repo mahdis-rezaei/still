@@ -1,4 +1,5 @@
-import { Pressable, Text } from "react-native";
+import { Pressable } from "react-native";
+import { Text } from "./text";
 import { useRouter } from "expo-router";
 
 // The "← Settings" link at the top of each settings sub-page (mirrors the web).
