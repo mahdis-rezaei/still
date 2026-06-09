@@ -5,8 +5,20 @@ import {
   useRef,
   useState,
 } from "react";
-import { View } from "react-native";
-import { WebView } from "react-native-webview";
+import { Text, View } from "react-native";
+
+// react-native-webview is a NATIVE module. Require it guardedly so a build that
+// doesn't include it yet shows a friendly note instead of crashing the whole
+// Today screen — a static `import` throws at load ("RNCWebViewModule could not
+// be found") and takes the app down with it.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let WebView: any = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  WebView = require("react-native-webview").WebView;
+} catch {
+  WebView = null;
+}
 
 // A true WYSIWYG rich editor — a contentEditable surface inside a WebView, so it
 // can show LIVE bold/italic/underline/headings/lists/quote/color while typing
@@ -140,6 +152,18 @@ export const RichEditor = forwardRef<
     insertText: (t: string) => send("insert", t),
     setHtml: (h: string) => send("setHtml", h),
   }));
+
+  // The installed build doesn't include the WebView module yet — degrade calmly.
+  if (!WebView) {
+    return (
+      <View style={{ minHeight: 240 }} className="items-start justify-center p-4">
+        <Text className="text-soft-ink leading-relaxed">
+          The rich editor needs the latest build of the app. Once it's rebuilt
+          with the editor update, your formatting toolbar appears here.
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={{ height }}>
