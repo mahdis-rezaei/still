@@ -20,6 +20,7 @@ import {
 } from "../../../lib/extras";
 import { KeyboardDone, KEYBOARD_DONE_ID } from "../../../components/keyboard-done";
 import { EntryPhotos } from "../../../components/entry-photos";
+import { MicButton } from "../../../components/mic-button";
 
 type JournalEntry = {
   id: string;
@@ -415,6 +416,10 @@ export default function EntryDetail() {
                   {status === "saving" ? "Saving…" : "Save now"}
                 </Text>
               </Pressable>
+            </View>
+
+            <View className="mt-2">
+              <MicButton value={body} onChangeText={setBody} />
             </View>
 
             {id ? <EntryPhotos entryId={id} /> : null}
