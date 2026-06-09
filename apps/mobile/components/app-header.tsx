@@ -11,6 +11,7 @@ import {
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../lib/auth";
+import { Avatar } from "./avatar";
 
 // The fixed top bar, rendered as the navigator header on every signed-in screen:
 // a back arrow (when there's somewhere to go back to) + the Yadegar wordmark on
@@ -22,7 +23,7 @@ type Item = { label: string; to?: string; action?: () => void };
 
 export function AppHeader() {
   const router = useRouter();
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const insets = useSafeAreaInsets();
   const [open, setOpen] = useState(false);
   const [kbVisible, setKbVisible] = useState(false);
@@ -49,23 +50,7 @@ export function AppHeader() {
       items: [
         { label: "Today", to: "/(app)/today" },
         { label: "Look back", to: "/(app)/look-back" },
-        { label: "Returns", to: "/(app)/returns" },
-        { label: "History", to: "/(app)/history" },
-      ],
-    },
-    {
-      title: "Explore",
-      items: [
-        { label: "Library", to: "/(app)/explore?tab=library" },
-        { label: "Shelf", to: "/(app)/explore?tab=shelf" },
-        { label: "Collections", to: "/(app)/explore?tab=collections" },
-        { label: "Capsules", to: "/(app)/explore?tab=capsules" },
-        { label: "Year in Pages", to: "/(app)/year" },
-        { label: "Calendar", to: "/(app)/calendar" },
-      ],
-    },
-    {
-      items: [
+        { label: "Explore", to: "/(app)/explore" },
         {
           label: "Shop",
           action: () => {
@@ -76,9 +61,24 @@ export function AppHeader() {
       ],
     },
     {
-      title: "Account",
       items: [
         { label: "Settings", to: "/(app)/settings" },
+        { label: "My profile", to: "/(app)/settings/profile" },
+        {
+          label: "Membership",
+          action: () => {
+            setOpen(false);
+            void Linking.openURL("https://yadegarjournal.com/settings/plan");
+          },
+        },
+        {
+          label: "Help & FAQ",
+          action: () => {
+            setOpen(false);
+            void Linking.openURL("https://yadegarjournal.com/help");
+          },
+        },
+        { label: "About Yadegar", to: "/(app)/philosophy" },
         {
           label: "Sign out",
           action: () => {
@@ -119,13 +119,18 @@ export function AppHeader() {
             </Text>
           </Pressable>
         ) : (
-          <Pressable
-            onPress={() => setOpen(true)}
-            hitSlop={10}
-            className="rounded-full border border-border bg-surface px-3 py-1.5"
-          >
-            <Text className="text-deep-brown text-lg">☰</Text>
-          </Pressable>
+          <View className="flex-row items-center gap-3">
+            <Pressable onPress={() => setOpen(true)} hitSlop={8}>
+              <Avatar user={user} size={28} />
+            </Pressable>
+            <Pressable
+              onPress={() => setOpen(true)}
+              hitSlop={10}
+              className="rounded-full border border-border bg-surface px-3 py-1.5"
+            >
+              <Text className="text-deep-brown text-lg">☰</Text>
+            </Pressable>
+          </View>
         )}
       </View>
 

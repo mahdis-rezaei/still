@@ -84,11 +84,18 @@ export default function Returns() {
         paddingBottom: insets.bottom + 48,
       }}
     >
-      <View>
-        <Text className="text-4xl text-deep-brown">Returns</Text>
-        <Text className="text-soft-ink mt-1 leading-relaxed">
-          Pages Yadegar has brought back, to revisit.
-        </Text>
+      <View className="flex-row items-start justify-between gap-4">
+        <View className="flex-1">
+          <Text className="text-4xl text-deep-brown">Returns</Text>
+          <Text className="text-soft-ink mt-1 leading-relaxed">
+            Pages Yadegar has brought back, to revisit.
+          </Text>
+        </View>
+        <Pressable onPress={() => router.push("/(app)/history")} className="mt-2" hitSlop={8}>
+          <Text className="text-soft-ink" style={{ fontSize: 13 }}>
+            History →
+          </Text>
+        </Pressable>
       </View>
 
       {loading ? (

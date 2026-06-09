@@ -128,7 +128,7 @@ export default function Settings() {
           encrypted at rest, and yours to export or delete whenever you like.
         </Text>
         <Pressable
-          onPress={() => void Linking.openURL("https://yadegarjournal.com/philosophy")}
+          onPress={() => router.push("/(app)/philosophy")}
           className="mt-3 self-start"
         >
           <Text className="text-soft-ink" style={{ fontSize: 13 }}>
