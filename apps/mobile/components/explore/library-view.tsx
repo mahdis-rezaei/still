@@ -1,6 +1,9 @@
 import { useCallback, useMemo, useState } from "react";
 import {
+  ActionSheetIOS,
   ActivityIndicator,
+  Alert,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -41,6 +44,40 @@ function firstLines(body: string, max = 2): string {
     .join(" ");
 }
 
+// A native dropdown for an inline filter token: the iOS action sheet (the native
+// equivalent of a <select>), with an Alert fallback off-iOS.
+function chooseOption(
+  title: string,
+  options: { label: string; value: string }[],
+  onSelect: (value: string) => void,
+) {
+  const labels = options.map((o) => o.label);
+  if (Platform.OS === "ios") {
+    ActionSheetIOS.showActionSheetWithOptions(
+      { title, options: [...labels, "Cancel"], cancelButtonIndex: labels.length },
+      (i) => {
+        if (i != null && i < options.length) onSelect(options[i].value);
+      },
+    );
+  } else {
+    Alert.alert(title, undefined, [
+      ...options.map((o) => ({ text: o.label, onPress: () => onSelect(o.value) })),
+      { text: "Cancel", style: "cancel" as const },
+    ]);
+  }
+}
+
+// One underlined inline "select" token, like the web filter line.
+function FilterToken({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} className="border-b border-border">
+      <Text className="text-ink" style={{ fontSize: 13 }}>
+        {label} ⌄
+      </Text>
+    </Pressable>
+  );
+}
+
 function ContinuityCard({ c }: { c: Continuity | null }) {
   if (!c || c.pageCount === 0) return null;
   const stats: string[] = [plural(c.pageCount, "page")];
@@ -65,30 +102,6 @@ function ContinuityCard({ c }: { c: Continuity | null }) {
         </Text>
       ) : null}
     </View>
-  );
-}
-
-function Chip({
-  label,
-  selected,
-  onPress,
-}: {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      className={
-        "rounded-full border px-3.5 py-1.5 " +
-        (selected ? "bg-deep-brown border-deep-brown" : "bg-surface border-border")
-      }
-    >
-      <Text style={{ fontSize: 12 }} className={selected ? "text-background" : "text-soft-ink"}>
-        {label}
-      </Text>
-    </Pressable>
   );
 }
 
@@ -190,6 +203,33 @@ export default function LibraryView() {
 
   const filtersActive =
     yearFilter !== "all" || monthFilter !== "all" || sourceFilter !== "all";
+
+  // Inline-dropdown options + current labels (mirrors the web's filter sentence).
+  const sourceOptions = useMemo(() => {
+    const opts = [{ label: "all pages", value: "all" }];
+    if (sourceKinds.has("written")) opts.push({ label: "written here", value: "written" });
+    if (sourceKinds.has("imported")) opts.push({ label: "imported", value: "imported" });
+    if (sourceKinds.has("sample")) opts.push({ label: "samples", value: "sample" });
+    return opts;
+  }, [sourceKinds]);
+  const yearOptions = useMemo(
+    () => [
+      { label: "any year", value: "all" },
+      ...years.map((y) => ({ label: y, value: y })),
+    ],
+    [years],
+  );
+  const monthOptions = useMemo(
+    () => [
+      { label: "any month", value: "all" },
+      ...MONTHS.map((m, i) => ({ label: m, value: String(i + 1).padStart(2, "0") })),
+    ],
+    [],
+  );
+  const sourceLabel =
+    sourceOptions.find((o) => o.value === sourceFilter)?.label ?? "all pages";
+  const yearLabel = yearFilter === "all" ? "any year" : yearFilter;
+  const monthLabel = monthFilter === "all" ? "any month" : MONTHS[Number(monthFilter) - 1];
 
   async function toggleFavorite(e: LibraryEntry) {
     const next = !e.favorite;
@@ -405,45 +445,25 @@ export default function LibraryView() {
           </View>
 
           {/* Filters. */}
-          <View className="mt-4">
-            <View className="flex-row flex-wrap items-center gap-2">
-              <Text className="text-faint-ink" style={{ fontSize: 12 }}>Showing</Text>
-              <Chip label="All pages" selected={sourceFilter === "all"} onPress={() => setSourceFilter("all")} />
-              {sourceKinds.has("written") ? (
-                <Chip label="Written" selected={sourceFilter === "written"} onPress={() => setSourceFilter("written")} />
-              ) : null}
-              {sourceKinds.has("imported") ? (
-                <Chip label="Imported" selected={sourceFilter === "imported"} onPress={() => setSourceFilter("imported")} />
-              ) : null}
-              {sourceKinds.has("sample") ? (
-                <Chip label="Samples" selected={sourceFilter === "sample"} onPress={() => setSourceFilter("sample")} />
-              ) : null}
-            </View>
-            <View className="mt-2">
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View className="flex-row gap-2 items-center">
-                  <Text className="text-faint-ink mr-1" style={{ fontSize: 12 }}>Year</Text>
-                  <Chip label="Any" selected={yearFilter === "all"} onPress={() => setYearFilter("all")} />
-                  {years.map((y) => (
-                    <Chip key={y} label={y} selected={yearFilter === y} onPress={() => setYearFilter(y)} />
-                  ))}
-                </View>
-              </ScrollView>
-            </View>
-            <View className="mt-2">
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View className="flex-row gap-2 items-center">
-                  <Text className="text-faint-ink mr-1" style={{ fontSize: 12 }}>Month</Text>
-                  <Chip label="Any" selected={monthFilter === "all"} onPress={() => setMonthFilter("all")} />
-                  {MONTHS.map((name, i) => {
-                    const mm = String(i + 1).padStart(2, "0");
-                    return (
-                      <Chip key={mm} label={name.slice(0, 3)} selected={monthFilter === mm} onPress={() => setMonthFilter(mm)} />
-                    );
-                  })}
-                </View>
-              </ScrollView>
-            </View>
+          <View className="mt-5 flex-row flex-wrap items-center gap-x-2 gap-y-2">
+            <Text className="text-faint-ink" style={{ fontSize: 13 }}>Showing</Text>
+            <FilterToken
+              label={sourceLabel}
+              onPress={() =>
+                chooseOption("Show", sourceOptions, (v) =>
+                  setSourceFilter(v as "all" | SourceKind),
+                )
+              }
+            />
+            <Text className="text-faint-ink" style={{ fontSize: 13 }}>from</Text>
+            <FilterToken
+              label={yearLabel}
+              onPress={() => chooseOption("Year", yearOptions, setYearFilter)}
+            />
+            <FilterToken
+              label={monthLabel}
+              onPress={() => chooseOption("Month", monthOptions, setMonthFilter)}
+            />
             {filtersActive ? (
               <Pressable
                 onPress={() => {
@@ -452,9 +472,8 @@ export default function LibraryView() {
                   setSourceFilter("all");
                 }}
                 hitSlop={6}
-                className="mt-2 self-start"
               >
-                <Text className="text-faint-ink" style={{ fontSize: 12 }}>clear filters</Text>
+                <Text className="text-faint-ink" style={{ fontSize: 13 }}>clear</Text>
               </Pressable>
             ) : null}
           </View>
