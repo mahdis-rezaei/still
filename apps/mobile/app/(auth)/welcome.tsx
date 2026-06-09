@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Linking, Pressable, ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -52,6 +53,76 @@ function Eyebrow({ children }: { children: string }) {
     <Text className="text-xs uppercase tracking-widest text-faint-ink text-center mb-5">
       {children}
     </Text>
+  );
+}
+
+function DemoCard({ r }: { r: (typeof RETURNS)[number] }) {
+  return (
+    <View className="rounded-3xl border border-border bg-surface p-5">
+      <View className="flex-row items-center justify-between mb-3">
+        <View
+          style={{ backgroundColor: TONES[r.tone].backgroundColor }}
+          className="rounded-full px-3 py-1"
+        >
+          <Text
+            style={{ color: TONES[r.tone].color, fontSize: 11 }}
+            className="uppercase tracking-wider"
+          >
+            {r.tag}
+          </Text>
+        </View>
+        <Text className="text-faint-ink text-xs">{r.date}</Text>
+      </View>
+      <Text className="text-lg italic text-deep-brown leading-snug mb-3">
+        “{r.quote}”
+      </Text>
+      <Text className="text-soft-ink text-sm leading-relaxed">{r.note}</Text>
+    </View>
+  );
+}
+
+// Try-it-yourself demo: tap "Bring a page back" to reveal a (fictional) returned
+// page, then rotate through more — the same interaction logged-out users get on
+// the web, so they can feel Yadegar before signing in.
+function ReturnDemo({ onCreate }: { onCreate: () => void }) {
+  const [revealed, setRevealed] = useState(false);
+  const [i, setI] = useState(0);
+
+  if (!revealed) {
+    return (
+      <View className="items-center">
+        <Pressable
+          onPress={() => setRevealed(true)}
+          className="rounded-full border border-accent-sepia/40 bg-surface px-6 py-3"
+        >
+          <Text className="text-ink">✦ Bring a page back</Text>
+        </Pressable>
+        <Text className="text-faint-ink text-xs mt-3">
+          a glimpse of what Yadegar returns
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View>
+      <DemoCard r={RETURNS[i % RETURNS.length]} />
+      <View className="flex-row items-center justify-center gap-6 mt-5">
+        <Pressable onPress={() => setI((n) => n + 1)}>
+          <Text className="text-soft-ink" style={{ fontSize: 13 }}>
+            Show me another →
+          </Text>
+        </Pressable>
+        <Pressable onPress={onCreate}>
+          <Text className="text-accent-sepia" style={{ fontSize: 13 }}>
+            Read across your own years
+          </Text>
+        </Pressable>
+      </View>
+      <Text className="text-faint-ink text-xs text-center mt-4">
+        These are examples. With your own journals, every page is yours.
+      </Text>
+    </View>
   );
 }
 
@@ -119,30 +190,7 @@ export default function Welcome() {
           Not a summary of your life. One page, returned at the moment it's true
           again.
         </Text>
-        <View className="gap-4">
-          {RETURNS.map((r) => (
-            <View key={r.tag + r.date} className="rounded-3xl border border-border bg-surface p-5">
-              <View className="flex-row items-center justify-between mb-3">
-                <View
-                  style={{ backgroundColor: TONES[r.tone].backgroundColor }}
-                  className="rounded-full px-3 py-1"
-                >
-                  <Text style={{ color: TONES[r.tone].color, fontSize: 11 }} className="uppercase tracking-wider">
-                    {r.tag}
-                  </Text>
-                </View>
-                <Text className="text-faint-ink text-xs">{r.date}</Text>
-              </View>
-              <Text className="text-lg italic text-deep-brown leading-snug mb-3">
-                “{r.quote}”
-              </Text>
-              <Text className="text-soft-ink text-sm leading-relaxed">{r.note}</Text>
-            </View>
-          ))}
-        </View>
-        <Text className="text-faint-ink text-sm text-center mt-5">
-          a glimpse of what Yadegar returns
-        </Text>
+        <ReturnDemo onCreate={createAccount} />
       </View>
 
       {/* How it works */}
