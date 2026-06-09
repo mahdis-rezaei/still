@@ -16,6 +16,8 @@ import {
   type DateMemory,
 } from "../../lib/memories";
 import { useRun, RunResult } from "../../components/memory-run";
+import { getMonthEntries, type CalendarEntry } from "../../lib/extras";
+import { EntryRefCard } from "../../components/entry-ref-card";
 
 // Look back mirrors the web: three quiet tabs of engine reads —
 //  · What keeps returning (the cross-time thread + a page you'd forgotten)
@@ -142,6 +144,18 @@ export default function LookBack() {
   const revisit = useRun();
   const [rMonth, setRMonth] = useState<number | null>(null);
   const [rYear, setRYear] = useState<number | null>(null);
+  // The month's pages, listed below the voiced read (as on the web).
+  const [revisitPages, setRevisitPages] = useState<CalendarEntry[] | null>(null);
+
+  async function runRevisit() {
+    if (!rMonth || !rYear) return;
+    setRevisitPages(null);
+    const [, pages] = await Promise.all([
+      revisit.run(() => revisitTime(rYear, rMonth)),
+      getMonthEntries(rYear, rMonth).catch(() => [] as CalendarEntry[]),
+    ]);
+    setRevisitPages(pages);
+  }
   const thenNow = useRun();
   const [tYear, setTYear] = useState<number | null>(null);
   const pastYears = years.filter((y) => y !== new Date().getFullYear());
@@ -285,9 +299,7 @@ export default function LookBack() {
                 <PillButton
                   label={revisit.pending ? "Reading…" : "Show me"}
                   disabled={!rMonth || !rYear || revisit.pending}
-                  onPress={() =>
-                    rMonth && rYear && void revisit.run(() => revisitTime(rYear, rMonth))
-                  }
+                  onPress={() => void runRevisit()}
                 />
               </View>
               <RunResult
@@ -295,6 +307,34 @@ export default function LookBack() {
                 elapsed={revisit.elapsed}
                 result={revisit.result}
               />
+
+              {!revisit.pending && revisitPages ? (
+                revisitPages.length > 0 ? (
+                  <View className="mt-8">
+                    <Text className="text-lg text-deep-brown mb-3">
+                      {revisitPages.length}{" "}
+                      {revisitPages.length === 1 ? "page" : "pages"} from{" "}
+                      {rMonth ? MONTHS[rMonth - 1] : ""} {rYear}
+                    </Text>
+                    <View className="gap-4">
+                      {revisitPages.map((e) => (
+                        <EntryRefCard
+                          key={e.id}
+                          entryId={e.id}
+                          title={e.title ?? null}
+                          excerpt={e.body}
+                          entryDate={e.entryDate}
+                          favorite={e.favorite}
+                        />
+                      ))}
+                    </View>
+                  </View>
+                ) : (
+                  <Text className="text-soft-ink leading-relaxed mt-3">
+                    No pages from that month — try another.
+                  </Text>
+                )
+              ) : null}
             </>
           )}
 
