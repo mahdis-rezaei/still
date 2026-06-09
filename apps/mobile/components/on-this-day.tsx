@@ -1,30 +1,36 @@
 import { useState } from "react";
 import { View, Text, Pressable } from "react-native";
 import { useQuery } from "@tanstack/react-query";
-import { getOnThisDay, onThisDayLabel, localTodayISO } from "../lib/memories";
+import { getOnThisDayFramed, onThisDayLabel, localTodayISO } from "../lib/memories";
 import { DateMemoryCard } from "./date-memory-card";
+import { MemoryCard } from "./memory-card";
 
-// On This Day on Today. Stays SILENT (renders nothing) when there's nothing from
-// this exact calendar day in prior years — never an empty box, never a nudge to
-// look. A collapsible ladder steps through each year. The fuller browse lives on
-// the Look back tab.
+// On This Day on Today. Pulls the EXACT calendar day from prior years and leads
+// with the most recent one VOICED by the engine (a lens heading + observation),
+// as the web does — falling back to the raw page if framing is unavailable. Stays
+// SILENT (renders nothing) when there's nothing from this day. A ladder steps
+// through each year; the fuller browse lives on Look back.
 export function OnThisDay() {
   const [showYears, setShowYears] = useState(false);
   const date = localTodayISO();
   const { data, isLoading } = useQuery({
-    queryKey: ["on-this-day", date],
-    queryFn: () => getOnThisDay(date),
+    queryKey: ["on-this-day-framed", date],
+    queryFn: () => getOnThisDayFramed(date),
     staleTime: 60 * 60 * 1000,
   });
 
-  const years = (data ?? []).filter((m) => m.onThisExactDay);
+  const years = data?.years ?? [];
   if (isLoading || years.length === 0) return null;
 
   return (
     <View className="mt-10">
       <Text className="text-2xl text-deep-brown mb-4">On this day</Text>
 
-      <DateMemoryCard heading={onThisDayLabel(years[0])} memory={years[0]} />
+      {data?.framed ? (
+        <MemoryCard memory={data.framed} />
+      ) : (
+        <DateMemoryCard heading={onThisDayLabel(years[0])} memory={years[0]} />
+      )}
 
       {years.length > 1 && (
         <View className="mt-4">

@@ -12,6 +12,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
+import { bringPageBack } from "../../lib/memories";
+import { useRun, RunResult } from "../../components/memory-run";
 import { OnThisDay } from "../../components/on-this-day";
 import { EntryPhotos } from "../../components/entry-photos";
 import { MicButton } from "../../components/mic-button";
@@ -127,6 +129,9 @@ export default function Today() {
   const saveSequenceRef = useRef(0);
   // `body` holds the editor's rich HTML; the server derives the plain body from it.
   const editorRef = useRef<RichEditorHandle>(null);
+
+  // "Bring a page back" — the engine read, right here on Today (as on the web).
+  const pageBack = useRun();
 
   useEffect(() => {
     let cancelled = false;
@@ -294,19 +299,40 @@ export default function Today() {
           <View className="flex-1">
             <Text className="text-4xl text-deep-brown">Today</Text>
             <Text className="text-soft-ink mt-1">{today}</Text>
+            <Pressable
+              onPress={() => editorRef.current?.focus()}
+              hitSlop={6}
+              className="self-start mt-1"
+            >
+              <Text className="text-xs text-faint-ink">{statusLabel(status)}</Text>
+            </Pressable>
           </View>
 
+          {/* The engine read, right on Today (as on the web). */}
           <Pressable
-            onPress={() => editorRef.current?.focus()}
-            className="rounded-full border border-border bg-surface px-3 py-1.5"
+            onPress={() => void pageBack.run(() => bringPageBack({}))}
+            disabled={pageBack.pending}
+            style={{ opacity: pageBack.pending ? 0.5 : 1 }}
+            className="rounded-full border border-border bg-surface px-4 py-2"
           >
-            <Text className="text-xs text-soft-ink">{statusLabel(status)}</Text>
+            <Text className="text-soft-ink" style={{ fontSize: 13 }}>
+              {pageBack.pending ? "Reading…" : "✦ Bring a page back"}
+            </Text>
           </Pressable>
         </View>
 
-        {/* Date-based returns from this day in years past, quiet when empty.
-            The engine reads (what keeps returning, revisit a time…) live under
-            Look back, mirroring the web. */}
+        <RunResult
+          pending={pageBack.pending}
+          elapsed={pageBack.elapsed}
+          result={pageBack.result}
+        />
+        {!pageBack.pending && pageBack.result ? (
+          <Pressable onPress={pageBack.reset} hitSlop={8} className="mt-2 self-start">
+            <Text className="text-xs text-faint-ink">close</Text>
+          </Pressable>
+        ) : null}
+
+        {/* Date-based returns from this day in years past, quiet when empty. */}
         <OnThisDay />
 
         <Text className="text-ink text-lg mt-10 leading-relaxed">

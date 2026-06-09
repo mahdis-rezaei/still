@@ -76,6 +76,18 @@ export function onThisDayLabel(m: {
 export const getOnThisDay = (date = localTodayISO()) =>
   api<DateMemory[]>(`/memories/on-this-day?date=${date}`);
 
+// GET /memories/on-this-day/framed?date= — the same exact-day pages, but with the
+// most recent one voiced by the engine (a lens heading + observation), as the web
+// shows on Today. `framed` can be null (framing is a bonus); fall back to `years`.
+export interface FramedOnThisDay {
+  exact: boolean;
+  years: DateMemory[];
+  framed: Memory | null;
+}
+
+export const getOnThisDayFramed = (date = localTodayISO()) =>
+  api<FramedOnThisDay>(`/memories/on-this-day/framed?date=${date}`);
+
 // The Look Back browse payload — every date-based way a page returns, gathered
 // (GET /memories/look-back). De-duped server-side across buckets.
 export interface LookBack {
