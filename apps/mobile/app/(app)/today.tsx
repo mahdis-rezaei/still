@@ -16,7 +16,6 @@ import { useAuth } from "../../lib/auth";
 import { bringPageBack, type MemoryRunResult } from "../../lib/memories";
 import { MemoryCard } from "../../components/memory-card";
 import { OnThisDay } from "../../components/on-this-day";
-import { KeyboardDoneBar } from "../../components/keyboard-done";
 import { EntryPhotos } from "../../components/entry-photos";
 
 type JournalEntry = {
@@ -283,7 +282,6 @@ export default function Today() {
   }
 
   return (
-    <View style={{ flex: 1 }}>
     <KeyboardAvoidingView
       className="flex-1 bg-background"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -405,7 +403,5 @@ export default function Today() {
         </Text>
       </ScrollView>
     </KeyboardAvoidingView>
-      <KeyboardDoneBar />
-    </View>
   );
 }

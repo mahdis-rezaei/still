@@ -1,5 +1,13 @@
-import { useState } from "react";
-import { View, Text, Pressable, Modal, ScrollView, Linking } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  Pressable,
+  Modal,
+  ScrollView,
+  Linking,
+  Keyboard,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../lib/auth";
@@ -17,7 +25,19 @@ export function AppHeader() {
   const { signOut } = useAuth();
   const insets = useSafeAreaInsets();
   const [open, setOpen] = useState(false);
+  const [kbVisible, setKbVisible] = useState(false);
   const canBack = router.canGoBack();
+
+  // When the keyboard is up, the header's ☰ becomes a "Done" — always reachable
+  // at the top, never fighting the keyboard. Works on every screen (incl. search).
+  useEffect(() => {
+    const show = Keyboard.addListener("keyboardWillShow", () => setKbVisible(true));
+    const hide = Keyboard.addListener("keyboardWillHide", () => setKbVisible(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
 
   function go(to: string) {
     setOpen(false);
@@ -87,13 +107,25 @@ export function AppHeader() {
             </Text>
           </Pressable>
         </View>
-        <Pressable
-          onPress={() => setOpen(true)}
-          hitSlop={10}
-          className="rounded-full border border-border bg-surface px-3 py-1.5"
-        >
-          <Text className="text-deep-brown text-lg">☰</Text>
-        </Pressable>
+        {kbVisible ? (
+          <Pressable
+            onPress={() => Keyboard.dismiss()}
+            hitSlop={10}
+            className="rounded-full border border-border bg-surface px-4 py-1.5"
+          >
+            <Text className="text-deep-brown text-base" style={{ fontWeight: "600" }}>
+              Done
+            </Text>
+          </Pressable>
+        ) : (
+          <Pressable
+            onPress={() => setOpen(true)}
+            hitSlop={10}
+            className="rounded-full border border-border bg-surface px-3 py-1.5"
+          >
+            <Text className="text-deep-brown text-lg">☰</Text>
+          </Pressable>
+        )}
       </View>
 
       <Modal
