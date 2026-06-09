@@ -1,21 +1,13 @@
 import { cloneElement, useEffect, useState } from "react";
 import { Text as RNText, StyleSheet } from "react-native";
-import { requireOptionalNativeModule } from "expo-modules-core";
 
 // Brand typography to match the web: Fraunces (display) · Newsreader (body) ·
 // Inter (UI). React Native won't auto-swap weight/italic font files like a
 // browser, so we patch <Text> once to choose the right loaded font family by
 // role — inferred from size + weight + style — unless a fontFamily is set
-// explicitly. Everything is GUARDED: a build without expo-font keeps system
-// fonts (no crash, no patch).
-
-function fontModuleAvailable(): boolean {
-  try {
-    return requireOptionalNativeModule("ExpoFontLoader") != null;
-  } catch {
-    return false;
-  }
-}
+// explicitly. The actual font files load asynchronously (useAppFonts); until
+// they're ready the OS falls back, then a re-render swaps them in. Everything is
+// wrapped in try/catch so a load failure quietly leaves system fonts (no crash).
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function pickFamily(flat: any): string {
@@ -42,17 +34,19 @@ function pickFamily(flat: any): string {
 function patchText() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const T = RNText as any;
-  if (T.__fontPatched || typeof T.render !== "function") return;
+  if (T.__fontPatched) return;
+  // RN's Text is a forwardRef component, so its render fn lives on `.render`.
   const orig = T.render;
+  if (typeof orig !== "function") return;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T.render = function (...args: any[]) {
     const el = orig.apply(this, args);
     try {
-      const props = args[0] ?? {};
-      const flat = StyleSheet.flatten(props.style) || {};
+      const childStyle = el?.props?.style;
+      const flat = StyleSheet.flatten(childStyle) || {};
       // Respect an explicit fontFamily; otherwise pick by role.
       const family = flat.fontFamily || pickFamily(flat);
-      return cloneElement(el, { style: [{ fontFamily: family }, el.props.style] });
+      return cloneElement(el, { style: [{ fontFamily: family }, childStyle] });
     } catch {
       return el;
     }
@@ -60,16 +54,17 @@ function patchText() {
   T.__fontPatched = true;
 }
 
+// Patch as early as this module is imported (before the first render), so the
+// role-based font family is in place from the first frame — the files below then
+// load and take effect on the next render.
+patchText();
+
 export function useAppFonts(): boolean {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      if (!fontModuleAvailable()) {
-        if (!cancelled) setReady(true); // system fonts; never block or crash
-        return;
-      }
       try {
         const Font = await import("expo-font");
         const [fraunces, newsreader, inter] = await Promise.all([
@@ -88,7 +83,7 @@ export function useAppFonts(): boolean {
           Inter_500Medium: inter.Inter_500Medium,
           Inter_600SemiBold: inter.Inter_600SemiBold,
         });
-        patchText();
+        patchText(); // idempotent — ensures the patch is in place post-load
       } catch {
         // Any trouble → system fonts, never crash.
       }
