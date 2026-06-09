@@ -6,16 +6,28 @@ import {
   Text,
   View,
 } from "react-native";
-import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import {
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
+} from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getYearInPages, type YearInPages } from "../../lib/extras";
-import { EntryRefCard } from "../../components/entry-ref-card";
 
-// Year in Pages: a quiet look back at a year — how much you wrote, how much you
-// reflected, and the pages you marked favorite. Step across years. An optional
-// `year` param (from Look back → Your Year in Pages) sets the starting year.
+// Your Year in Pages — the year letter: a whole year of your writing gathered to
+// read straight through. Mirrors the web /letters/:year (the data is the same;
+// here it reads as a letter rather than a stats card).
+function dateLabel(value: string): string {
+  const [y, m, d] = value.split("-").map(Number);
+  if (!y || !m || !d) return value;
+  return new Date(y, m - 1, d)
+    .toLocaleDateString("en-US", { month: "long", day: "numeric" })
+    .toUpperCase();
+}
+
 export default function Year() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const params = useLocalSearchParams<{ year?: string }>();
   const initialYear = Number(params.year);
   const [year, setYear] = useState(
@@ -49,72 +61,90 @@ export default function Year() {
       contentContainerStyle={{
         paddingTop: 14,
         paddingHorizontal: 24,
-        paddingBottom: insets.bottom + 48,
+        paddingBottom: insets.bottom + 56,
       }}
     >
-      <Text className="text-4xl text-deep-brown">Year in Pages</Text>
+      <View className="flex-row items-center justify-between">
+        <Pressable onPress={() => router.push("/(app)/look-back")} hitSlop={8}>
+          <Text className="text-soft-ink" style={{ fontSize: 14 }}>← Look back</Text>
+        </Pressable>
+        <View className="flex-row items-center gap-3">
+          <Pressable
+            onPress={() => setYear((y) => y - 1)}
+            className="rounded-full border border-border bg-surface px-3 py-1.5"
+            hitSlop={6}
+          >
+            <Text className="text-soft-ink">‹</Text>
+          </Pressable>
+          <Text className="text-lg text-deep-brown">{year}</Text>
+          <Pressable
+            onPress={() => setYear((y) => y + 1)}
+            className="rounded-full border border-border bg-surface px-3 py-1.5"
+            hitSlop={6}
+          >
+            <Text className="text-soft-ink">›</Text>
+          </Pressable>
+        </View>
+      </View>
 
-      <View className="mt-6 flex-row items-center justify-between">
-        <Pressable
-          onPress={() => setYear((y) => y - 1)}
-          className="rounded-full border border-border bg-surface px-4 py-2"
-        >
-          <Text className="text-soft-ink">‹</Text>
-        </Pressable>
-        <Text className="text-2xl text-deep-brown">{year}</Text>
-        <Pressable
-          onPress={() => setYear((y) => y + 1)}
-          className="rounded-full border border-border bg-surface px-4 py-2"
-        >
-          <Text className="text-soft-ink">›</Text>
-        </Pressable>
+      {/* Letter header. */}
+      <View className="items-center mt-10">
+        <Text className="text-xs uppercase tracking-widest text-faint-ink mb-2">
+          Yadegar
+        </Text>
+        <Text className="text-2xl text-deep-brown">Your Year in Pages</Text>
+        <Text className="text-deep-brown" style={{ fontSize: 64, lineHeight: 72 }}>
+          {year}
+        </Text>
       </View>
 
       {loading ? (
-        <View className="min-h-80 items-center justify-center">
+        <View className="min-h-60 items-center justify-center">
           <ActivityIndicator color="#3A2F25" />
         </View>
       ) : !data ? (
-        <Text className="text-soft-ink mt-10">Couldn't load that year.</Text>
+        <Text className="text-soft-ink mt-10 text-center">Couldn't load that year.</Text>
+      ) : data.pageCount === 0 ? (
+        <Text className="text-soft-ink mt-8 text-center leading-relaxed">
+          No pages from {year} yet. As you write across the year, they gather here.
+        </Text>
       ) : (
         <>
-          <View className="mt-8 flex-row gap-4">
-            <View className="flex-1 rounded-3xl border border-border bg-surface p-5">
-              <Text className="text-3xl text-deep-brown">{data.pageCount}</Text>
-              <Text className="text-soft-ink mt-1">
-                {data.pageCount === 1 ? "page" : "pages"}
-              </Text>
-            </View>
-            <View className="flex-1 rounded-3xl border border-border bg-surface p-5">
-              <Text className="text-3xl text-deep-brown">
-                {data.reflectionCount}
-              </Text>
-              <Text className="text-soft-ink mt-1">
-                {data.reflectionCount === 1 ? "reflection" : "reflections"}
-              </Text>
-            </View>
-          </View>
+          <Text className="text-soft-ink mt-6 text-center leading-relaxed">
+            This year you wrote {data.pageCount} {data.pageCount === 1 ? "page" : "pages"}.
+            {data.favorites.length > 0 ? " These are a few that stayed." : ""}
+          </Text>
 
-          {data.pageCount === 0 ? (
-            <View className="mt-8 rounded-3xl border border-border bg-surface p-5">
-              <Text className="text-soft-ink leading-relaxed">
-                No pages from {year} yet.
-              </Text>
-            </View>
-          ) : data.favorites.length > 0 ? (
-            <View className="mt-8">
-              <Text className="text-xs uppercase tracking-widest text-faint-ink mb-3">
-                Pages you treasured
-              </Text>
-              <View className="gap-4">
-                {data.favorites.map((f) => (
-                  <EntryRefCard key={f.entryId} {...f} />
-                ))}
-              </View>
+          {data.favorites.length > 0 ? (
+            <View className="mt-10">
+              {data.favorites.map((f) => (
+                <View key={f.entryId} className="mb-9">
+                  <Text className="text-xs uppercase tracking-widest text-faint-ink mb-2">
+                    {f.entryDate ? dateLabel(f.entryDate) : "Undated"}
+                  </Text>
+                  {f.title ? (
+                    <Text className="text-xl text-deep-brown mb-2">{f.title}</Text>
+                  ) : null}
+                  <Text className="text-lg text-ink leading-relaxed" numberOfLines={8}>
+                    {f.excerpt}
+                  </Text>
+                  <Pressable
+                    onPress={() =>
+                      router.push({ pathname: "/(app)/entries/[id]", params: { id: f.entryId } })
+                    }
+                    className="mt-3 self-start"
+                  >
+                    <Text className="text-accent-sepia" style={{ fontSize: 13 }}>
+                      Read the full page →
+                    </Text>
+                  </Pressable>
+                </View>
+              ))}
             </View>
           ) : (
-            <Text className="text-soft-ink mt-8 leading-relaxed">
-              Mark pages as favorite and they'll gather here.
+            <Text className="text-soft-ink mt-8 text-center leading-relaxed">
+              Mark pages as favorite across the year and they'll gather here to
+              read straight through.
             </Text>
           )}
         </>
