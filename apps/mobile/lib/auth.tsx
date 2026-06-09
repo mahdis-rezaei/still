@@ -24,6 +24,9 @@ export interface MobileUser {
   onboardingCompleted?: boolean;
   emailVerified?: boolean;
   usage?: { used: number; limit: number | null; atLimit: boolean };
+  avatarUrl?: string | null;
+  avatarColor?: string | null;
+  hasPassword?: boolean;
 }
 
 interface AuthState {
@@ -35,6 +38,7 @@ interface AuthState {
   signInWithGoogle: () => Promise<void>;
   signInWithApple: () => Promise<void>;
   completeOnboarding: () => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
@@ -144,6 +148,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser((u) => (u ? { ...u, onboardingCompleted: true } : u));
   };
 
+  // Re-pull the signed-in user (after a profile edit, so the header + pages
+  // reflect a new name/avatar).
+  const refresh = async () => {
+    try {
+      setUser(await api<MobileUser>("/auth/me"));
+    } catch {
+      // keep the current user on a transient failure
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -155,6 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signInWithGoogle,
         signInWithApple,
         completeOnboarding,
+        refresh,
       }}
     >
       {children}
