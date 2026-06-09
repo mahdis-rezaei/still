@@ -79,28 +79,33 @@ brand fonts. Web uses **Fraunces** (display/headings), **Newsreader** (body/quot
 
 ---
 
-## TASK 2 — Web: logo mark, favicon, and App Store download path
+## TASK 2 — Web: logo mark, favicon, and app download path
 
 > The **web frontend is a SEPARATE part of the codebase** from `apps/mobile` — locate
 > it first (deployed to yadegarjournal.com).
 
-1. **Favicon** = the app mark (source art: `apps/mobile/assets/icon-source.png` — the
-   open-book "Y" on cream).
-2. **Small logo mark in the site header**, next to/above the "Yadegar" wordmark — for
-   brand cohesion across web ↔ app ↔ App Store.
-3. **App Store download path** (gate behind "app is live" — see timing below):
+1. **Logo update / favicon** = the app mark (source art:
+   `apps/mobile/assets/icon-source.png` — the open-book "Y" on cream). Replace the
+   browser-tab favicon and add a small mark in the site header next to the "Yadegar"
+   wordmark, for brand cohesion across web ↔ app ↔ stores.
+2. **iOS app download path** (gate behind "app is live" — see timing):
    - **Apple Smart App Banner** — add to web `<head>`:
-     `<meta name="apple-itunes-app" content="app-id=6778475173">`
-   - **Official "Download on the App Store" badge** in the hero + footer, linking to
+     `<meta name="apple-itunes-app" content="app-id=6778475173">` (native banner in
+     iOS Safari).
+   - **Official "Download on the App Store" badge** in the hero + footer →
      `https://apps.apple.com/app/id6778475173` (use Apple's official badge artwork).
-   - **Platform-aware CTA:** lead with the app on iPhone; show a **QR code** on desktop.
-   - Keep web sign-in available — invite, don't force (no full-screen interstitial).
-   - **Timing:** only enable once the app is Approved AND released. Manual release means
-     flip the web CTAs live + press "Release" in App Store Connect at the same moment.
+3. **Android download path** (later, once the Android app ships — Task 5):
+   - There is **no native "smart banner" on Android**; instead add a **"Get it on
+     Google Play" badge** + an optional custom dismissible banner. Link to the Play
+     Store listing URL once it exists.
+4. **Platform-aware CTA:** lead with the app on phones, show a **QR code** on desktop.
+   Keep web sign-in available — invite, don't force (no full-screen interstitial).
+5. **Timing:** only enable a store CTA once that app is Approved AND released. Manual
+   release means flip the web CTAs + press "Release" at the same moment.
 
 ---
 
-## TASK 3 — FAQ anchor links (deferred)
+## TASK 3 — FAQ: hyperlink the contents (anchor links)
 
 `components/markdown.tsx` currently renders in-page `#anchors` as **plain text**
 (RN has no DOM anchors). Make the Contents items (in `lib/faq.ts`) tappable and
@@ -110,39 +115,99 @@ fixed: the list number column was widened to `width: 26`.)
 
 ---
 
-## TASK 4 — Membership in-app purchase (deferred)
+## TASK 4 — Membership / subscriptions (in-app purchase)
 
 Currently `app/(app)/membership.tsx` is intentionally **price-free with no checkout**
 (App Store rules: digital subscriptions must use IAP). To make it real:
-- Integrate **RevenueCat** + create the subscription product(s) in App Store Connect
-  (and Google Play for Android).
-- Wire the quota gate (currently shadow until `STILL_QUOTA_ENFORCED=1`).
-- See `docs/MONETIZATION-*.md` and `docs/STRIPE-SETUP.md` for the existing strategy.
+- Integrate **RevenueCat** + create the subscription product(s) in **App Store
+  Connect** (and **Google Play** for Android).
+- Wire the quota gate (currently shadow until `STILL_QUOTA_ENFORCED=1`) — gate the AI
+  returns, never the journal.
+- Surface the price + a working **Subscribe** button on the membership screen once IAP
+  is live; restore-purchases flow; reflect `user.plan === "member"` state.
+- See `docs/MEMBERSHIP-COMMS.md`, `docs/MONETIZATION-*.md`, `docs/STRIPE-SETUP.md`.
 
 ---
 
-## TASK 5 — Android app (new — see assessment below)
+## TASK 5 — Android app
 
 The app is already Expo/React Native, so most code is cross-platform. `app.json`
 already has Android config (`package`, `adaptiveIcon` via `assets/adaptive-icon.png`,
-permissions). Remaining work is testing/polish + Play Store setup.
+permissions). Remaining work is testing/polish + Play Store setup. Estimate: ~2–4
+focused days once iOS fonts are fixed (mostly device testing + Play Console paperwork,
+not rewriting). Do this **after** iOS 1.0 is live + fonts fixed, so Android inherits a
+polished codebase.
 
-Key Android-specific items:
-- **Sign in with Apple** is iOS-only — conditionally hide it on Android (keep Google +
-  email/password). Apple requires SiwA on iOS when offering Google; Android doesn't.
-- **Push notifications** need **FCM (Firebase)** setup for Android (iOS uses APNs,
-  already working).
-- Verify each native module on Android: `expo-local-authentication` (biometric),
-  `expo-speech-recognition`, `expo-image-picker`, `expo-secure-store`, `expo-notifications`.
-- Android adaptive icon + splash polish; test layouts on Android.
-- **Google Play Console** ($25 one-time): store listing, Android screenshots, Data
-  Safety form (≈ App Privacy), content rating.
-- Build/submit via EAS: `eas build --platform android` → `eas submit -p android`.
+**Phase A — code (platform parity)**
+- Conditionally **hide "Sign in with Apple" on Android** (keep Google + email/password).
+  Apple requires SiwA on iOS when offering Google; Android doesn't.
+- **Push notifications → FCM:** create a Firebase project, add the FCM key to EAS
+  credentials (iOS uses APNs, already working). See Task 7.
+- **Verify each native module on Android:** `expo-local-authentication` (biometric),
+  `expo-speech-recognition` (most fiddly), `expo-image-picker`, `expo-secure-store`,
+  `expo-notifications`, `expo-apple-authentication` (iOS-only — guard it).
+- Polish the **adaptive icon** safe-zone + splash; sweep every screen for Android
+  layout/keyboard/safe-area differences.
+
+**Phase B — store setup (Google Play Console, $25 one-time)**
+- Store listing (reuse iOS copy), **Android screenshots** (phone sizes), feature graphic.
+- **Data Safety form** (≈ App Privacy — same answers: App Functionality, linked to
+  user, no tracking).
+- Content rating questionnaire; target API level compliance.
+
+**Phase C — build & submit**
+- `eas build --platform android --profile production` → `eas submit -p android`.
+- Internal testing track first, then production.
+
+---
+
+## TASK 6 — Shop (in-app entry + settings)
+
+Currently the **Shop** menu item (`components/app-header.tsx`) opens
+`https://yadegarjournal.com/shop` in the external browser. It sells **physical goods
+only** (journals/keepsakes), which is App-Store-compliant.
+- **Clarify desired scope** with Mahdis: keep as an external link, or build a richer
+  in-app shop surface / "shop settings" (e.g., region, currency, a nicer in-app
+  browser via `expo-web-browser` instead of `Linking.openURL`).
+- If kept external, consider an in-app `WebBrowser.openBrowserAsync` for a smoother,
+  in-app-feeling experience while still being an external store.
+
+---
+
+## TASK 7 — Make push notifications / nudges actually work
+
+The nudge feature is the native counterpart to the web's email nudges. Verify the full
+loop on a **real device with the production build** (push doesn't work in Simulator):
+- `lib/push.ts` `registerForPush()` runs, gets an Expo push token, and POSTs it to
+  `/notifications/devices`. (Guarded so it never breaks launch.)
+- Confirm the token actually registers with the backend for the signed-in user.
+- Confirm the **nudge cron** delivers a push and it appears on the device (foreground
+  handler uses `shouldShowBanner` / `shouldShowList` post-SDK-54).
+- Check notification **permission prompt** timing/UX.
+- Android: requires FCM (Task 5 Phase A) before this works there.
+
+---
+
+## TASK 8 — Marketing: explainer video + auto-generated assets
+
+For logged-out / curious users who don't want to sign in, give them a way to *get it*
+fast.
+- **Short product video / explainer** (30–60s) for the landing page + App Store
+  "App Preview" slot — the loop: write → keep → return → reflect, with the silence
+  discipline as the hook ("offer the meaning, never push the moment").
+- **Idea from Mahdis:** feed everything we've built (the engine spec, PRD, FAQ, build
+  logs in `docs/`, the product story) into **NotebookLM** (or similar) to generate a
+  presentation / explainer / "podcast" overview. Good source set:
+  `docs/STILL-BUILD-AND-EVAL.md`, `docs/PRD/*`, `docs/FAQ.md` / `lib/faq.ts`,
+  `docs/LAUNCH-PLAN.md`, `docs/PRODUCT-BUILD.md`, `README.md`.
+- Could double as portfolio/resume material (the brand + the AI-product thinking).
 
 ---
 
 ## Suggested order
-1. **Fonts (1.0.1)** — top priority, the one visible flaw.
-2. **Web logo/favicon + App Store download CTAs** — pairs well, gate on "live".
-3. **Android app** — biggest scope; do once iOS 1.0 is stable.
-4. FAQ anchors + Membership IAP — opportunistic.
+1. **Fonts (1.0.1)** — top priority, the one visible flaw. (Task 1)
+2. **Push/nudge verification** — confirm the core notification loop works. (Task 7)
+3. **Web logo/favicon + iOS download CTAs** — gate on "live". (Task 2)
+4. **Android app** — biggest scope; after iOS is stable + fonts fixed. (Task 5)
+5. **Membership IAP** — monetization. (Task 4)
+6. **FAQ hyperlinks, Shop polish, explainer video** — opportunistic. (Tasks 3, 6, 8)
