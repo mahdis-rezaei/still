@@ -52,9 +52,11 @@ export function SiteNav({ showWhy = true }: { showWhy?: boolean }) {
     <nav className="w-full flex items-center justify-between px-6 md:px-10 py-5">
       <Link
         href="/login"
-        className="font-display text-xl text-deep-brown tracking-tight"
+        className="flex items-center gap-2 font-display text-xl text-deep-brown tracking-tight"
         data-testid="link-wordmark"
       >
+        {/* The open-book mark (the app icon), small and quiet beside the wordmark. */}
+        <img src="/logo-mark.png" alt="" aria-hidden="true" className="h-6 w-6 rounded-md" />
         Yadegar
       </Link>
       {showWhy && (
