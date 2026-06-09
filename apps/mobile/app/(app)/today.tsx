@@ -16,7 +16,7 @@ import { useAuth } from "../../lib/auth";
 import { bringPageBack, type MemoryRunResult } from "../../lib/memories";
 import { MemoryCard } from "../../components/memory-card";
 import { OnThisDay } from "../../components/on-this-day";
-import { KeyboardDone, KEYBOARD_DONE_ID } from "../../components/keyboard-done";
+import { KeyboardDoneBar } from "../../components/keyboard-done";
 import { EntryPhotos } from "../../components/entry-photos";
 
 type JournalEntry = {
@@ -283,6 +283,7 @@ export default function Today() {
   }
 
   return (
+    <View style={{ flex: 1 }}>
     <KeyboardAvoidingView
       className="flex-1 bg-background"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -393,7 +394,6 @@ export default function Today() {
               className="min-h-80 text-lg leading-7 text-ink"
               autoCorrect
               scrollEnabled={false}
-              inputAccessoryViewID={KEYBOARD_DONE_ID}
             />
           )}
           <EntryPhotos entryId={entryId} ensureEntry={ensureEntry} />
@@ -404,7 +404,8 @@ export default function Today() {
           the connection is available.
         </Text>
       </ScrollView>
-      <KeyboardDone />
     </KeyboardAvoidingView>
+      <KeyboardDoneBar />
+    </View>
   );
 }
