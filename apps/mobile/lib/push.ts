@@ -52,7 +52,9 @@ export async function registerForPush(): Promise<string | null> {
     // Show an alert + sound when a push arrives while foregrounded.
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
-        shouldShowAlert: true,
+        // SDK 54: shouldShowAlert split into banner + list.
+        shouldShowBanner: true,
+        shouldShowList: true,
         shouldPlaySound: true,
         shouldSetBadge: false,
       }),
