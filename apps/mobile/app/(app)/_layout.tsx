@@ -21,6 +21,7 @@ export default function AppLayout() {
       <Tabs.Screen name="history" options={{ href: null }} />
       <Tabs.Screen name="philosophy" options={{ href: null }} />
       <Tabs.Screen name="why" options={{ href: null }} />
+      <Tabs.Screen name="help" options={{ href: null }} />
       <Tabs.Screen name="settings/index" options={{ href: null }} />
       <Tabs.Screen name="settings/profile" options={{ href: null }} />
       <Tabs.Screen name="settings/reminders" options={{ href: null }} />

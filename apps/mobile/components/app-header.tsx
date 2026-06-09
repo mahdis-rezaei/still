@@ -71,13 +71,7 @@ export function AppHeader() {
             void Linking.openURL("https://yadegarjournal.com/settings/plan");
           },
         },
-        {
-          label: "Help & FAQ",
-          action: () => {
-            setOpen(false);
-            void Linking.openURL("https://yadegarjournal.com/help");
-          },
-        },
+        { label: "Help & FAQ", to: "/(app)/help" },
         { label: "About Yadegar", to: "/(app)/why" },
         {
           label: "Sign out",

@@ -5,6 +5,12 @@ module.exports = {
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
+      fontFamily: {
+        // Mirrors the web: Fraunces (display), Newsreader (body), Inter (sans).
+        display: ["Fraunces_600SemiBold"],
+        body: ["Newsreader_400Regular"],
+        sans: ["Inter_400Regular"],
+      },
       colors: {
         background: "#F7F1E6",
         surface: "#FFFDF8",

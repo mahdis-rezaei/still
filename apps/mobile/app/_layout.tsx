@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider, useAuth } from "../lib/auth";
 import { BiometricLockGate } from "../lib/biometric-lock";
+import { useAppFonts } from "../lib/app-fonts";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,8 @@ function Gate() {
 }
 
 export default function RootLayout() {
+  // Load the brand fonts; render anyway if they're slow so the app never blanks.
+  useAppFonts();
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>

@@ -139,7 +139,7 @@ export default function Settings() {
 
       <View className="mt-8">
         <SectionLabel>Help</SectionLabel>
-        <NavCard onPress={() => void Linking.openURL("https://yadegarjournal.com/help")}>
+        <NavCard onPress={() => router.push("/(app)/help")}>
           <Text className="text-lg text-ink">Help & FAQ</Text>
           <Text className="text-soft-ink text-sm mt-1 leading-relaxed">
             Answers to common questions about every part of Yadegar.
