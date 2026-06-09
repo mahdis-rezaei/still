@@ -24,9 +24,12 @@ import {
 export function EntryPhotos({
   entryId,
   ensureEntry,
+  editable = true,
 }: {
   entryId: string | null;
   ensureEntry?: () => Promise<string | null>;
+  // When false (a read view), show existing photos only — no ＋ tile, no remove.
+  editable?: boolean;
 }) {
   const [items, setItems] = useState<Attachment[]>([]);
   const [token, setToken] = useState<string | null>(null);
@@ -113,30 +116,35 @@ export function EntryPhotos({
     ]);
   }
 
+  // Read view with no photos: render nothing.
+  if (!editable && items.length === 0) return null;
+
   return (
     <View className="mt-6">
       <View className="flex-row flex-wrap gap-3">
         {items.map((a) => (
-          <Pressable key={a.id} onLongPress={() => onRemove(a)}>
+          <Pressable key={a.id} onLongPress={editable ? () => onRemove(a) : undefined}>
             <Image
               source={source(a.id)}
               style={{ width: 96, height: 96, borderRadius: 14 }}
             />
           </Pressable>
         ))}
-        <Pressable
-          onPress={onAdd}
-          disabled={busy}
-          className="h-24 w-24 items-center justify-center rounded-2xl border border-border bg-surface"
-        >
-          {busy ? (
-            <ActivityIndicator color="#3A2F25" />
-          ) : (
-            <Text className="text-soft-ink text-2xl">＋</Text>
-          )}
-        </Pressable>
+        {editable ? (
+          <Pressable
+            onPress={onAdd}
+            disabled={busy}
+            className="h-24 w-24 items-center justify-center rounded-2xl border border-border bg-surface"
+          >
+            {busy ? (
+              <ActivityIndicator color="#3A2F25" />
+            ) : (
+              <Text className="text-soft-ink text-2xl">＋</Text>
+            )}
+          </Pressable>
+        ) : null}
       </View>
-      {items.length > 0 ? (
+      {editable && items.length > 0 ? (
         <Text className="text-faint-ink text-xs mt-2">
           Long-press a photo to remove it.
         </Text>

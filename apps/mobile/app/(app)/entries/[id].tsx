@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -6,6 +6,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  Share,
   Text,
   TextInput,
   View,
@@ -19,10 +20,10 @@ import {
   addToCollection,
   type Collection,
 } from "../../../lib/extras";
-import { KeyboardDone, KEYBOARD_DONE_ID } from "../../../components/keyboard-done";
 import { EntryPhotos } from "../../../components/entry-photos";
-import { MicButton } from "../../../components/mic-button";
 import { RichText } from "../../../components/rich-text";
+import { RichEditor } from "../../../components/rich-editor";
+import { htmlToPlain, plainToHtml } from "../../../lib/html";
 import {
   updateEntryResurfacing,
   type ResurfacingPreference,
@@ -32,8 +33,6 @@ type JournalEntry = {
   id: string;
   title?: string | null;
   body: string;
-  // Optional rich-text layer (sanitized HTML) composed on the web. When present
-  // we render it faithfully; the plain `body` above is derived from it.
   bodyRich?: string | null;
   resurfacingPreference?: ResurfacingPreference;
   entryDate: string | null;
@@ -52,15 +51,17 @@ type Reflection = {
   updatedAt: string;
 };
 
-type SaveStatus = "loading" | "saved" | "draft" | "saving" | "offline" | "error";
+const RESURFACING: { value: ResurfacingPreference; label: string }[] = [
+  { value: "normal", label: "Let Yadegar return this" },
+  { value: "more_often", label: "Return this more often" },
+  { value: "never", label: "Never return this automatically" },
+];
 
-function formatEntryDate(value: string | null): string {
+function longDate(value: string | null): string {
   if (!value) return "Undated";
-
-  const [year, month, day] = value.split("-").map(Number);
-  if (!year || !month || !day) return value;
-
-  return new Date(year, month - 1, day).toLocaleDateString("en-US", {
+  const [y, m, d] = value.split("-").map(Number);
+  if (!y || !m || !d) return value;
+  return new Date(y, m - 1, d).toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -68,70 +69,107 @@ function formatEntryDate(value: string | null): string {
   });
 }
 
-function formatShortDate(value: string): string {
-  const [year, month, day] = value.split("-").map(Number);
-  if (!year || !month || !day) return value;
-
-  return new Date(year, month - 1, day).toLocaleDateString("en-US", {
+function shortDate(value: string): string {
+  const [y, m, d] = value.split("-").map(Number);
+  if (!y || !m || !d) return value;
+  return new Date(y, m - 1, d).toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
   });
 }
 
-function statusLabel(status: SaveStatus): string {
-  switch (status) {
-    case "loading":
-      return "Loading…";
-    case "draft":
-      return "Draft";
-    case "saving":
-      return "Saving…";
-    case "offline":
-      return "Offline draft";
-    case "error":
-      return "Could not save";
-    default:
-      return "Saved";
-  }
-}
-
 export default function EntryDetail() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ id?: string | string[] }>();
-
   const id = useMemo(() => {
-    const value = params.id;
-    return Array.isArray(value) ? value[0] : value;
+    const v = params.id;
+    return Array.isArray(v) ? v[0] : v;
   }, [params.id]);
 
   const [entry, setEntry] = useState<JournalEntry | null>(null);
-  const [body, setBody] = useState("");
-  const [lastSavedBody, setLastSavedBody] = useState("");
-  const [status, setStatus] = useState<SaveStatus>("loading");
-  const [error, setError] = useState<string | null>(null);
-  // A page formatted on the web opens in a rendered read view; tapping "Edit"
-  // switches to the plain editor (and editing here simplifies it to plain text).
-  // Plain pages skip straight to the editor, exactly as before.
-  const [editing, setEditing] = useState(false);
-  // How this page returns: normal · more often · never (a per-page mute).
-  const [resurf, setResurf] = useState<ResurfacingPreference>("normal");
-
   const [reflections, setReflections] = useState<Reflection[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Edit mode (read-by-default, like the web).
+  const [editing, setEditing] = useState(false);
+  const [draftDate, setDraftDate] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+  const draftHtmlRef = useRef("");
+
+  // Reflections composer.
+  const [reflecting, setReflecting] = useState(false);
   const [reflectionText, setReflectionText] = useState("");
   const [reflectionBusy, setReflectionBusy] = useState(false);
-  const [reflectionError, setReflectionError] = useState<string | null>(null);
 
-  // Keep this page: shelf + collections.
+  // Keep / collections / favorite / delete.
   const [shelved, setShelved] = useState(false);
   const [collPickerOpen, setCollPickerOpen] = useState(false);
   const [collections, setCollections] = useState<Collection[] | null>(null);
   const [addedColl, setAddedColl] = useState<Set<string>>(new Set());
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!id) {
+        setError("Entry not found.");
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      setError(null);
+      try {
+        const [row, refls] = await Promise.all([
+          api<JournalEntry>(`/entries/${id}`),
+          api<Reflection[]>(`/entries/${id}/reflections`),
+        ]);
+        if (cancelled) return;
+        setEntry(row);
+        setReflections(refls);
+      } catch {
+        if (!cancelled) setError("Could not load this page.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  const backToLibrary = () => router.navigate("/(app)/explore?tab=library");
+
+  async function patch(data: Record<string, unknown>) {
+    if (!id) return;
+    const saved = await api<JournalEntry>(`/entries/${id}`, { method: "PATCH", body: data });
+    setEntry(saved);
+    return saved;
+  }
+
+  function toggleFavorite() {
+    if (!entry) return;
+    const next = !entry.favorite;
+    setEntry({ ...entry, favorite: next });
+    patch({ favorite: next }).catch(() =>
+      setEntry((e) => (e ? { ...e, favorite: !next } : e)),
+    );
+  }
+
+  function changeResurf(v: ResurfacingPreference) {
+    if (!entry || !id) return;
+    const prev = entry.resurfacingPreference ?? "normal";
+    setEntry({ ...entry, resurfacingPreference: v });
+    updateEntryResurfacing(id, v).catch(() =>
+      setEntry((e) => (e ? { ...e, resurfacingPreference: prev } : e)),
+    );
+  }
 
   async function onAddToShelf() {
     if (!id || shelved) return;
-    setShelved(true); // optimistic; idempotent server-side
+    setShelved(true);
     try {
       await addToShelf(id);
     } catch {
@@ -165,164 +203,75 @@ export default function EntryDetail() {
     }
   }
 
-  function changeResurf(v: ResurfacingPreference) {
-    if (!id) return;
-    const prev = resurf;
-    setResurf(v); // optimistic
-    updateEntryResurfacing(id, v).catch(() => setResurf(prev));
+  function startEdit() {
+    if (!entry) return;
+    draftHtmlRef.current = entry.bodyRich ?? plainToHtml(entry.body);
+    setDraftDate(entry.entryDate ?? "");
+    setEditing(true);
   }
 
-  const loadedRef = useRef(false);
-  const latestBodyRef = useRef("");
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const saveSequenceRef = useRef(0);
-  // Whether the loaded page still carries a rich layer. Saving plain text from
-  // mobile clears it (bodyRich: null) so `body` and `bodyRich` can't diverge.
-  const richRef = useRef(false);
+  async function saveEdit() {
+    const html = draftHtmlRef.current;
+    const plain = htmlToPlain(html);
+    if (!plain.trim()) {
+      Alert.alert("Write something", "A page can't be empty.");
+      return;
+    }
+    setSavingEdit(true);
+    try {
+      await patch({ body: plain, bodyRich: html, entryDate: draftDate || null });
+      setEditing(false);
+    } catch {
+      Alert.alert("Couldn't save", "Please try again in a moment.");
+    } finally {
+      setSavingEdit(false);
+    }
+  }
 
-  useEffect(() => {
-    latestBodyRef.current = body;
-  }, [body]);
+  function exportEntry() {
+    if (!entry) return;
+    const lines = [longDate(entry.entryDate)];
+    if (entry.title) lines.push("", entry.title);
+    lines.push("", entry.body);
+    for (const r of reflections) {
+      lines.push("", "—", `Reflection · ${shortDate(r.reflectionDate)}`, "", r.body);
+    }
+    void Share.share({ message: lines.join("\n") });
+  }
 
-  useEffect(() => {
-    richRef.current = !!entry?.bodyRich;
-  }, [entry?.bodyRich]);
-
-  const loadReflections = useCallback(async () => {
+  async function doDelete() {
     if (!id) return;
-    const rows = await api<Reflection[]>(`/entries/${id}/reflections`);
-    setReflections(rows);
-  }, [id]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      if (!id) {
-        setError("Entry not found.");
-        setStatus("error");
-        return;
-      }
-
-      loadedRef.current = false;
-      setStatus("loading");
-      setError(null);
-      setReflectionError(null);
-
-      try {
-        const [row, reflectionRows] = await Promise.all([
-          api<JournalEntry>(`/entries/${id}`),
-          api<Reflection[]>(`/entries/${id}/reflections`),
-        ]);
-
-        if (cancelled) return;
-
-        setEntry(row);
-        setBody(row.body);
-        setLastSavedBody(row.body);
-        latestBodyRef.current = row.body;
-        setResurf(row.resurfacingPreference ?? "normal");
-        // Rich pages open as a rendered read view; plain pages are directly editable.
-        setEditing(!row.bodyRich);
-        setReflections(reflectionRows);
-        setStatus("saved");
-      } catch {
-        if (cancelled) return;
-        setError("Could not load this page.");
-        setStatus("error");
-      } finally {
-        loadedRef.current = true;
-      }
+    try {
+      await api(`/entries/${id}`, { method: "DELETE" });
+      backToLibrary();
+    } catch {
+      Alert.alert("Couldn't delete", "Please try again in a moment.");
     }
+  }
 
-    void load();
-
-    return () => {
-      cancelled = true;
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    };
-  }, [id]);
-
-  const saveBody = useCallback(
-    async (nextBody: string) => {
-      if (!id || !nextBody.trim()) {
-        setStatus("draft");
-        return;
-      }
-
-      const sequence = saveSequenceRef.current + 1;
-      saveSequenceRef.current = sequence;
-      setStatus("saving");
-
-      try {
-        const saved = await api<JournalEntry>(`/entries/${id}`, {
-          method: "PATCH",
-          // Editing a once-rich page on mobile simplifies it to plain text —
-          // clear bodyRich so the server makes this plain `body` canonical.
-          body: richRef.current ? { body: nextBody, bodyRich: null } : { body: nextBody },
-        });
-
-        if (saveSequenceRef.current !== sequence) return;
-
-        setEntry(saved);
-        setLastSavedBody(saved.body);
-        setStatus(latestBodyRef.current === saved.body ? "saved" : "draft");
-      } catch {
-        if (saveSequenceRef.current !== sequence) return;
-        setStatus("offline");
-      }
-    },
-    [id],
-  );
-
-  useEffect(() => {
-    if (!loadedRef.current) return;
-
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-
-    if (body === lastSavedBody) {
-      setStatus(body.trim() ? "saved" : "draft");
-      return;
-    }
-
-    if (!body.trim()) {
-      setStatus("draft");
-      return;
-    }
-
-    setStatus("draft");
-
-    saveTimerRef.current = setTimeout(() => {
-      void saveBody(body);
-    }, 1000);
-
-    return () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    };
-  }, [body, lastSavedBody, saveBody]);
-
-  async function submitReflection() {
+  async function addReflection() {
     if (!id || reflectionBusy) return;
-
     const trimmed = reflectionText.trim();
     if (!trimmed) return;
-
     setReflectionBusy(true);
-    setReflectionError(null);
-
     try {
       const created = await api<Reflection>(`/entries/${id}/reflections`, {
         method: "POST",
         body: { body: trimmed },
       });
-
-      setReflections((current) => [...current, created]);
+      setReflections((cur) => [...cur, created]);
       setReflectionText("");
+      setReflecting(false);
     } catch {
-      setReflectionError("Could not save this reflection. Please try again.");
+      Alert.alert("Couldn't save", "Please try again in a moment.");
     } finally {
       setReflectionBusy(false);
     }
+  }
+
+  function removeReflection(rid: string) {
+    setReflections((cur) => cur.filter((r) => r.id !== rid));
+    void api(`/reflections/${rid}`, { method: "DELETE" }).catch(() => {});
   }
 
   return (
@@ -339,66 +288,52 @@ export default function EntryDetail() {
           paddingBottom: insets.bottom + 48,
         }}
       >
+        <Pressable onPress={backToLibrary} hitSlop={8} className="self-start">
+          <Text className="text-soft-ink" style={{ fontSize: 14 }}>← Library</Text>
+        </Pressable>
 
-        {status === "loading" ? (
+        {loading ? (
           <View className="min-h-80 items-center justify-center">
             <ActivityIndicator color="#3A2F25" />
           </View>
-        ) : error ? (
+        ) : error || !entry ? (
           <View className="mt-10 rounded-3xl border border-border bg-surface p-5">
-            <Text className="text-ink">{error}</Text>
-            <Pressable onPress={() => router.back()} className="mt-4">
-              <Text className="text-deep-brown">Return to Library</Text>
+            <Text className="text-ink">{error ?? "This page could not be found."}</Text>
+            <Pressable onPress={backToLibrary} className="mt-4">
+              <Text className="text-deep-brown">Back to your Library</Text>
             </Pressable>
           </View>
-        ) : entry ? (
-          <>
-            <View className="mt-10 flex-row items-start justify-between gap-4">
-              <View className="flex-1">
-                <Text className="text-4xl text-deep-brown">
-                  {entry.title || "Page"}
-                </Text>
-                <Text className="mt-2 text-soft-ink">
-                  {formatEntryDate(entry.entryDate)}
-                </Text>
+        ) : (
+          <View className="mt-8">
+            {/* Title (the date) + inline actions. */}
+            <View className="flex-row items-start justify-between gap-3 mb-8">
+              <Text className="flex-1 text-3xl text-deep-brown leading-tight">
+                {longDate(entry.entryDate)}
+              </Text>
+              <View className="flex-row items-center gap-4 pt-1">
+                <Pressable onPress={toggleCollPicker} hitSlop={6}>
+                  <Text className="text-soft-ink" style={{ fontSize: 13 }}>Collections</Text>
+                </Pressable>
+                <Pressable onPress={onAddToShelf} disabled={shelved} hitSlop={6}>
+                  <Text className="text-soft-ink" style={{ fontSize: 13 }}>
+                    {shelved ? "On shelf ✓" : "Add to shelf"}
+                  </Text>
+                </Pressable>
+                <Pressable onPress={toggleFavorite} hitSlop={6}>
+                  <Text className={entry.favorite ? "text-accent-sepia text-2xl" : "text-faint-ink text-2xl"}>
+                    {entry.favorite ? "★" : "☆"}
+                  </Text>
+                </Pressable>
               </View>
-
-              <View className="rounded-full border border-border bg-surface px-3 py-1.5">
-                <Text className="text-xs text-soft-ink">
-                  {statusLabel(status)}
-                </Text>
-              </View>
-            </View>
-
-            {/* Keep this page: shelf + collections. */}
-            <View className="mt-6 flex-row gap-2">
-              <Pressable
-                onPress={onAddToShelf}
-                disabled={shelved}
-                className="flex-1 items-center rounded-full border border-border bg-surface py-2.5"
-              >
-                <Text className="text-soft-ink" style={{ fontSize: 13 }}>
-                  {shelved ? "On shelf ✓" : "Add to shelf"}
-                </Text>
-              </Pressable>
-              <Pressable
-                onPress={toggleCollPicker}
-                className="flex-1 items-center rounded-full border border-border bg-surface py-2.5"
-              >
-                <Text className="text-soft-ink" style={{ fontSize: 13 }}>
-                  Add to collection
-                </Text>
-              </Pressable>
             </View>
 
             {collPickerOpen ? (
-              <View className="mt-3 rounded-3xl border border-border bg-surface p-4 gap-1">
+              <View className="mb-6 rounded-3xl border border-border bg-surface p-4 gap-1">
                 {collections === null ? (
                   <ActivityIndicator color="#3A2F25" />
                 ) : collections.length === 0 ? (
                   <Text className="text-soft-ink leading-relaxed">
-                    No collections yet. Make one on the Collections screen
-                    (Library → Collections).
+                    No collections yet. Make one in Explore → Collections.
                   </Text>
                 ) : (
                   collections.map((c) => {
@@ -411,9 +346,7 @@ export default function EntryDetail() {
                         className="flex-row items-center justify-between py-2.5"
                       >
                         <Text className="text-ink">{c.name}</Text>
-                        <Text
-                          className={added ? "text-accent-sepia" : "text-faint-ink"}
-                        >
+                        <Text className={added ? "text-accent-sepia" : "text-faint-ink"}>
                           {added ? "Added ✓" : "Add"}
                         </Text>
                       </Pressable>
@@ -423,178 +356,172 @@ export default function EntryDetail() {
               </View>
             ) : null}
 
-            {/* How this page returns — a per-page resurfacing control. */}
-            <View className="mt-6">
-              <Text className="text-soft-ink mb-2" style={{ fontSize: 13 }}>
-                How this page returns
-              </Text>
-              <View className="flex-row gap-2">
-                {(
-                  [
-                    { value: "normal", label: "Normal" },
-                    { value: "more_often", label: "More often" },
-                    { value: "never", label: "Never" },
-                  ] as { value: ResurfacingPreference; label: string }[]
-                ).map((o) => {
-                  const sel = o.value === resurf;
-                  return (
-                    <Pressable
-                      key={o.value}
-                      onPress={() => changeResurf(o.value)}
-                      className={
-                        "flex-1 items-center rounded-full border px-3 py-2 " +
-                        (sel
-                          ? "bg-deep-brown border-deep-brown"
-                          : "bg-surface border-border")
-                      }
-                    >
-                      <Text
-                        style={{ fontSize: 13 }}
-                        className={sel ? "text-background" : "text-soft-ink"}
-                      >
-                        {o.label}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-              {resurf === "never" ? (
-                <Text className="text-faint-ink text-xs mt-2 leading-relaxed">
-                  This page won't resurface on its own. You can still find it in your Library.
-                </Text>
-              ) : null}
-            </View>
-
-            {entry.bodyRich && !editing ? (
-              // Formatted on the web — render it faithfully, read-only, with an
-              // explicit path to plain-text editing.
-              <View className="mt-8 rounded-3xl border border-border bg-surface px-5 py-4">
-                <RichText html={entry.bodyRich} />
-                <Pressable
-                  onPress={() =>
-                    Alert.alert(
-                      "Edit as plain text?",
-                      "This page was formatted on the web. Editing it here will simplify the formatting to plain text.",
-                      [
-                        { text: "Cancel", style: "cancel" },
-                        { text: "Edit", onPress: () => setEditing(true) },
-                      ],
-                    )
-                  }
-                  className="mt-5 self-start rounded-full border border-border bg-background px-4 py-2"
-                >
-                  <Text className="text-soft-ink" style={{ fontSize: 13 }}>
-                    Edit as plain text
-                  </Text>
-                </Pressable>
-              </View>
-            ) : (
-              <View className="mt-8 rounded-3xl border border-border bg-surface px-5 py-4">
-                <TextInput
-                  value={body}
-                  onChangeText={setBody}
-                  multiline
-                  textAlignVertical="top"
-                  placeholder="Write more…"
-                  placeholderTextColor="#A59B8D"
-                  className="min-h-80 text-lg leading-7 text-ink"
-                  autoCorrect
-                  scrollEnabled={false}
-                  inputAccessoryViewID={KEYBOARD_DONE_ID}
-                />
-              </View>
-            )}
-
             {editing ? (
-              <View className="mt-4 flex-row items-center justify-between">
-                <Text className="text-faint-ink text-sm">
-                  Edits autosave after you pause.
-                </Text>
-
-                <Pressable
-                  onPress={() => void saveBody(body)}
-                  disabled={status === "saving" || body === lastSavedBody || !body.trim()}
-                >
-                  <Text className="text-soft-ink">
-                    {status === "saving" ? "Saving…" : "Save now"}
-                  </Text>
-                </Pressable>
-              </View>
-            ) : null}
-
-            <View className="mt-2">
-              <MicButton value={body} onChangeText={setBody} />
-            </View>
-
-            {id ? <EntryPhotos entryId={id} /> : null}
-
-            <View className="mt-12">
-              <Text className="text-3xl text-deep-brown">Reflections</Text>
-              <Text className="mt-2 text-soft-ink leading-relaxed">
-                Add a note to this page without changing the original writing.
-              </Text>
-
-              <View className="mt-5 gap-4">
-                {reflections.length === 0 ? (
-                  <View className="rounded-3xl border border-border bg-surface p-5">
-                    <Text className="text-soft-ink">
-                      No reflections yet.
-                    </Text>
-                  </View>
-                ) : (
-                  reflections.map((reflection) => (
-                    <View
-                      key={reflection.id}
-                      className="rounded-3xl border border-border bg-surface p-5"
-                    >
-                      <Text className="text-sm text-soft-ink">
-                        {formatShortDate(reflection.reflectionDate)}
-                      </Text>
-                      <Text className="mt-3 text-base leading-7 text-ink">
-                        {reflection.body}
-                      </Text>
-                    </View>
-                  ))
-                )}
-              </View>
-
-              <View className="mt-6 rounded-full border border-border bg-surface px-4 py-3">
-                <View className="flex-row items-center gap-3">
-                  <TextInput
-                    value={reflectionText}
-                    onChangeText={setReflectionText}
-                    placeholder="Write a reflection…"
-                    placeholderTextColor="#A59B8D"
-                    className="flex-1 text-base text-ink"
-                    autoCorrect
-                    returnKeyType="done"
-                    onSubmitEditing={submitReflection}
+              /* Edit mode. */
+              <View>
+                <TextInput
+                  value={draftDate}
+                  onChangeText={setDraftDate}
+                  placeholder="Date (YYYY-MM-DD)"
+                  placeholderTextColor="#A59B8D"
+                  autoCapitalize="none"
+                  className="self-start rounded-lg border border-border bg-surface px-3 py-2 text-soft-ink mb-4"
+                  style={{ fontSize: 13 }}
+                />
+                <View className="rounded-3xl border border-border bg-surface overflow-hidden">
+                  <RichEditor
+                    initialHtml={draftHtmlRef.current}
+                    placeholder="Write more…"
+                    onChangeHtml={(h) => {
+                      draftHtmlRef.current = h;
+                    }}
                   />
-
+                </View>
+                <View className="mt-4 flex-row items-center gap-5">
                   <Pressable
-                    onPress={submitReflection}
-                    disabled={reflectionBusy || !reflectionText.trim()}
-                    className="rounded-full bg-deep-brown px-4 py-2 disabled:opacity-50"
+                    onPress={() => void saveEdit()}
+                    disabled={savingEdit}
+                    className="rounded-full bg-deep-brown px-6 py-2"
                   >
-                    {reflectionBusy ? (
-                      <ActivityIndicator color="#F7F1E6" />
-                    ) : (
-                      <Text className="text-sm text-background">Add</Text>
-                    )}
+                    <Text className="text-background" style={{ fontSize: 13 }}>
+                      {savingEdit ? "Saving…" : "Save"}
+                    </Text>
+                  </Pressable>
+                  <Pressable onPress={() => setEditing(false)}>
+                    <Text className="text-soft-ink" style={{ fontSize: 13 }}>Cancel</Text>
                   </Pressable>
                 </View>
+                {id ? (
+                  <View className="px-1">
+                    <EntryPhotos entryId={id} editable />
+                  </View>
+                ) : null}
               </View>
+            ) : (
+              /* Read mode. */
+              <>
+                {entry.bodyRich ? (
+                  <RichText html={entry.bodyRich} />
+                ) : (
+                  <Text className="text-lg text-ink leading-7">{entry.body}</Text>
+                )}
+                {id ? <EntryPhotos entryId={id} editable={false} /> : null}
 
-              {reflectionError ? (
-                <Text className="mt-3 text-sm text-accent-sepia">
-                  {reflectionError}
-                </Text>
-              ) : null}
-            </View>
-          </>
-        ) : null}
+                {/* Reflections. */}
+                <View className="mt-12">
+                  {reflections.length > 0 ? (
+                    <View className="gap-7 mb-7">
+                      {reflections.map((r) => (
+                        <View key={r.id} className="border-l-2 border-accent-sepia/30 pl-5">
+                          <View className="flex-row items-baseline justify-between gap-3 mb-1.5">
+                            <Text className="text-xs uppercase tracking-widest text-faint-ink">
+                              Reflection · {shortDate(r.reflectionDate)}
+                            </Text>
+                            <Pressable onPress={() => removeReflection(r.id)} hitSlop={6}>
+                              <Text className="text-faint-ink text-xs">remove</Text>
+                            </Pressable>
+                          </View>
+                          <Text className="text-lg text-soft-ink leading-relaxed">{r.body}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  ) : null}
+
+                  {reflecting ? (
+                    <View className="gap-3">
+                      <TextInput
+                        value={reflectionText}
+                        onChangeText={setReflectionText}
+                        autoFocus
+                        multiline
+                        textAlignVertical="top"
+                        placeholder="Write to the person who wrote this…"
+                        placeholderTextColor="#A59B8D"
+                        className="min-h-[120px] rounded-lg border border-border bg-surface p-4 text-lg text-ink leading-relaxed"
+                      />
+                      <View className="flex-row items-center gap-5">
+                        <Pressable
+                          onPress={() => void addReflection()}
+                          disabled={reflectionBusy || !reflectionText.trim()}
+                          style={{ opacity: reflectionBusy || !reflectionText.trim() ? 0.5 : 1 }}
+                          className="rounded-full bg-deep-brown px-6 py-2"
+                        >
+                          <Text className="text-background" style={{ fontSize: 13 }}>
+                            {reflectionBusy ? "Saving…" : "Add reflection"}
+                          </Text>
+                        </Pressable>
+                        <Pressable
+                          onPress={() => {
+                            setReflecting(false);
+                            setReflectionText("");
+                          }}
+                        >
+                          <Text className="text-soft-ink" style={{ fontSize: 13 }}>Cancel</Text>
+                        </Pressable>
+                      </View>
+                    </View>
+                  ) : (
+                    <Pressable onPress={() => setReflecting(true)} className="self-start">
+                      <Text className="text-accent-sepia">Reflect on this page</Text>
+                    </Pressable>
+                  )}
+                </View>
+
+                {/* When Yadegar may return this. */}
+                <View className="mt-14 pt-8 border-t border-border/60">
+                  <Text className="text-xs uppercase tracking-widest text-faint-ink mb-3">
+                    When Yadegar may return this
+                  </Text>
+                  <View className="flex-row flex-wrap gap-2">
+                    {RESURFACING.map((opt) => {
+                      const sel = (entry.resurfacingPreference ?? "normal") === opt.value;
+                      return (
+                        <Pressable
+                          key={opt.value}
+                          onPress={() => changeResurf(opt.value)}
+                          className={
+                            "rounded-full border px-4 py-1.5 " +
+                            (sel ? "border-accent-sepia bg-surface" : "border-border bg-surface")
+                          }
+                        >
+                          <Text className={sel ? "text-ink" : "text-soft-ink"} style={{ fontSize: 13 }}>
+                            {opt.label}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+
+                  {/* Edit · Export · Delete. */}
+                  <View className="mt-8 flex-row items-center gap-6">
+                    <Pressable onPress={startEdit}>
+                      <Text className="text-soft-ink" style={{ fontSize: 14 }}>Edit</Text>
+                    </Pressable>
+                    <Pressable onPress={exportEntry}>
+                      <Text className="text-soft-ink" style={{ fontSize: 14 }}>Export</Text>
+                    </Pressable>
+                    {confirmDelete ? (
+                      <View className="flex-row items-center gap-3">
+                        <Text className="text-soft-ink" style={{ fontSize: 13 }}>Delete this page?</Text>
+                        <Pressable onPress={() => void doDelete()}>
+                          <Text style={{ color: "#B4453A", fontSize: 14 }}>Delete</Text>
+                        </Pressable>
+                        <Pressable onPress={() => setConfirmDelete(false)}>
+                          <Text className="text-soft-ink" style={{ fontSize: 14 }}>Keep</Text>
+                        </Pressable>
+                      </View>
+                    ) : (
+                      <Pressable onPress={() => setConfirmDelete(true)}>
+                        <Text className="text-soft-ink" style={{ fontSize: 14 }}>Delete</Text>
+                      </Pressable>
+                    )}
+                  </View>
+                </View>
+              </>
+            )}
+          </View>
+        )}
       </ScrollView>
-      <KeyboardDone />
     </KeyboardAvoidingView>
   );
 }
