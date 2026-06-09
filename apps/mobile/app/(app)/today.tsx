@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
@@ -111,6 +112,7 @@ function statusLabel(status: SaveStatus): string {
 export default function Today() {
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
 
   const entryDate = useMemo(() => localDateKey(), []);
   const today = useMemo(() => friendlyDate(), []);
@@ -280,6 +282,9 @@ export default function Today() {
     }
   }
 
+  // Once today's page is saved with content, mirror the web's "kept" footer.
+  const keptToday = !!entryId && htmlToPlain(body).trim().length > 0;
+
   return (
     <KeyboardAvoidingView
       className="flex-1 bg-background"
@@ -340,7 +345,10 @@ export default function Today() {
           remember about today?
         </Text>
 
-        <View className="mt-6 rounded-3xl border border-border bg-surface px-2 py-2 overflow-hidden">
+        <View className="mt-6 rounded-3xl border border-border bg-surface overflow-hidden">
+          <Text className="text-xs uppercase tracking-widest text-faint-ink px-4 pt-4 pb-1">
+            Today's page
+          </Text>
           {status === "loading" ? (
             <View className="min-h-80 items-center justify-center">
               <ActivityIndicator color="#3A2F25" />
@@ -353,18 +361,31 @@ export default function Today() {
               placeholder="Start with one sentence…"
             />
           )}
-          <View className="mt-3 px-3">
+          <View className="h-px bg-border mt-2" />
+          <View className="px-4 pt-3">
             <MicButton onInsert={(t) => editorRef.current?.insertText(t)} />
           </View>
-          <View className="px-3">
+          <View className="px-4 pb-4">
             <EntryPhotos entryId={entryId} ensureEntry={ensureEntry} />
           </View>
         </View>
 
-        <Text className="text-faint-ink text-sm mt-4 leading-relaxed">
-          Your words save privately to this phone first, then sync to Yadegar when
-          the connection is available.
-        </Text>
+        {keptToday ? (
+          <Pressable
+            onPress={() => router.push("/(app)/explore?tab=library")}
+            className="mt-4 self-start"
+            hitSlop={6}
+          >
+            <Text className="text-soft-ink leading-relaxed">
+              You've kept 1 page today — it's in your Library →
+            </Text>
+          </Pressable>
+        ) : (
+          <Text className="text-faint-ink text-sm mt-4 leading-relaxed">
+            Your words save privately to this phone first, then sync to Yadegar
+            when the connection is available.
+          </Text>
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );

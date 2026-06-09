@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { View, Text, Pressable } from "react-native";
+import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { getOnThisDayFramed, onThisDayLabel, localTodayISO } from "../lib/memories";
 import { DateMemoryCard } from "./date-memory-card";
@@ -11,6 +12,7 @@ import { MemoryCard } from "./memory-card";
 // SILENT (renders nothing) when there's nothing from this day. A ladder steps
 // through each year; the fuller browse lives on Look back.
 export function OnThisDay() {
+  const router = useRouter();
   const [showYears, setShowYears] = useState(false);
   const date = localTodayISO();
   const { data, isLoading } = useQuery({
@@ -24,7 +26,12 @@ export function OnThisDay() {
 
   return (
     <View className="mt-10">
-      <Text className="text-2xl text-deep-brown mb-4">On this day</Text>
+      <View className="flex-row items-center justify-between mb-4">
+        <Text className="text-2xl text-deep-brown">On this day</Text>
+        <Pressable onPress={() => router.push("/(app)/look-back")} hitSlop={8}>
+          <Text className="text-soft-ink" style={{ fontSize: 13 }}>Look back →</Text>
+        </Pressable>
+      </View>
 
       {data?.framed ? (
         <MemoryCard memory={data.framed} />
