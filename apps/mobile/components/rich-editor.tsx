@@ -61,6 +61,7 @@ function buildHtml(placeholder: string): string {
   .sep{width:1px;height:22px;background:#E7DECF;margin:0 2px;}
   .sw{width:22px;height:22px;border-radius:11px;border:1px solid #D8CDBA;display:inline-block;}
   .sw.reset{display:inline-flex;align-items:center;justify-content:center;font-size:13px;color:#5b4f40;background:#fff;}
+  #bar button.done{margin-left:auto;min-width:0;padding:0 12px;background:#3A2F25;border-color:#3A2F25;color:#F7F1E6;font-weight:600;}
   #editor{padding:16px 16px 48px;outline:none;font-family:Georgia,'Times New Roman',serif;
        font-size:18px;line-height:1.6;color:#3A2F25;min-height:240px;}
   #editor:empty:before{content:attr(data-ph);color:#A59B8D;}
@@ -84,6 +85,7 @@ function buildHtml(placeholder: string): string {
   <button onmousedown="md(event)" onclick="run('quote')">&#10077;</button>
   <span class="sep"></span>
   ${swatches}
+  <button class="done" onclick="done()">Done</button>
 </div>
 <div id="editor" contenteditable="true" data-ph="${placeholder.replace(/"/g, "&quot;")}"></div>
 <script>
@@ -97,6 +99,7 @@ function buildHtml(placeholder: string): string {
     if (s && s.rangeCount && ed.contains(s.anchorNode)) savedRange = s.getRangeAt(0).cloneRange();
   });
   function md(e){ e.preventDefault(); }          // keep selection/keyboard on toolbar tap
+  function done(){ ed.blur(); if (document.activeElement) document.activeElement.blur(); }
   function restore(){
     if (!savedRange) return;
     var s = window.getSelection(); s.removeAllRanges(); s.addRange(savedRange);
@@ -161,7 +164,6 @@ const RichEditorWeb = forwardRef<RichEditorHandle, RichEditorProps>(function Ric
         source={{ html }}
         style={{ backgroundColor: "transparent", flex: 1 }}
         keyboardDisplayRequiresUserAction={false}
-        hideKeyboardAccessoryView
         scrollEnabled
         onMessage={(e) => {
           let data: { type?: string; payload?: string } = {};
