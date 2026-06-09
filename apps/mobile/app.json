@@ -58,7 +58,10 @@
           "microphonePermission": "Allow Yadegar to use the microphone to dictate your writing.",
           "speechRecognitionPermission": "Allow Yadegar to transcribe your speech into text."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker",
+      "expo-font",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
