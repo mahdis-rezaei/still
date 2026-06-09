@@ -24,6 +24,16 @@ import { KeyboardDone, KEYBOARD_DONE_ID } from "../keyboard-done";
 // Memory Capsules: seal a letter to your future self; locked until its delivery
 // date, then openable. Delivery is In 1/5/10 years or a chosen date (mirrors the
 // web's Deliver dropdown). Used by the Explore tab and the standalone /capsules route.
+// Native date wheel when the module is in the build; falls back to a typed field.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let DateTimePicker: any = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  DateTimePicker = require("@react-native-community/datetimepicker").default;
+} catch {
+  DateTimePicker = null;
+}
+
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const PRESETS = [1, 5, 10];
 
@@ -169,15 +179,30 @@ export default function CapsulesView() {
               <Text className="text-faint-ink">⌄</Text>
             </Pressable>
             {mode === "date" ? (
-              <TextInput
-                value={dateStr}
-                onChangeText={setDateStr}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor="#A59B8D"
-                autoCapitalize="none"
-                className="mt-2 rounded-xl border border-border bg-background px-4 py-3 text-ink"
-                style={{ fontSize: 14 }}
-              />
+              DateTimePicker ? (
+                <View className="mt-2 self-start">
+                  <DateTimePicker
+                    value={dateStr ? new Date(dateStr + "T12:00:00") : new Date(Date.now() + 86400000)}
+                    mode="date"
+                    display="inline"
+                    minimumDate={new Date(Date.now() + 86400000)}
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    onChange={(_e: any, d?: Date) => {
+                      if (d) setDateStr(d.toISOString().slice(0, 10));
+                    }}
+                  />
+                </View>
+              ) : (
+                <TextInput
+                  value={dateStr}
+                  onChangeText={setDateStr}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor="#A59B8D"
+                  autoCapitalize="none"
+                  className="mt-2 rounded-xl border border-border bg-background px-4 py-3 text-ink"
+                  style={{ fontSize: 14 }}
+                />
+              )
             ) : null}
           </View>
           <Pressable

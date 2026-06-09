@@ -1,4 +1,4 @@
-import { Linking, Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../../lib/auth";
@@ -60,11 +60,7 @@ export default function Settings() {
 
       <View className="mt-8">
         <SectionLabel>Membership</SectionLabel>
-        <NavCard
-          onPress={() =>
-            void Linking.openURL("https://yadegarjournal.com/settings/plan")
-          }
-        >
+        <NavCard onPress={() => router.push("/(app)/membership")}>
           {user?.plan === "member" ? (
             <>
               <Text className="text-lg text-ink">Member</Text>

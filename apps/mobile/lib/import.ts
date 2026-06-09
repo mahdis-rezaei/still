@@ -1,8 +1,36 @@
+import { requireOptionalNativeModule } from "expo-modules-core";
 import { api } from "./api";
 
 // Paste import: bring past journaling in by pasting text. The backend parses it
 // into dated entries you review, then confirm. Mirrors the web's paste flow
 // (POST /imports/paste → review → PATCH includes → POST confirm).
+
+// True only on a build with the document picker (needs the next eas build).
+export function fileImportAvailable(): boolean {
+  try {
+    return requireOptionalNativeModule("ExpoDocumentPicker") != null;
+  } catch {
+    return false;
+  }
+}
+
+// Pick a .txt / .md file and read its text, to feed the same paste flow. Returns
+// null if cancelled or the picker module isn't in the build yet.
+export async function pickImportFileText(): Promise<string | null> {
+  if (!fileImportAvailable()) return null;
+  try {
+    const DocumentPicker = await import("expo-document-picker");
+    const res = await DocumentPicker.getDocumentAsync({
+      type: ["text/plain", "text/markdown", "public.plain-text"],
+      copyToCacheDirectory: true,
+    });
+    if (res.canceled || !res.assets?.[0]) return null;
+    const FileSystem = await import("expo-file-system");
+    return await FileSystem.readAsStringAsync(res.assets[0].uri);
+  } catch {
+    return null;
+  }
+}
 
 export type DateConfidence = "high" | "medium" | "low" | "unknown";
 

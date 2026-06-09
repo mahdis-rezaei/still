@@ -64,13 +64,7 @@ export function AppHeader() {
       items: [
         { label: "Settings", to: "/(app)/settings" },
         { label: "My profile", to: "/(app)/settings/profile" },
-        {
-          label: "Membership",
-          action: () => {
-            setOpen(false);
-            void Linking.openURL("https://yadegarjournal.com/settings/plan");
-          },
-        },
+        { label: "Membership", to: "/(app)/membership" },
         { label: "Help & FAQ", to: "/(app)/help" },
         { label: "About Yadegar", to: "/(app)/why" },
         {

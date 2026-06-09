@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,6 +16,8 @@ import {
   pasteImport,
   updateParsedEntry,
   confirmImport,
+  fileImportAvailable,
+  pickImportFileText,
   type ImportReview,
   type ParsedEntry,
 } from "../../lib/import";
@@ -36,6 +39,18 @@ export default function Import() {
   const [importedCount, setImportedCount] = useState(0);
 
   const includedCount = entries.filter((e) => e.include).length;
+
+  async function chooseFile() {
+    if (!fileImportAvailable()) {
+      Alert.alert(
+        "File import needs the latest build",
+        "Choosing a file turns on once the app is rebuilt. You can paste your writing now.",
+      );
+      return;
+    }
+    const text = await pickImportFileText();
+    if (text) setRaw(text);
+  }
 
   async function find() {
     if (!raw.trim() || busy) return;
@@ -116,6 +131,11 @@ export default function Import() {
                 inputAccessoryViewID={KEYBOARD_DONE_ID}
               />
             </View>
+            <Pressable onPress={chooseFile} className="mt-3 self-start" hitSlop={6}>
+              <Text className="text-accent-sepia" style={{ fontSize: 13 }}>
+                …or choose a .txt / .md file →
+              </Text>
+            </Pressable>
             {error ? (
               <Text className="text-accent-sepia mt-3">{error}</Text>
             ) : null}
