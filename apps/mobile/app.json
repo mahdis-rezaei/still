@@ -15,7 +15,7 @@
     },
     "ios": {
       "bundleIdentifier": "com.yadegar.app",
-      "supportsTablet": true,
+      "supportsTablet": false,
       "usesAppleSignIn": true,
       "icon": "./assets/icon.png",
       "infoPlist": {
