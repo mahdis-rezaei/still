@@ -83,6 +83,15 @@ export function EntryPhotos({
   }
 
   function onAdd() {
+    // Only the native picker needs the module — guard the action, not the tile,
+    // so the ＋ never vanishes. A build without it shows a friendly note instead.
+    if (!photosAvailable()) {
+      Alert.alert(
+        "Photos need the latest build",
+        "Adding a photo turns on once the app is rebuilt with the photos update.",
+      );
+      return;
+    }
     Alert.alert("Add a photo", undefined, [
       { text: "Photo Library", onPress: () => void add("library") },
       { text: "Take Photo", onPress: () => void add("camera") },
@@ -115,19 +124,17 @@ export function EntryPhotos({
             />
           </Pressable>
         ))}
-        {photosAvailable() ? (
-          <Pressable
-            onPress={onAdd}
-            disabled={busy}
-            className="h-24 w-24 items-center justify-center rounded-2xl border border-border bg-surface"
-          >
-            {busy ? (
-              <ActivityIndicator color="#3A2F25" />
-            ) : (
-              <Text className="text-soft-ink text-2xl">＋</Text>
-            )}
-          </Pressable>
-        ) : null}
+        <Pressable
+          onPress={onAdd}
+          disabled={busy}
+          className="h-24 w-24 items-center justify-center rounded-2xl border border-border bg-surface"
+        >
+          {busy ? (
+            <ActivityIndicator color="#3A2F25" />
+          ) : (
+            <Text className="text-soft-ink text-2xl">＋</Text>
+          )}
+        </Pressable>
       </View>
       {items.length > 0 ? (
         <Text className="text-faint-ink text-xs mt-2">

@@ -56,6 +56,16 @@ export function MicButton({
   }
 
   async function start() {
+    // Only reach the native import on a build that actually includes the module —
+    // importing it otherwise throws "Cannot find native module" out of band. On a
+    // build without it we show a friendly note instead of hiding the button.
+    if (!speechAvailable()) {
+      Alert.alert(
+        "Dictation needs the latest build",
+        "Voice typing turns on once the app is rebuilt with the speech update.",
+      );
+      return;
+    }
     setStarting(true);
     try {
       const Speech = await import("expo-speech-recognition");
@@ -106,10 +116,8 @@ export function MicButton({
 
   useEffect(() => () => cleanup(), []);
 
-  // Hide the button entirely on a build without the speech module (so tapping it
-  // can never crash). It reappears once the app is rebuilt with voice.
-  if (!speechAvailable()) return null;
-
+  // Always render the button (a build without the module is handled on press,
+  // not by hiding) so it never silently disappears.
   return (
     <Pressable
       onPress={() => (listening ? void stop() : void start())}
