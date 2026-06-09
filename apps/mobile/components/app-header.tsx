@@ -56,10 +56,10 @@ export function AppHeader() {
     {
       title: "Explore",
       items: [
-        { label: "Library", to: "/(app)/library" },
-        { label: "Shelf", to: "/(app)/shelf" },
-        { label: "Collections", to: "/(app)/collections" },
-        { label: "Capsules", to: "/(app)/capsules" },
+        { label: "Library", to: "/(app)/explore?tab=library" },
+        { label: "Shelf", to: "/(app)/explore?tab=shelf" },
+        { label: "Collections", to: "/(app)/explore?tab=collections" },
+        { label: "Capsules", to: "/(app)/explore?tab=capsules" },
         { label: "Year in Pages", to: "/(app)/year" },
         { label: "Calendar", to: "/(app)/calendar" },
       ],
