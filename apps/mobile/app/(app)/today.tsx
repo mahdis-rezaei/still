@@ -18,6 +18,8 @@ import { MemoryCard } from "../../components/memory-card";
 import { OnThisDay } from "../../components/on-this-day";
 import { EntryPhotos } from "../../components/entry-photos";
 import { MicButton } from "../../components/mic-button";
+import { FormatToolbar } from "../../components/format-toolbar";
+import { applyMarkup, markupToHtml, type FormatAction } from "../../lib/markup";
 
 type JournalEntry = {
   id: string;
@@ -124,6 +126,19 @@ export default function Today() {
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveSequenceRef = useRef(0);
   const editorRef = useRef<TextInput>(null);
+  // Track the latest body + cursor so a toolbar tap can format the right span
+  // without controlling the TextInput selection (which makes RN editors janky).
+  const bodyRef = useRef(body);
+  const selRef = useRef({ start: 0, end: 0 });
+
+  useEffect(() => {
+    bodyRef.current = body;
+  }, [body]);
+
+  function applyFormat(action: FormatAction) {
+    const { start, end } = selRef.current;
+    setBody(applyMarkup(bodyRef.current, start, end, action));
+  }
 
   // "Bring a page back" — the engine read. A long archive is a two-pass model
   // read (can take a couple of minutes), so show calm, time-aware reassurance
@@ -234,22 +249,40 @@ export default function Today() {
       async function save() {
         setStatus("saving");
 
+        // Convert the writer's markers to the allowlist HTML. We ALWAYS send
+        // bodyRich explicitly (html when formatted, null otherwise) so the
+        // server's plain `body` and the rich layer can never drift apart.
+        const { html, hasFormatting } = markupToHtml(body);
+        const payload = {
+          body,
+          bodyRich: hasFormatting ? html : null,
+          entryDate,
+        };
+
         try {
           const saved = entryId
             ? await api<JournalEntry>(`/entries/${entryId}`, {
                 method: "PATCH",
-                body: { body, entryDate },
+                body: payload,
               })
             : await api<JournalEntry>("/entries", {
                 method: "POST",
-                body: { body, entryDate },
+                body: payload,
               });
 
           if (saveSequenceRef.current !== sequence) return;
 
           setEntryId(saved.id);
-          setLastSavedBody(saved.body);
-          await writeDraft(draftKey, saved.body);
+          // When formatted, keep the editor + local draft on the MARKER text
+          // (saved.body is the stripped plain version); otherwise track the
+          // server's body as before.
+          if (hasFormatting) {
+            setLastSavedBody(body);
+            await writeDraft(draftKey, body);
+          } else {
+            setLastSavedBody(saved.body);
+            await writeDraft(draftKey, saved.body);
+          }
           setStatus("saved");
         } catch {
           if (saveSequenceRef.current !== sequence) return;
@@ -382,18 +415,26 @@ export default function Today() {
               <ActivityIndicator color="#3A2F25" />
             </View>
           ) : (
-            <TextInput
-              ref={editorRef}
-              value={body}
-              onChangeText={setBody}
-              multiline
-              textAlignVertical="top"
-              placeholder="Start with one sentence…"
-              placeholderTextColor="#A59B8D"
-              className="min-h-80 text-lg leading-7 text-ink"
-              autoCorrect
-              scrollEnabled={false}
-            />
+            <>
+              <View className="mb-3 border-b border-border pb-3">
+                <FormatToolbar onAction={applyFormat} />
+              </View>
+              <TextInput
+                ref={editorRef}
+                value={body}
+                onChangeText={setBody}
+                onSelectionChange={(e) => {
+                  selRef.current = e.nativeEvent.selection;
+                }}
+                multiline
+                textAlignVertical="top"
+                placeholder="Start with one sentence…"
+                placeholderTextColor="#A59B8D"
+                className="min-h-80 text-lg leading-7 text-ink"
+                autoCorrect
+                scrollEnabled={false}
+              />
+            </>
           )}
           <View className="mt-3">
             <MicButton value={body} onChangeText={setBody} />
