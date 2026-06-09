@@ -161,7 +161,12 @@ export default function Welcome() {
         <Text className="text-3xl text-soft-ink" style={{ writingDirection: "rtl" }}>
           یادگار
         </Text>
-        <Text className="text-7xl text-deep-brown mt-1">Yadegar</Text>
+        <Text
+          className="text-7xl text-deep-brown mt-1"
+          style={{ fontFamily: "Fraunces_600SemiBold" }}
+        >
+          Yadegar
+        </Text>
         <Text className="text-lg italic text-accent-sepia mt-3 text-center">
           Persian: a keepsake, the thing that remains
         </Text>
