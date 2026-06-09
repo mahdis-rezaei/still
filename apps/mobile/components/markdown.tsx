@@ -112,7 +112,7 @@ export function Markdown({ source }: { source: string }) {
         <View key={`ul${key}`} className="mb-3 gap-1.5">
           {items.map((it, j) => (
             <View key={j} className="flex-row gap-2">
-              <Text className="text-faint-ink" style={{ fontSize: 15, width: 18 }}>{it.n}</Text>
+              <Text className="text-faint-ink" style={{ fontSize: 15, width: 26 }}>{it.n}</Text>
               <Text className="flex-1 text-soft-ink leading-relaxed" style={{ fontSize: 15 }}>
                 {renderInline(it.text, `${key}.${j}`)}
               </Text>
