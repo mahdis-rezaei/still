@@ -13,6 +13,7 @@ import {
   pickImage,
   uploadAttachment,
   deleteAttachment,
+  photosAvailable,
   type Attachment,
 } from "../lib/photos";
 
@@ -114,17 +115,19 @@ export function EntryPhotos({
             />
           </Pressable>
         ))}
-        <Pressable
-          onPress={onAdd}
-          disabled={busy}
-          className="h-24 w-24 items-center justify-center rounded-2xl border border-border bg-surface"
-        >
-          {busy ? (
-            <ActivityIndicator color="#3A2F25" />
-          ) : (
-            <Text className="text-soft-ink text-2xl">＋</Text>
-          )}
-        </Pressable>
+        {photosAvailable() ? (
+          <Pressable
+            onPress={onAdd}
+            disabled={busy}
+            className="h-24 w-24 items-center justify-center rounded-2xl border border-border bg-surface"
+          >
+            {busy ? (
+              <ActivityIndicator color="#3A2F25" />
+            ) : (
+              <Text className="text-soft-ink text-2xl">＋</Text>
+            )}
+          </Pressable>
+        ) : null}
       </View>
       {items.length > 0 ? (
         <Text className="text-faint-ink text-xs mt-2">

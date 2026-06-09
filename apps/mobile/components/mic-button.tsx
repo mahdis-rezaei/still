@@ -1,5 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, Text } from "react-native";
+import { requireOptionalNativeModule } from "expo-modules-core";
+
+// True only on a build that actually includes the speech native module. Checked
+// via expo-modules-core (always present, returns null instead of throwing) so we
+// never even import expo-speech-recognition on a build that lacks it — importing
+// it throws "Cannot find native module" out of band, which escapes try/catch.
+function speechAvailable(): boolean {
+  try {
+    return requireOptionalNativeModule("ExpoSpeechRecognition") != null;
+  } catch {
+    return false;
+  }
+}
 
 // Voice → text: tap to dictate, the transcription streams into the editor; tap
 // again to stop. expo-speech-recognition is a NATIVE module, imported lazily and
@@ -92,6 +105,10 @@ export function MicButton({
   }
 
   useEffect(() => () => cleanup(), []);
+
+  // Hide the button entirely on a build without the speech module (so tapping it
+  // can never crash). It reappears once the app is rebuilt with voice.
+  if (!speechAvailable()) return null;
 
   return (
     <Pressable
