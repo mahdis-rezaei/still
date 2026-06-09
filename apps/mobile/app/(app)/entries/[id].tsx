@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -21,11 +22,15 @@ import {
 import { KeyboardDone, KEYBOARD_DONE_ID } from "../../../components/keyboard-done";
 import { EntryPhotos } from "../../../components/entry-photos";
 import { MicButton } from "../../../components/mic-button";
+import { RichText } from "../../../components/rich-text";
 
 type JournalEntry = {
   id: string;
   title?: string | null;
   body: string;
+  // Optional rich-text layer (sanitized HTML) composed on the web. When present
+  // we render it faithfully; the plain `body` above is derived from it.
+  bodyRich?: string | null;
   entryDate: string | null;
   source: string;
   favorite?: boolean;
@@ -101,6 +106,10 @@ export default function EntryDetail() {
   const [lastSavedBody, setLastSavedBody] = useState("");
   const [status, setStatus] = useState<SaveStatus>("loading");
   const [error, setError] = useState<string | null>(null);
+  // A page formatted on the web opens in a rendered read view; tapping "Edit"
+  // switches to the plain editor (and editing here simplifies it to plain text).
+  // Plain pages skip straight to the editor, exactly as before.
+  const [editing, setEditing] = useState(false);
 
   const [reflections, setReflections] = useState<Reflection[]>([]);
   const [reflectionText, setReflectionText] = useState("");
@@ -153,10 +162,17 @@ export default function EntryDetail() {
   const latestBodyRef = useRef("");
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveSequenceRef = useRef(0);
+  // Whether the loaded page still carries a rich layer. Saving plain text from
+  // mobile clears it (bodyRich: null) so `body` and `bodyRich` can't diverge.
+  const richRef = useRef(false);
 
   useEffect(() => {
     latestBodyRef.current = body;
   }, [body]);
+
+  useEffect(() => {
+    richRef.current = !!entry?.bodyRich;
+  }, [entry?.bodyRich]);
 
   const loadReflections = useCallback(async () => {
     if (!id) return;
@@ -191,6 +207,8 @@ export default function EntryDetail() {
         setBody(row.body);
         setLastSavedBody(row.body);
         latestBodyRef.current = row.body;
+        // Rich pages open as a rendered read view; plain pages are directly editable.
+        setEditing(!row.bodyRich);
         setReflections(reflectionRows);
         setStatus("saved");
       } catch {
@@ -224,7 +242,9 @@ export default function EntryDetail() {
       try {
         const saved = await api<JournalEntry>(`/entries/${id}`, {
           method: "PATCH",
-          body: { body: nextBody },
+          // Editing a once-rich page on mobile simplifies it to plain text —
+          // clear bodyRich so the server makes this plain `body` canonical.
+          body: richRef.current ? { body: nextBody, bodyRich: null } : { body: nextBody },
         });
 
         if (saveSequenceRef.current !== sequence) return;
@@ -388,35 +408,62 @@ export default function EntryDetail() {
               </View>
             ) : null}
 
-            <View className="mt-8 rounded-3xl border border-border bg-surface px-5 py-4">
-              <TextInput
-                value={body}
-                onChangeText={setBody}
-                multiline
-                textAlignVertical="top"
-                placeholder="Write more…"
-                placeholderTextColor="#A59B8D"
-                className="min-h-80 text-lg leading-7 text-ink"
-                autoCorrect
-                scrollEnabled={false}
-                inputAccessoryViewID={KEYBOARD_DONE_ID}
-              />
-            </View>
+            {entry.bodyRich && !editing ? (
+              // Formatted on the web — render it faithfully, read-only, with an
+              // explicit path to plain-text editing.
+              <View className="mt-8 rounded-3xl border border-border bg-surface px-5 py-4">
+                <RichText html={entry.bodyRich} />
+                <Pressable
+                  onPress={() =>
+                    Alert.alert(
+                      "Edit as plain text?",
+                      "This page was formatted on the web. Editing it here will simplify the formatting to plain text.",
+                      [
+                        { text: "Cancel", style: "cancel" },
+                        { text: "Edit", onPress: () => setEditing(true) },
+                      ],
+                    )
+                  }
+                  className="mt-5 self-start rounded-full border border-border bg-background px-4 py-2"
+                >
+                  <Text className="text-soft-ink" style={{ fontSize: 13 }}>
+                    Edit as plain text
+                  </Text>
+                </Pressable>
+              </View>
+            ) : (
+              <View className="mt-8 rounded-3xl border border-border bg-surface px-5 py-4">
+                <TextInput
+                  value={body}
+                  onChangeText={setBody}
+                  multiline
+                  textAlignVertical="top"
+                  placeholder="Write more…"
+                  placeholderTextColor="#A59B8D"
+                  className="min-h-80 text-lg leading-7 text-ink"
+                  autoCorrect
+                  scrollEnabled={false}
+                  inputAccessoryViewID={KEYBOARD_DONE_ID}
+                />
+              </View>
+            )}
 
-            <View className="mt-4 flex-row items-center justify-between">
-              <Text className="text-faint-ink text-sm">
-                Edits autosave after you pause.
-              </Text>
-
-              <Pressable
-                onPress={() => void saveBody(body)}
-                disabled={status === "saving" || body === lastSavedBody || !body.trim()}
-              >
-                <Text className="text-soft-ink">
-                  {status === "saving" ? "Saving…" : "Save now"}
+            {editing ? (
+              <View className="mt-4 flex-row items-center justify-between">
+                <Text className="text-faint-ink text-sm">
+                  Edits autosave after you pause.
                 </Text>
-              </Pressable>
-            </View>
+
+                <Pressable
+                  onPress={() => void saveBody(body)}
+                  disabled={status === "saving" || body === lastSavedBody || !body.trim()}
+                >
+                  <Text className="text-soft-ink">
+                    {status === "saving" ? "Saving…" : "Save now"}
+                  </Text>
+                </Pressable>
+              </View>
+            ) : null}
 
             <View className="mt-2">
               <MicButton value={body} onChangeText={setBody} />
