@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
 import { View, Text, TextInput, Pressable, ActivityIndicator } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { useAuth } from "../../lib/auth";
 
 // Email/password auth. Google + Sign in with Apple land in Phase 0.x (native
-// flows). The look mirrors the web's calm auth screen.
+// flows). The look mirrors the web's calm auth screen. Reached from Welcome with
+// ?mode=in|up.
 export default function SignIn() {
   const { signIn, signUp, signInWithGoogle, signInWithApple } = useAuth();
-  const [mode, setMode] = useState<"in" | "up">("in");
+  const params = useLocalSearchParams<{ mode?: string }>();
+  const router = useRouter();
+  const [mode, setMode] = useState<"in" | "up">(params.mode === "up" ? "up" : "in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -64,6 +68,14 @@ export default function SignIn() {
 
   return (
     <View className="flex-1 bg-background px-6 justify-center">
+      <Pressable
+        onPress={() => (router.canGoBack() ? router.back() : router.replace("/(auth)/welcome"))}
+        hitSlop={12}
+        style={{ position: "absolute", top: 56, left: 20 }}
+      >
+        <Text className="text-soft-ink text-3xl">‹</Text>
+      </Pressable>
+
       <Text className="text-3xl text-deep-brown text-center">Yadegar</Text>
       <Text className="text-soft-ink text-center mt-1 mb-8">
         {mode === "in" ? "Welcome back." : "Begin your journal."}

@@ -23,7 +23,7 @@ function Gate() {
   useEffect(() => {
     if (loading) return;
     if (!user) {
-      if (!inAuthGroup) router.replace("/(auth)/sign-in");
+      if (!inAuthGroup) router.replace("/(auth)/welcome");
       return;
     }
     if (needsOnboarding) {
