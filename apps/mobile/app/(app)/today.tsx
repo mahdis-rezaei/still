@@ -6,6 +6,7 @@ import {
   Pressable,
   ScrollView,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -145,11 +146,22 @@ export default function Today() {
     return () => clearInterval(t);
   }, [pending]);
 
+  // Optional scope: narrow the read to a year (and optional month).
+  const [scopeOpen, setScopeOpen] = useState(false);
+  const [scopeYear, setScopeYear] = useState("");
+  const [scopeMonth, setScopeMonth] = useState("");
+
   async function onBringPageBack() {
     setRun(null);
     setPending(true);
     try {
-      setRun(await bringPageBack());
+      const year = /^\d{4}$/.test(scopeYear) ? Number(scopeYear) : undefined;
+      const monthNum = Number(scopeMonth);
+      const month =
+        year && Number.isInteger(monthNum) && monthNum >= 1 && monthNum <= 12
+          ? monthNum
+          : undefined;
+      setRun(await bringPageBack({ year, month }));
     } catch {
       setRun({ surfaced: false, reason: "error" });
     } finally {
@@ -334,16 +346,52 @@ export default function Today() {
         </View>
 
         {/* The engine: bring back one page worth returning to, or stay silent. */}
-        <Pressable
-          onPress={onBringPageBack}
-          disabled={pending}
-          style={{ opacity: pending ? 0.5 : 1 }}
-          className="mt-6 self-start rounded-full border border-border bg-surface px-5 py-3"
-        >
-          <Text className="text-soft-ink">
-            {pending ? "Reading…" : "✦ Bring a page back"}
-          </Text>
-        </Pressable>
+        <View className="mt-6 flex-row items-center gap-3">
+          <Pressable
+            onPress={onBringPageBack}
+            disabled={pending}
+            style={{ opacity: pending ? 0.5 : 1 }}
+            className="self-start rounded-full border border-border bg-surface px-5 py-3"
+          >
+            <Text className="text-soft-ink">
+              {pending ? "Reading…" : "✦ Bring a page back"}
+            </Text>
+          </Pressable>
+          <Pressable onPress={() => setScopeOpen((v) => !v)} hitSlop={8}>
+            <Text className="text-faint-ink" style={{ fontSize: 13 }}>
+              {scopeOpen ? "Across all years" : "Choose a time"}
+            </Text>
+          </Pressable>
+        </View>
+
+        {scopeOpen && (
+          <View className="mt-3 rounded-2xl border border-border bg-surface px-4 py-3">
+            <Text className="text-faint-ink text-xs mb-2 leading-relaxed">
+              Read from one year (and optionally one month), instead of across all
+              your pages.
+            </Text>
+            <View className="flex-row gap-2">
+              <TextInput
+                value={scopeYear}
+                onChangeText={setScopeYear}
+                keyboardType="number-pad"
+                placeholder="Year (e.g. 2019)"
+                placeholderTextColor="#A59B8D"
+                className="flex-1 rounded-xl border border-border bg-background px-3 py-2.5 text-ink"
+                style={{ fontSize: 13 }}
+              />
+              <TextInput
+                value={scopeMonth}
+                onChangeText={setScopeMonth}
+                keyboardType="number-pad"
+                placeholder="Month 1–12 (optional)"
+                placeholderTextColor="#A59B8D"
+                className="flex-1 rounded-xl border border-border bg-background px-3 py-2.5 text-ink"
+                style={{ fontSize: 13 }}
+              />
+            </View>
+          </View>
+        )}
 
         {pending && (
           <View className="mt-4 rounded-3xl border border-border bg-surface p-5">

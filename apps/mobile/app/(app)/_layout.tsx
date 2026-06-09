@@ -18,6 +18,7 @@ export default function AppLayout() {
       {/* Hidden routes — reached via the ☰ menu, the Explore hub, or a list. */}
       <Tabs.Screen name="library" options={{ href: null }} />
       <Tabs.Screen name="returns" options={{ href: null }} />
+      <Tabs.Screen name="history" options={{ href: null }} />
       <Tabs.Screen name="settings" options={{ href: null }} />
       <Tabs.Screen name="calendar" options={{ href: null }} />
       <Tabs.Screen name="collections" options={{ href: null }} />

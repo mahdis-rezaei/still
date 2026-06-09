@@ -131,10 +131,17 @@ function renderInline(nodes: Node[], style: Inline, keyPrefix: string): ReactNod
 }
 
 // Walk the top-level (block) nodes. Loose inline/text runs are gathered into a
-// paragraph so stray text never gets dropped.
-function renderBlocks(nodes: Node[], keyPrefix: string): ReactNode[] {
+// paragraph so stray text never gets dropped. `quoted` styles paragraphs inside
+// a blockquote (muted + italic) to match the web.
+function renderBlocks(nodes: Node[], keyPrefix: string, quoted = false): ReactNode[] {
   const out: ReactNode[] = [];
   let run: Node[] = [];
+  const paraClass = quoted
+    ? "text-base leading-7 text-soft-ink"
+    : "text-lg leading-7 text-ink";
+  const paraStyle = quoted
+    ? { marginBottom: 8, fontStyle: "italic" as const }
+    : { marginBottom: 12 };
 
   const flush = (k: string) => {
     if (run.length === 0) return;
@@ -142,11 +149,7 @@ function renderBlocks(nodes: Node[], keyPrefix: string): ReactNode[] {
     run = [];
     if (items.every((n) => n.type === "text" && !n.text.trim())) return;
     out.push(
-      <Text
-        key={`p${k}`}
-        className="text-lg leading-7 text-ink"
-        style={{ marginBottom: 12 }}
-      >
+      <Text key={`p${k}`} className={paraClass} style={paraStyle}>
         {renderInline(items, {}, `p${k}`)}
       </Text>,
     );
@@ -192,7 +195,7 @@ function renderBlocks(nodes: Node[], keyPrefix: string): ReactNode[] {
             key={key}
             style={{ borderLeftWidth: 3, borderLeftColor: "#CBBBA0", paddingLeft: 14, marginVertical: 8 }}
           >
-            {renderBlocks(n.children, key)}
+            {renderBlocks(n.children, key, true)}
           </View>,
         );
         break;
@@ -220,11 +223,7 @@ function renderBlocks(nodes: Node[], keyPrefix: string): ReactNode[] {
       case "p":
       default:
         out.push(
-          <Text
-            key={key}
-            className="text-lg leading-7 text-ink"
-            style={{ marginBottom: 12 }}
-          >
+          <Text key={key} className={paraClass} style={paraStyle}>
             {renderInline(n.children, {}, key)}
           </Text>,
         );

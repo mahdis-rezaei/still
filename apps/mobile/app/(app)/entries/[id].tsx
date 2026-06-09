@@ -23,6 +23,10 @@ import { KeyboardDone, KEYBOARD_DONE_ID } from "../../../components/keyboard-don
 import { EntryPhotos } from "../../../components/entry-photos";
 import { MicButton } from "../../../components/mic-button";
 import { RichText } from "../../../components/rich-text";
+import {
+  updateEntryResurfacing,
+  type ResurfacingPreference,
+} from "../../../lib/settings";
 
 type JournalEntry = {
   id: string;
@@ -31,6 +35,7 @@ type JournalEntry = {
   // Optional rich-text layer (sanitized HTML) composed on the web. When present
   // we render it faithfully; the plain `body` above is derived from it.
   bodyRich?: string | null;
+  resurfacingPreference?: ResurfacingPreference;
   entryDate: string | null;
   source: string;
   favorite?: boolean;
@@ -110,6 +115,8 @@ export default function EntryDetail() {
   // switches to the plain editor (and editing here simplifies it to plain text).
   // Plain pages skip straight to the editor, exactly as before.
   const [editing, setEditing] = useState(false);
+  // How this page returns: normal · more often · never (a per-page mute).
+  const [resurf, setResurf] = useState<ResurfacingPreference>("normal");
 
   const [reflections, setReflections] = useState<Reflection[]>([]);
   const [reflectionText, setReflectionText] = useState("");
@@ -156,6 +163,13 @@ export default function EntryDetail() {
         return n;
       });
     }
+  }
+
+  function changeResurf(v: ResurfacingPreference) {
+    if (!id) return;
+    const prev = resurf;
+    setResurf(v); // optimistic
+    updateEntryResurfacing(id, v).catch(() => setResurf(prev));
   }
 
   const loadedRef = useRef(false);
@@ -207,6 +221,7 @@ export default function EntryDetail() {
         setBody(row.body);
         setLastSavedBody(row.body);
         latestBodyRef.current = row.body;
+        setResurf(row.resurfacingPreference ?? "normal");
         // Rich pages open as a rendered read view; plain pages are directly editable.
         setEditing(!row.bodyRich);
         setReflections(reflectionRows);
@@ -407,6 +422,48 @@ export default function EntryDetail() {
                 )}
               </View>
             ) : null}
+
+            {/* How this page returns — a per-page resurfacing control. */}
+            <View className="mt-6">
+              <Text className="text-soft-ink mb-2" style={{ fontSize: 13 }}>
+                How this page returns
+              </Text>
+              <View className="flex-row gap-2">
+                {(
+                  [
+                    { value: "normal", label: "Normal" },
+                    { value: "more_often", label: "More often" },
+                    { value: "never", label: "Never" },
+                  ] as { value: ResurfacingPreference; label: string }[]
+                ).map((o) => {
+                  const sel = o.value === resurf;
+                  return (
+                    <Pressable
+                      key={o.value}
+                      onPress={() => changeResurf(o.value)}
+                      className={
+                        "flex-1 items-center rounded-full border px-3 py-2 " +
+                        (sel
+                          ? "bg-deep-brown border-deep-brown"
+                          : "bg-surface border-border")
+                      }
+                    >
+                      <Text
+                        style={{ fontSize: 13 }}
+                        className={sel ? "text-background" : "text-soft-ink"}
+                      >
+                        {o.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              {resurf === "never" ? (
+                <Text className="text-faint-ink text-xs mt-2 leading-relaxed">
+                  This page won't resurface on its own. You can still find it in your Library.
+                </Text>
+              ) : null}
+            </View>
 
             {entry.bodyRich && !editing ? (
               // Formatted on the web — render it faithfully, read-only, with an

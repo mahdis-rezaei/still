@@ -50,6 +50,7 @@ export function AppHeader() {
         { label: "Today", to: "/(app)/today" },
         { label: "Look back", to: "/(app)/look-back" },
         { label: "Returns", to: "/(app)/returns" },
+        { label: "History", to: "/(app)/history" },
       ],
     },
     {

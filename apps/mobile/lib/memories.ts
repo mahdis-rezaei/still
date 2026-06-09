@@ -105,11 +105,21 @@ async function pollRunJob(jobId: string): Promise<MemoryRunResult> {
 // POST /memories/run. The run may come back synchronously (a result) or as an
 // async job to poll (ADR 0002). A 402 means the free quota is spent (only when
 // enforcement is on) — surface it as a calm "quota" reason rather than an error.
-export async function bringPageBack(): Promise<MemoryRunResult> {
+// An optional scope narrows the read to a year (and optional month); omitted, it
+// reads across all the years.
+export interface RunScope {
+  year?: number;
+  month?: number;
+}
+
+export async function bringPageBack(scope: RunScope = {}): Promise<MemoryRunResult> {
+  const body: RunScope = {};
+  if (scope.year) body.year = scope.year;
+  if (scope.month) body.month = scope.month;
   try {
     const resp = await api<MemoryRunResult & { jobId?: string }>(
       "/memories/run",
-      { method: "POST", body: {} },
+      { method: "POST", body },
     );
     if (resp && typeof resp.jobId === "string") return pollRunJob(resp.jobId);
     return resp as MemoryRunResult;
