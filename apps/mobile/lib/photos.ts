@@ -1,4 +1,16 @@
+import { requireOptionalNativeModule } from "expo-modules-core";
 import { API_ORIGIN, getToken } from "./api";
+
+// True only on a build that includes the image-picker native module. Lets us skip
+// importing expo-image-picker on a build without it (importing it throws "Cannot
+// find native module" out of band, escaping try/catch).
+export function photosAvailable(): boolean {
+  try {
+    return requireOptionalNativeModule("ExpoImagePicker") != null;
+  } catch {
+    return false;
+  }
+}
 
 // Photos on a page (entry attachments). Mirrors the web: pick from the library or
 // camera, upload the raw bytes to the existing /attachments backend (encrypted at
@@ -54,6 +66,7 @@ export async function deleteAttachment(id: string): Promise<void> {
 export async function pickImage(
   from: "library" | "camera",
 ): Promise<{ uri: string; width?: number; height?: number } | null> {
+  if (!photosAvailable()) return null;
   try {
     const ImagePicker = await import("expo-image-picker");
     if (from === "camera") {
