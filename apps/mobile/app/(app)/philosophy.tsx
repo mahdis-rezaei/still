@@ -1,4 +1,5 @@
-import { Linking, Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // The Yadegar philosophy — the values behind the product, in its own voice.
@@ -28,6 +29,7 @@ const TENETS: { title: string; body: string }[] = [
 
 export default function Philosophy() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
 
   return (
     <ScrollView
@@ -63,7 +65,7 @@ export default function Philosophy() {
       </Text>
 
       <Pressable
-        onPress={() => void Linking.openURL("https://yadegarjournal.com/why")}
+        onPress={() => router.push("/(app)/why")}
         className="self-start rounded-full bg-deep-brown px-7 py-3"
       >
         <Text className="text-background">Read why I built Yadegar →</Text>

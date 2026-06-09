@@ -78,7 +78,7 @@ export function AppHeader() {
             void Linking.openURL("https://yadegarjournal.com/help");
           },
         },
-        { label: "About Yadegar", to: "/(app)/philosophy" },
+        { label: "About Yadegar", to: "/(app)/why" },
         {
           label: "Sign out",
           action: () => {
