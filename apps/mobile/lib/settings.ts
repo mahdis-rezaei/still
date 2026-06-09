@@ -66,11 +66,22 @@ export const updateProfileName = (name: string) =>
 export const deleteAccount = () =>
   api("/privacy/account", { method: "DELETE" });
 
-// GET /privacy/export/text — the readable, portable export. Not JSON, so we fetch
-// it as raw text (the shared api() helper JSON-parses) and let the caller share it.
-export async function exportText(): Promise<string> {
+// Portable exports. Markdown/text honour a scope (everything | favorites); JSON
+// is the complete archive. Fetched as raw text (the shared api() helper would
+// JSON-parse) so the caller can share it.
+export type ExportFormat = "markdown" | "text" | "json";
+export type ExportScope = "all" | "favorites";
+
+export async function fetchExport(
+  format: ExportFormat,
+  scope: ExportScope = "all",
+): Promise<string> {
   const token = await getToken();
-  const res = await fetch(`${API_ORIGIN}/api/privacy/export/text`, {
+  const path =
+    format === "json"
+      ? "privacy/export"
+      : `privacy/export/${format}?scope=${scope}`;
+  const res = await fetch(`${API_ORIGIN}/api/${path}`, {
     headers: {
       "X-Yadegar-Client": "mobile",
       ...(token ? { authorization: `Bearer ${token}` } : {}),
