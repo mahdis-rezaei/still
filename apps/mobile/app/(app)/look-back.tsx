@@ -94,6 +94,18 @@ function Chips<T extends string | number>({
   );
 }
 
+// The big title that opens each tab — mirrors the Explore views, where the
+// sub-view (Library / Your shelf / …) carries the page heading itself.
+function LeadHeading({ title, body }: { title: string; body: string }) {
+  return (
+    <View className="mb-6">
+      <Text className="text-4xl text-deep-brown">{title}</Text>
+      <Text className="text-soft-ink mt-1 leading-relaxed">{body}</Text>
+    </View>
+  );
+}
+
+// A secondary heading within a tab (the second read under a lead section).
 function SectionHeading({ title, body }: { title: string; body: string }) {
   return (
     <View className="mb-4">
@@ -181,10 +193,9 @@ export default function LookBack() {
         paddingBottom: insets.bottom + 48,
       }}
     >
-      <Text className="text-4xl text-deep-brown">Look back</Text>
-
-      {/* Sub-tabs — a quiet text nav, mirroring Explore (no pills, no scroll). */}
-      <View className="mt-5 border-b border-border/60">
+      {/* Sub-tabs — a quiet text nav, mirroring Explore: no page title, each
+          tab carries its own heading just like the Library / Shelf views. */}
+      <View className="border-b border-border/60">
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -207,8 +218,8 @@ export default function LookBack() {
       </View>
 
       {tab === "returning" && (
-        <View className="mt-8">
-          <SectionHeading
+        <View className="mt-6">
+          <LeadHeading
             title="What keeps returning"
             body="Across years of pages, the same things quietly resurface — a worry, a hope, a line you keep coming back to. Yadegar reads your whole archive and brings back one thread worth sitting with."
           />
@@ -266,8 +277,8 @@ export default function LookBack() {
       )}
 
       {tab === "revisit" && (
-        <View className="mt-8">
-          <SectionHeading
+        <View className="mt-6">
+          <LeadHeading
             title="Revisit a time"
             body="Pick a month and year, and Yadegar reads that stretch of your life back to you in your own words. A way to return somewhere on purpose."
           />
@@ -358,8 +369,8 @@ export default function LookBack() {
       )}
 
       {tab === "year" && (
-        <View className="mt-8">
-          <SectionHeading
+        <View className="mt-6">
+          <LeadHeading
             title="Your Year in Pages"
             body="A whole year of your writing, gathered into one place to read straight through. The keepsake at the heart of Yadegar."
           />
