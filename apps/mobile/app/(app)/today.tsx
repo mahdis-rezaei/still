@@ -290,6 +290,7 @@ export default function Today() {
       <ScrollView
         className="flex-1"
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
         contentContainerStyle={{
           paddingTop: 14,
           paddingHorizontal: 24,
@@ -395,9 +396,8 @@ export default function Today() {
               inputAccessoryViewID={KEYBOARD_DONE_ID}
             />
           )}
+          <EntryPhotos entryId={entryId} ensureEntry={ensureEntry} />
         </View>
-
-        <EntryPhotos entryId={entryId} ensureEntry={ensureEntry} />
 
         <Text className="text-faint-ink text-sm mt-4 leading-relaxed">
           Your words save privately to this phone first, then sync to Yadegar when
