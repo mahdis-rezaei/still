@@ -17,6 +17,7 @@ import { bringPageBack, type MemoryRunResult } from "../../lib/memories";
 import { MemoryCard } from "../../components/memory-card";
 import { OnThisDay } from "../../components/on-this-day";
 import { EntryPhotos } from "../../components/entry-photos";
+import { MicButton } from "../../components/mic-button";
 
 type JournalEntry = {
   id: string;
@@ -394,6 +395,9 @@ export default function Today() {
               scrollEnabled={false}
             />
           )}
+          <View className="mt-3">
+            <MicButton value={body} onChangeText={setBody} />
+          </View>
           <EntryPhotos entryId={entryId} ensureEntry={ensureEntry} />
         </View>
 

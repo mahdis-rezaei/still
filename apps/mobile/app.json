@@ -43,6 +43,13 @@
           "photosPermission": "Allow Yadegar to add photos to your pages.",
           "cameraPermission": "Allow Yadegar to take a photo for your page."
         }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow Yadegar to use the microphone to dictate your writing.",
+          "speechRecognitionPermission": "Allow Yadegar to transcribe your speech into text."
+        }
       ]
     ],
     "experiments": {
