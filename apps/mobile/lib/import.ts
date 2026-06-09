@@ -25,7 +25,8 @@ export async function pickImportFileText(): Promise<string | null> {
       copyToCacheDirectory: true,
     });
     if (res.canceled || !res.assets?.[0]) return null;
-    const FileSystem = await import("expo-file-system");
+    // SDK 54: the string/file helpers live on the legacy subpath now.
+    const FileSystem = await import("expo-file-system/legacy");
     return await FileSystem.readAsStringAsync(res.assets[0].uri);
   } catch {
     return null;
