@@ -61,9 +61,11 @@ export default function Reminders() {
         paddingBottom: insets.bottom + 48,
       }}
     >
-      <Text className="text-4xl text-deep-brown">Reminders</Text>
-      <Text className="text-soft-ink mt-1 leading-relaxed">
-        A gentle nudge to write, or a page brought back. Off by default.
+      <Text className="text-4xl text-deep-brown">Nudges</Text>
+      <Text className="text-soft-ink mt-2 leading-relaxed">
+        Gentle, never guilt. No streaks, no "you missed a day." Just a quiet note
+        now and then, and only when there's something honest to send. Both are off
+        unless you turn them on.
       </Text>
 
       {loading ? (
@@ -71,18 +73,19 @@ export default function Reminders() {
           <ActivityIndicator color="#3A2F25" />
         </View>
       ) : (
-        <View className="mt-8 rounded-3xl border border-border bg-surface p-5 gap-6">
+        <View className="mt-10 gap-10">
           <View>
-            <Text className="text-ink mb-1">A reminder to write</Text>
-            <Text className="text-faint-ink text-sm mb-3 leading-relaxed">
-              A gentle nudge to put something down.
+            <Text className="text-lg text-ink mb-1">A nudge to write</Text>
+            <Text className="text-soft-ink text-sm mb-4 leading-relaxed">
+              "What wants to be written today?", a small invitation, by email.
             </Text>
             <Segmented value={writing} options={FREQ} onChange={setWritingFreq} />
           </View>
           <View>
-            <Text className="text-ink mb-1">A page brought back</Text>
-            <Text className="text-faint-ink text-sm mb-3 leading-relaxed">
-              When something honest surfaces, Yadegar can let you know.
+            <Text className="text-lg text-ink mb-1">A page brought back</Text>
+            <Text className="text-soft-ink text-sm mb-4 leading-relaxed">
+              Yadegar reads across your years and emails you one page worth
+              returning to, or stays quiet when nothing honest surfaces.
             </Text>
             <Segmented value={memory} options={FREQ} onChange={setMemoryFreq} />
           </View>

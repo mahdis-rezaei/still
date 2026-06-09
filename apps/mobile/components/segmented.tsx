@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 
-// A small segmented control (Off · Weekly · Monthly, Open · Gentle · Protected…).
+// A connected segmented control (Off · Weekly · Monthly, Open · Gentle ·
+// Protected…) — one rounded pill with equal segments, the selected one filled.
 export function Segmented<T extends string>({
   value,
   options,
@@ -11,7 +12,7 @@ export function Segmented<T extends string>({
   onChange: (v: T) => void;
 }) {
   return (
-    <View className="flex-row gap-2">
+    <View className="flex-row rounded-full border border-border bg-surface p-1">
       {options.map((o) => {
         const sel = o.value === value;
         return (
@@ -19,8 +20,7 @@ export function Segmented<T extends string>({
             key={o.value}
             onPress={() => onChange(o.value)}
             className={
-              "flex-1 items-center rounded-full border px-3 py-2 " +
-              (sel ? "bg-deep-brown border-deep-brown" : "bg-surface border-border")
+              "flex-1 items-center rounded-full py-2 " + (sel ? "bg-deep-brown" : "")
             }
           >
             <Text
