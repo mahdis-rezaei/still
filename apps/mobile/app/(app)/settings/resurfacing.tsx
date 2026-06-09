@@ -18,17 +18,37 @@ import {
   type MemorySensitivity,
   type ResurfaceMute,
 } from "../../../lib/settings";
-import { Segmented } from "../../../components/segmented";
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
-const SENSITIVITY: { value: MemorySensitivity; label: string }[] = [
-  { value: "open", label: "Open" },
-  { value: "gentle", label: "Gentle" },
-  { value: "protected", label: "Protected" },
+
+const OPTIONS: { value: MemorySensitivity; label: string; desc: string }[] = [
+  {
+    value: "open",
+    label: "Open",
+    desc: 'Yadegar may bring a page back on its own, a gentle nudge, and "on this day" pages when you visit.',
+  },
+  {
+    value: "gentle",
+    label: "Gentle",
+    desc: "No memory nudges. Pages still appear quietly in the app when you're here, but Yadegar won't reach out.",
+  },
+  {
+    value: "protected",
+    label: "Protected",
+    desc: 'Nothing returns unbidden. Pages come back only when you go looking. Look back, Calendar, Search, or "Bring a page back."',
+  },
 ];
 
-// What returns → Resurfacing: how freely memories resurface, plus muted periods
-// (date ranges that never resurface).
+function SectionLabel({ children }: { children: string }) {
+  return (
+    <Text className="text-xs uppercase tracking-widest text-faint-ink mb-3">
+      {children}
+    </Text>
+  );
+}
+
+// What returns: how freely memories resurface (radio cards), the safety note,
+// and muted periods (date ranges that never resurface). Mirrors the web.
 export default function Resurfacing() {
   const insets = useSafeAreaInsets();
   const [sensitivity, setSensitivity] = useState<MemorySensitivity>("open");
@@ -100,6 +120,10 @@ export default function Resurfacing() {
       }}
     >
       <Text className="text-4xl text-deep-brown">What returns</Text>
+      <Text className="text-soft-ink mt-2 leading-relaxed">
+        You decide what comes back. Some seasons are harder to revisit than
+        others — these are yours to set.
+      </Text>
 
       {loading ? (
         <View className="min-h-60 items-center justify-center">
@@ -107,30 +131,68 @@ export default function Resurfacing() {
         </View>
       ) : (
         <>
-          <View className="mt-8 rounded-3xl border border-border bg-surface p-5">
-            <Text className="text-ink mb-1">How memories resurface</Text>
-            <Text className="text-faint-ink text-sm mb-3 leading-relaxed">
-              Open surfaces freely; Gentle is more careful; Protected never
-              surfaces a page unbidden.
+          <View className="mt-8">
+            <SectionLabel>How memories return</SectionLabel>
+            <View className="gap-3">
+              {OPTIONS.map((o) => {
+                const sel = o.value === sensitivity;
+                return (
+                  <Pressable
+                    key={o.value}
+                    onPress={() => setSens(o.value)}
+                    className={
+                      "rounded-2xl border p-4 flex-row gap-3 " +
+                      (sel ? "border-accent-sepia bg-surface" : "border-border bg-surface")
+                    }
+                  >
+                    <View
+                      style={{
+                        width: 18,
+                        height: 18,
+                        borderRadius: 9,
+                        borderWidth: 1.5,
+                        borderColor: sel ? "#8A6F4D" : "#CBBBA0",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginTop: 2,
+                      }}
+                    >
+                      {sel ? (
+                        <View
+                          style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#8A6F4D" }}
+                        />
+                      ) : null}
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-lg text-ink">{o.label}</Text>
+                      <Text className="text-soft-ink text-sm mt-1 leading-relaxed">
+                        {o.desc}
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <Text className="text-faint-ink text-sm mt-4 leading-relaxed">
+              Whatever you choose, body-image and active-crisis pages are never
+              resurfaced, and muted periods below are always respected.
             </Text>
-            <Segmented value={sensitivity} options={SENSITIVITY} onChange={setSens} />
           </View>
 
-          <View className="mt-6 rounded-3xl border border-border bg-surface p-5">
-            <Text className="text-ink mb-1">Muted periods</Text>
-            <Text className="text-faint-ink text-sm mb-3 leading-relaxed">
-              Pages from a muted stretch of time never resurface — gentle for a
-              grief window or a hard year. Nothing is deleted.
-            </Text>
-
-            {mutes.length > 0 ? (
-              <View className="gap-2 mb-3">
+          <View className="mt-10">
+            <SectionLabel>Muted periods</SectionLabel>
+            {mutes.length === 0 ? (
+              <Text className="text-soft-ink leading-relaxed">
+                Nothing is muted. Every eligible page can return.
+              </Text>
+            ) : (
+              <View className="gap-2">
                 {mutes.map((m) => (
                   <View
                     key={m.id}
-                    className="flex-row items-center justify-between rounded-xl border border-border bg-background px-3 py-2.5"
+                    className="flex-row items-center justify-between rounded-xl border border-border bg-surface px-4 py-3"
                   >
-                    <Text className="text-ink" style={{ fontSize: 14 }}>
+                    <Text className="text-ink">
                       {m.startDate} → {m.endDate}
                     </Text>
                     <Pressable onPress={() => onRemoveMute(m)} hitSlop={8}>
@@ -141,36 +203,41 @@ export default function Resurfacing() {
                   </View>
                 ))}
               </View>
-            ) : null}
+            )}
+          </View>
 
-            <View className="flex-row gap-2">
-              <TextInput
-                value={muteStart}
-                onChangeText={setMuteStart}
-                placeholder="Start (YYYY-MM-DD)"
-                placeholderTextColor="#A59B8D"
-                autoCapitalize="none"
-                className="flex-1 rounded-xl border border-border bg-background px-3 py-2.5 text-ink"
-                style={{ fontSize: 13 }}
-              />
-              <TextInput
-                value={muteEnd}
-                onChangeText={setMuteEnd}
-                placeholder="End (YYYY-MM-DD)"
-                placeholderTextColor="#A59B8D"
-                autoCapitalize="none"
-                className="flex-1 rounded-xl border border-border bg-background px-3 py-2.5 text-ink"
-                style={{ fontSize: 13 }}
-              />
+          <View className="mt-10">
+            <SectionLabel>Mute a period</SectionLabel>
+            <View className="gap-4">
+              <View>
+                <Text className="text-soft-ink mb-2">From</Text>
+                <TextInput
+                  value={muteStart}
+                  onChangeText={setMuteStart}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor="#A59B8D"
+                  autoCapitalize="none"
+                  className="rounded-xl border border-border bg-surface px-4 py-3 text-ink"
+                />
+              </View>
+              <View>
+                <Text className="text-soft-ink mb-2">To</Text>
+                <TextInput
+                  value={muteEnd}
+                  onChangeText={setMuteEnd}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor="#A59B8D"
+                  autoCapitalize="none"
+                  className="rounded-xl border border-border bg-surface px-4 py-3 text-ink"
+                />
+              </View>
+              <Pressable
+                onPress={onAddMute}
+                className="items-center rounded-full bg-deep-brown py-3.5"
+              >
+                <Text className="text-background">Mute this period</Text>
+              </Pressable>
             </View>
-            <Pressable
-              onPress={onAddMute}
-              className="mt-2 items-center rounded-full border border-border bg-background py-2.5"
-            >
-              <Text className="text-soft-ink" style={{ fontSize: 13 }}>
-                Mute this period
-              </Text>
-            </Pressable>
           </View>
         </>
       )}
