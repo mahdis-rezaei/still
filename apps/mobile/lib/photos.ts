@@ -81,7 +81,8 @@ export async function pickImage(
     if (!perm.granted) return null;
     const r = await ImagePicker.launchImageLibraryAsync({
       quality: 0.7,
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      // SDK 54: MediaTypeOptions removed; mediaTypes now takes a string array.
+      mediaTypes: ["images"],
     });
     if (r.canceled || !r.assets?.[0]) return null;
     const a = r.assets[0];
@@ -100,7 +101,8 @@ export async function uploadAttachment(
   height?: number,
 ): Promise<Attachment | null> {
   try {
-    const FileSystem = await import("expo-file-system");
+    // SDK 54: uploadAsync / FileSystemUploadType live on the legacy subpath now.
+    const FileSystem = await import("expo-file-system/legacy");
     const token = await getToken();
     const q = width && height ? `?w=${width}&h=${height}` : "";
     const res = await FileSystem.uploadAsync(
